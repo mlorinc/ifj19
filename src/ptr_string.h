@@ -10,7 +10,7 @@
 #define __PTR_STRING_CHUNK 15
 #endif
 
-static struct ptr_string {
+struct ptr_string {
     /**
      * Pointer to c string. Not ended with '\0' char
      */
@@ -23,7 +23,7 @@ static struct ptr_string {
      * Number of allocated bytes for buffer
      */ 
     size_t capacity;
-}
+};
 
 /**
  * Structure representing higher abstraction of C string.
