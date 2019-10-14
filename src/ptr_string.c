@@ -27,9 +27,12 @@ ptr_string_t ptr_string_new_with_length(const size_t initial_length)
         if(new_ptr->buffer == NULL)
         {
             free(new_ptr);
-            return NULL;
+            error_exit(ERROR_INTERNAL);
         }
         new_ptr->length = initial_length;
+    }
+    else{
+        error_exit(ERROR_INTERNAL);
     }
     return new_ptr;
 }
@@ -41,6 +44,9 @@ ptr_string_t ptr_string_clone(const ptr_string_t const str)
     {
         new_ptr->length = str->length;
         memcpy(new_ptr->buffer, str->buffer, str->length);
+    }
+    else{
+        error_exit(ERROR_INTERNAL);
     }
     return new_ptr;
 }
