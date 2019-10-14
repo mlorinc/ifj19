@@ -78,7 +78,7 @@ char *ptr_string_c_string(ptr_string_t const str);
  * @param str_to_concat string to be concanetated to source string
  * @returns new concanetated string or NULL, when error occurs
  */ 
-ptr_string_t ptr_string_concat(ptr_string_tconst str, ptr_string_tconst str_to_concat);
+ptr_string_t ptr_string_concat(ptr_string_t const str, ptr_string_t const str_to_concat);
 
 /**
  * Inserts str_to_insert at begging of str.
@@ -86,7 +86,7 @@ ptr_string_t ptr_string_concat(ptr_string_tconst str, ptr_string_tconst str_to_c
  * @param str_to_concat string to be inserted
  * @returns new string or NULL, when error occurs
  */ 
-ptr_string_t ptr_string_insert(ptr_string_tconst str, ptr_string_tconst str_to_insert);
+ptr_string_t ptr_string_insert(ptr_string_t const str, ptr_string_t const str_to_insert);
 
 /**
  * Appeds character at end of str.
@@ -94,7 +94,7 @@ ptr_string_t ptr_string_insert(ptr_string_tconst str, ptr_string_tconst str_to_i
  * @param c character to be appended
  * @returns new string or NULL, when error occurs
  */ 
-ptr_string_t ptr_string_append(ptr_string_tconst str, const char c);
+ptr_string_t ptr_string_append(ptr_string_t const str, const char c);
 
 /**
  * Returns substring from start to end.
@@ -103,7 +103,7 @@ ptr_string_t ptr_string_append(ptr_string_tconst str, const char c);
  * @param end end index (exclusive)
  * @returns new string or NULL, when error occurs
  */ 
-ptr_string_t ptr_string_substring(ptr_string_tconst str, const size_t start, const size_t end);
+ptr_string_t ptr_string_substring(ptr_string_t const str, const size_t start, const size_t end);
 
 /**
  * Finds character in string and returns its index.
@@ -111,7 +111,7 @@ ptr_string_t ptr_string_substring(ptr_string_tconst str, const size_t start, con
  * @param c character to be looked for
  * @returns index of character or -1 if character was not found
  */ 
-size_t ptr_string_find_char(ptr_string_tconst str, const char c);
+size_t ptr_string_find_char(ptr_string_t const str, const char c);
 
 /**
  * Finds character in string and returns its index. Searching is started from index.
@@ -120,7 +120,7 @@ size_t ptr_string_find_char(ptr_string_tconst str, const char c);
  * @param index starting position of search
  * @returns index of character or -1 if character was not found
  */ 
-size_t ptr_string_find_char_from_index(ptr_string_tconst str, const char c, const size_t index);
+size_t ptr_string_find_char_from_index(ptr_string_t const str, const char c, const size_t index);
 
 static inline size_t should_resize(size_t capacity, size_t length1, size_t length2) {
     return capacity < length1 + length2;
