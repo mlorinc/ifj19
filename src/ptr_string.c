@@ -30,3 +30,14 @@ ptr_string_t* ptr_string_clone(const ptr_string_t * const str)
     }
     return new_ptr;
 }
+
+ptr_string_t* ptr_string(const char *str)
+{
+    size_t str_len = strlen(str);
+    ptr_string_t *casted_str = ptr_string_new_with_length(str_len);
+    
+    // Copies whole string without '\\0'
+    memcpy(casted_str->buffer, str, str_len);
+    casted_str->length = str_len;
+
+}
