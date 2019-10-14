@@ -6,6 +6,11 @@ ptr_string_t* ptr_string_new_with_length(const size_t initial_length)
     if(new_ptr != NULL)
     {
         new_ptr->buffer = malloc(sizeof(char)*initial_length);
+        if(new_ptr->buffer == NULL)
+        {
+            free(new_ptr);
+            return NULL;
+        }
         new_ptr->capacity = initial_length;
         new_ptr->length = 0;
     }
