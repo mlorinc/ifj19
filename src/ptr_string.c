@@ -23,10 +23,18 @@ ptr_string_t* ptr_string_clone(const ptr_string_t * const str)
     if(new_ptr != NULL)
     {
         new_ptr->length = str->length;
-        for (int i = 0; i < new_ptr->length; i++)
-        {
-            new_ptr->buffer[i] = str->buffer[i];
-        }
+        memcpy(new_ptr->buffer, str->buffer, str->length);
     }
     return new_ptr;
+}
+
+char *ptr_string_c_string(ptr_string_t * const str)
+{
+    size_t length = str->length + 1;
+    char stringValue [length];
+    
+    memcpy(stringValue, str->buffer, length);
+    stringValue[length] = '\0';
+
+    return stringValue;
 }
