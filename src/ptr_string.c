@@ -116,7 +116,7 @@ bool ptr_string_delete(ptr_string_t const str) {
  */ 
 ptr_string_t ptr_string_append(ptr_string_t const str, const char c) {
     assert(c != '\0');
-    
+
     if(str == NULL || str->buffer == NULL) return NULL;
 
     ptr_string_t newStr = ptr_string_new_with_length(str->length + 1);
@@ -128,6 +128,32 @@ ptr_string_t ptr_string_append(ptr_string_t const str, const char c) {
     
     memcpy(newStr->buffer, str->buffer, str->length);
     newStr->buffer[str->length] = c;
+
+    return newStr;
+}
+
+/**
+ * Returns substring from start to end.
+ * @param str source string
+ * @param start start index (inclusive)
+ * @param end end index (exclusive)
+ * @author Marian Lorinc
+ * @returns new string or NULL, when error occurs
+ */ 
+ptr_string_t ptr_string_substring(ptr_string_t const str, const size_t start, const size_t end) {
+    if(str == NULL || str->buffer == NULL) return NULL;
+    assert(end > start);
+    assert(str->length > start && str->length <= end);
+
+    size_t length = end - start;
+    ptr_string_t newStr = ptr_string_new_with_length(length);
+
+    if (newStr == NULL)
+    {
+        return NULL;
+    }
+
+    memcpy(newStr->buffer, str->buffer + start, length);
 
     return newStr;
 }
