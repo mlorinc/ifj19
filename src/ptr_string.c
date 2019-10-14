@@ -17,6 +17,7 @@
 
 #include "ptr_string.h"
 #include "error.h"
+#include <assert.h>
 
 ptr_string_t ptr_string_new_with_length(const size_t initial_length)
 {
@@ -103,4 +104,30 @@ bool ptr_string_delete(ptr_string_t const str) {
     str->length = 0;
     
     return true;
+}
+
+
+/**
+ * Appeds character at end of str.
+ * @param str source string
+ * @param c character to be appended
+ * @author Marian Lorinc
+ * @returns new string or NULL, when error occurs
+ */ 
+ptr_string_t ptr_string_append(ptr_string_t const str, const char c) {
+    assert(c != '\0');
+    
+    if(str == NULL || str->buffer == NULL) return NULL;
+
+    ptr_string_t newStr = ptr_string_new_with_length(str->length + 1);
+
+    if (newStr == NULL)
+    {
+        return NULL;
+    }
+    
+    memcpy(newStr->buffer, str->buffer, str->length);
+    newStr->buffer[str->length] = c;
+
+    return newStr;
 }
