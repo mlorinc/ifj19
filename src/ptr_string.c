@@ -86,3 +86,21 @@ ptr_string_t* ptr_string_new()
 
     return new_ptr;
 }
+
+/**
+ * Deletes string from memory. Deleting the same string is considered as safe operation.
+ * @param str string to be deleted
+ * @author Marian Lorinc
+ * @returns bool - true if delete was successfull, false otherwise
+ */ 
+bool ptr_string_delete(ptr_string_t const str) {
+    if (str == NULL || str->buffer == NULL) {
+        return false;
+    }
+
+    free(str->buffer);
+    str->buffer = NULL;
+    str->length = 0;
+    
+    return true;
+}
