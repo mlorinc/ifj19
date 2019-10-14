@@ -6,11 +6,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#ifndef __PTR_STRING_CHUNK
-#define __PTR_STRING_CHUNK 15
-#endif
-
-struct ptr_string {
+typedef struct ptr_string {
     /**
      * Pointer to c string. Not ended with '\0' char
      */
@@ -19,16 +15,7 @@ struct ptr_string {
      * Current length of string
      */ 
     size_t length;
-    /**
-     * Number of allocated bytes for buffer
-     */ 
-    size_t capacity;
-};
-
-/**
- * Structure representing higher abstraction of C string.
- */ 
-typedef struct ptr_string ptr_string_t;
+} ptr_string_t;
 
 /**
  * Creates new string with size of __PTR_STRING_CHUNK
