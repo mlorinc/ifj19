@@ -164,6 +164,11 @@ ptr_string_t ptr_string_concat(ptr_string_t const str, ptr_string_t const str_to
     memcpy(newStr->buffer, str->buffer, str->length);
     strcat(newStr->buffer, str_to_concat->buffer);
 
+    if (newStr == NULL)
+    {
+        return NULL;
+    }
+
     return newStr;
 }
 
