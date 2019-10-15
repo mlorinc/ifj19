@@ -35,12 +35,6 @@ typedef struct my_string {
 } *ptr_string_t;
 
 /**
- * Creates new string with size of __PTR_STRING_CHUNK
- * @returns pointer to newly created string or NULL
- */
-ptr_string_t ptr_string_new();
-
-/**
  * Casts c string to ptr_string
  * @param str c string to be casted
  * @returns pointer to newly created string or NULL

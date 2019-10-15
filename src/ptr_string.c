@@ -81,13 +81,6 @@ ptr_string_t ptr_string(const char *str)
     return casted_str;
 }
 
-ptr_string_t* ptr_string_new()
-{
-    ptr_string_t* new_ptr = ptr_string_new_with_length(__PTR_STRING_CHUNK);
-
-    return new_ptr;
-}
-
 /**
  * Deletes string from memory. Deleting the same string is considered as safe operation.
  * @param str string to be deleted
