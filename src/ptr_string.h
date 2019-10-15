@@ -90,15 +90,15 @@ size_t ptr_string_capacity(ptr_string_t const str);
 char *ptr_string_c_string(ptr_string_t const str);
 
 /**
- * Concats two strings together. If concanetated string is larger than capacity, the string will resize itself.
+ * Concats two strings together. If concatenated string is larger than capacity, the string will resize itself.
  * @param str source string
- * @param str_to_concat string to be concanetated to source string
- * @returns new concanetated string or NULL, when error occurs
+ * @param str_to_concat string to be concatenated to source string
+ * @returns new concatenated string or NULL, when error occurs
  */ 
 ptr_string_t ptr_string_concat(ptr_string_t const str, ptr_string_t const str_to_concat);
 
 /**
- * Inserts str_to_insert at begging of str.
+ * Inserts str_to_insert at beginning of str.
  * @param str source string
  * @param str_to_concat string to be inserted
  * @returns new string or NULL, when error occurs
