@@ -150,3 +150,31 @@ ptr_string_t ptr_string_substring(ptr_string_t const str, const size_t start, co
 
     return newStr;
 }
+
+ptr_string_t ptr_string_concat(ptr_string_t const str, ptr_string_t const str_to_concat)
+{
+    ptr_string_t newStr = ptr_string_new_with_length(str->length + str_to_concat->length);
+    memcpy(newStr->buffer, str->buffer, str->length);
+    strcat(newStr->buffer, str_to_concat->buffer);
+
+    if (newStr == NULL)
+    {
+        return NULL;
+    }
+
+    return newStr;
+}
+
+ptr_string_t ptr_string_insert(ptr_string_t const str, ptr_string_t const str_to_insert)
+{
+    ptr_string_t newStr = ptr_string_new_with_length(str->length + str_to_insert->length);
+    memcpy(newStr->buffer, str_to_insert->buffer, str_to_insert->length);
+    strcat(newStr->buffer, str->buffer);
+
+    if (newStr == NULL)
+    {
+        return NULL;
+    }
+
+    return newStr;
+}
