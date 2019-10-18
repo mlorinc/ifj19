@@ -89,7 +89,7 @@ bool ptr_string_delete(ptr_string_t const str) {
     free(str->buffer);
     str->buffer = NULL;
     str->length = 0;
-    
+
     return true;
 }
 
@@ -104,7 +104,7 @@ ptr_string_t ptr_string_append(ptr_string_t const str, const char c) {
     {
         return NULL;
     }
-    
+
     memcpy(newStr->buffer, str->buffer, str->length);
     newStr->buffer[str->length] = c;
 
