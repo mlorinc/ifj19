@@ -54,9 +54,8 @@ project
 │
 └───src
     │   Makefile
-    │
-    └───sources - *.c files of project
-    └───headers - *.h header files of project
-    └───tests - test suites
+    │   *.c files of project
+    |   *.h header files of project
+    |   test suites
 
    

@@ -81,12 +81,6 @@ ptr_string_t ptr_string(const char *str)
     return casted_str;
 }
 
-/**
- * Deletes string from memory. Deleting the same string is considered as safe operation.
- * @param str string to be deleted
- * @author Marian Lorinc
- * @returns bool - true if delete was successfull, false otherwise
- */ 
 bool ptr_string_delete(ptr_string_t const str) {
     if (str == NULL || str->buffer == NULL) {
         return false;
@@ -95,18 +89,10 @@ bool ptr_string_delete(ptr_string_t const str) {
     free(str->buffer);
     str->buffer = NULL;
     str->length = 0;
-    
+
     return true;
 }
 
-
-/**
- * Appeds character at end of str.
- * @param str source string
- * @param c character to be appended
- * @author Marian Lorinc
- * @returns new string or NULL, when error occurs
- */ 
 ptr_string_t ptr_string_append(ptr_string_t const str, const char c) {
     assert(c != '\0');
 
@@ -118,21 +104,13 @@ ptr_string_t ptr_string_append(ptr_string_t const str, const char c) {
     {
         return NULL;
     }
-    
+
     memcpy(newStr->buffer, str->buffer, str->length);
     newStr->buffer[str->length] = c;
 
     return newStr;
 }
 
-/**
- * Returns substring from start to end.
- * @param str source string
- * @param start start index (inclusive)
- * @param end end index (exclusive)
- * @author Marian Lorinc
- * @returns new string or NULL, when error occurs
- */ 
 ptr_string_t ptr_string_substring(ptr_string_t const str, const size_t start, const size_t end) {
     if(str == NULL || str->buffer == NULL) return NULL;
     assert(end > start);
@@ -177,4 +155,30 @@ ptr_string_t ptr_string_insert(ptr_string_t const str, ptr_string_t const str_to
     }
 
     return newStr;
+}
+
+size_t ptr_string_find_char(ptr_string_t const str, const char c)
+{
+    char * pch;
+    pch = memchr(str->buffer, c, str->length);
+    if (pch != NULL)
+    {
+        return (size_t)(pch-(str->buffer));
+    }
+    else
+        return -1;
+}
+
+size_t ptr_string_find_char_from_index(ptr_string_t const str, const char c, const size_t index)
+{
+    int i = index;
+    while (i < str->length){
+        if (str->buffer[i] == c){
+            return i;
+        }
+
+        i++;
+    }
+
+    return -1;
 }
