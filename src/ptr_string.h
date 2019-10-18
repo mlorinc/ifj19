@@ -18,6 +18,7 @@
 #ifndef __PTR_STRING_H
 #define __PTR_STRING_H
 
+#include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>

@@ -81,12 +81,6 @@ ptr_string_t ptr_string(const char *str)
     return casted_str;
 }
 
-/**
- * Deletes string from memory. Deleting the same string is considered as safe operation.
- * @param str string to be deleted
- * @author Marian Lorinc
- * @returns bool - true if delete was successfull, false otherwise
- */ 
 bool ptr_string_delete(ptr_string_t const str) {
     if (str == NULL || str->buffer == NULL) {
         return false;
@@ -177,25 +171,14 @@ size_t ptr_string_find_char(ptr_string_t const str, const char c)
 
 size_t ptr_string_find_char_from_index(ptr_string_t const str, const char c, const size_t index)
 {
-    //TODO ZMAZAT TUTO KOKOTINU
-    //TATO KOKOTINA POD TYMTO KOMENTAROM ABSOLUTNE NEFUNGUJE, CHCEL SOM TO SPRAVIT NEJAK EFEKTIVNE
-    //ALE MAM TO PICI TAKTO, LEBO CEZ WHILE TO BUDE ROBIT 45616516156 ROKOV A TOTO PROSTE NEFUNGUJE
-    //LEBO SI KOKOT HLADA ADRESY KDE NEMA
+    int i = index;
+    while (i < str->length){
+        if (str->buffer[i] == c){
+            return i;
+        }
 
-    /*char * pch;
-    pch = memchr(str->buffer, c, str->length);
-    if (pch != NULL)
-    {
-        size_t actIndex = (size_t)(pch-(str->buffer));
-        if (actIndex > str->length){                    //ak bude novy "index" za medzami dlzky stringu  vratime -1 -> nenasli sme
-            return -1;
-        }
-        else if (actIndex < index){                     //ak je novy index mensi ako hladany musime pokracovat v hladani
-            ptr_string_find_char_from_index(str, c, index);
-        }
-        else if (actIndex >= index){
-            printf("%d\n", actIndex);
-            return actIndex;
-        }
-    }*/
+        i++;
+    }
+
+    return -1;
 }
