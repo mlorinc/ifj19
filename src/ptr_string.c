@@ -171,14 +171,10 @@ size_t ptr_string_find_char(ptr_string_t const str, const char c)
 
 size_t ptr_string_find_char_from_index(ptr_string_t const str, const char c, const size_t index)
 {
-    int i = index;
-    while (i < str->length){
-        if (str->buffer[i] == c){
+    for (size_t i = index; i < str->length; i++)
+    {
+        if (str->buffer[i] == c)
             return i;
-        }
-
-        i++;
     }
-
-    return -1;
+    return -1;   
 }
