@@ -1,13 +1,26 @@
-PRJ=ptr_string
-#
-PROGS=$(PRJ)-test
+STRING=ptr_string
+ERR=error
+MAIN=main
+
+TARGET=$(PRJ-NAME)-test
 CC=gcc
-CFLAGS=-Wall -std=c99 -pedantic -lm
+CFLAGS=-Wall -Werror -Wextra -Wpedantic -std=c99 -pedantic -lm
 
-all: $(PROGS)
+.PHONY : all
 
-$(PRJ)-test: $(PRJ).c error.c main.c $(PRJ).h error.h
-	$(CC) $(CFLAGS) -o $@ $(PRJ).c error.c main.c
+all: $(TARGET)
+
+$(TARGET): $(STRING).o $(ERR).o $(MAIN).o
+	$(CC) $(CFLAGS) $^ -o $@
+
+$(STRING).o: $(STRING).c $(ERR).h $(STRING).h
+	$(CC) $(CFLAGS) -c $<
+
+$(ERR).o: $(ERR).c $(ERR).h
+	$(CC) $(CFLAGS) -c $<
+
+$(MAIN).o: $(MAIN).c $(ERR).h $(STRING).h
+	$(CC) $(CFLAGS) -c $<
 
 clean:
-	rm -f *.o  $(PROGS)
+	rm -f *.o $(TARGET)
