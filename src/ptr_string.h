@@ -18,12 +18,6 @@
 #ifndef __PTR_STRING_H
 #define __PTR_STRING_H
 
-#include <stdio.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <string.h>
-#include <stdlib.h>
-
 typedef struct my_string {
     /**
      * Pointer to c string. Not ended with '\0' char
