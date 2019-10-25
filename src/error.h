@@ -18,8 +18,6 @@
 #ifndef IFJ19_ERROR_H
 #define IFJ19_ERROR_H
 
-#include <stdio.h>
-#include <stdlib.h>
 
 enum error_codes{
     ERROR_OK = 0,           //code compiled without any error
