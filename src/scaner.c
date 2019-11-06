@@ -11,14 +11,6 @@
  * Patrik Ondriga (xondri08)
  * Peter Vinarcik (xvinar00)
  *
- * File: parser.h
+ * File: scaner.c
  *
  */
-
-#ifndef __PTR_PARSER_H
-#define __PTR_PARSER_H
-
-
-
-
-#endif //IFJ19_PARSER_H
