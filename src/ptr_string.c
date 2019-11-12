@@ -17,6 +17,11 @@
 
 #include "ptr_string.h"
 #include "error.h"
+#include <stdio.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <string.h>
+#include <stdlib.h>
 #include <assert.h>
 
 ptr_string_t ptr_string_new_with_length(const size_t initial_length)
@@ -71,7 +76,7 @@ ptr_string_t ptr_string(const char *str)
     ptr_string_t casted_str = ptr_string_new_with_length(str_len);
     if (casted_str == NULL)
     {
-        // TODO set error flag
+        error_exit(ERROR_INTERNAL);
         return NULL;
     }
 
@@ -171,14 +176,10 @@ size_t ptr_string_find_char(ptr_string_t const str, const char c)
 
 size_t ptr_string_find_char_from_index(ptr_string_t const str, const char c, const size_t index)
 {
-    int i = index;
-    while (i < str->length){
-        if (str->buffer[i] == c){
+    for (size_t i = index; i < str->length; i++)
+    {
+        if (str->buffer[i] == c)
             return i;
-        }
-
-        i++;
     }
-
-    return -1;
+    return -1;   
 }
