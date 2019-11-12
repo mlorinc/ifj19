@@ -22,54 +22,49 @@
 typedef enum {
 
     // Automata states
+    THEADER, // Header (.ifj19)
 
-    tStart, // Starting type (e.g. newline, tab)
+    TNEWLINE, // Newline
 
     // Function indentation
-    Indent, // >> (i.e. two spaces)
-    Dedent, // << (i.e. minus two spaces)
+    TINDENT, // >> (i.e. two spaces)
+    TDEDENT, // << (i.e. minus two spaces)
 
     // Numbers
-    tInt, // integer
+    TINT, // integer
 
-    tDoublePoint, // double in form (1.234)
-    tDoubleExp, // double in form (10e2) or (12E-3)
-    tDoublePointExp, // double in form (1.23e4)
+    TFLOAT, //float
 
     // Strings
-    tString, // simple string
-    tStringEscape, // String and escape letter inside (\)
-    tStringEscapeNumber, // String with character in ASCII code (e.g. \xFF)
+    TSTRING, // simple string
+    
+    // Identificator
+    TKEYWORD,
 
-
-    // Identificator or Keyword
-    tIdOrKeyWord,
+    // Identificator
+    TIDENTIFICATOR,
 
     // Operators
-	tAdd, // +
-	tSub, // -
-	tMul, // *
-	tDiv, // /
-	tMod, // %
-	tLt, // <
-	tGt, // >
-	tLte, // <=
-	tGte, // >=
-	tEq, // ==
-	tNe, // !=
-
-    // Comments
-    tStartComment, // Start of comment ' """ '
-    tEndComment, // End of comment ' """ '
+	TADD, // +
+	TSUB, // -
+	TMUL, // *
+	TDIV, // /
+	TMOD, // %
+	TLT, // <
+	TGT, // >
+	TLTE, // <=
+	TGTE, // >=
+	TEQ, // ==
+	TNE, // !=
 
     // Special characters
-    tLeftPar, // )
-    tRightPar, // (
-    tSemicolon, // ;
-    tComma, // ,
+    TLEFTPAR, // )
+    TRIGHTPAR, // (
+    TSEMICOLON, // ;
+    TCOMMA, // ,
 
-    tEndOfLine, // EOL
-    tEndOfFile, // EOF
+    TENDOFLINE, // EOL
+    TENDOFFILE, // EOF
 
 } tToken_type;
 
