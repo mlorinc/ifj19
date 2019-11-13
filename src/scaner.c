@@ -11,13 +11,6 @@
  * Patrik Ondriga (xondri08)
  * Peter Vinarcik (xvinar00)
  *
- * File: parser.c
+ * File: scaner.c
  *
  */
-
-#include "parser.h"
-#include "error.h"
-#include "ptr_string.h"
-
-
-
