@@ -14,3 +14,24 @@
  * File: scaner.c
  *
  */
+
+#include "scaner.h"
+#include "error.h"
+#include <stdio.h>
+#include "stack.h"
+
+get_token(){
+
+    tToken = token;
+    char c; // New char on input
+    t_stack stack = stack_init();
+
+    ptr_string_t string = NULL; // Space for something readed from input
+
+    while ((c=getchar()) != EOF)    // Until whole input is readed
+    {
+        
+    }
+    
+
+}
