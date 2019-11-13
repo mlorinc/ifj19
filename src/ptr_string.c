@@ -43,7 +43,7 @@ ptr_string_t ptr_string_new_with_length(const size_t initial_length)
     return new_ptr;
 }
 
-ptr_string_t ptr_string_clone(const ptr_string_t const str)
+ptr_string_t ptr_string_clone(const ptr_string_t str)
 {
     ptr_string_t new_ptr = ptr_string_new_with_length(str->length);
     if(new_ptr != NULL)
