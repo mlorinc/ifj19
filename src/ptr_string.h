@@ -131,6 +131,12 @@ size_t ptr_string_find_char(ptr_string_t const str, const char c);
  */ 
 size_t ptr_string_find_char_from_index(ptr_string_t const str, const char c, const size_t index);
 
+/**
+ * Delete last char in string.
+ * @param str source string
+ */
+void ptr_string_delete_last(ptr_string_t str);
+
 static inline size_t should_resize(size_t capacity, size_t length1, size_t length2) {
     return capacity < length1 + length2;
 }

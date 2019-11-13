@@ -98,7 +98,7 @@ bool ptr_string_delete(ptr_string_t const str) {
     return true;
 }
 
-ptr_string_t ptr_string_append(ptr_string_t const str, const char c) {
+ptr_string_t ptr_string_append(ptr_string_t const str, const char c) { // TODO change implementation of ptr_string_append
     assert(c != '\0');
 
     if(str == NULL || str->buffer == NULL) return NULL;
@@ -182,4 +182,10 @@ size_t ptr_string_find_char_from_index(ptr_string_t const str, const char c, con
             return i;
     }
     return -1;   
+}
+
+void ptr_string_delete_last(ptr_string_t str) //TODO problem with ptr_string_insert
+{
+    if(str->length != 0)
+        str->length = str->length-1;
 }
