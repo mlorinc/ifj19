@@ -18,6 +18,9 @@
 #ifndef __PTR_STRING_H
 #define __PTR_STRING_H
 
+#include <stddef.h>
+#include <stdbool.h>
+
 typedef struct my_string {
     /**
      * Pointer to c string. Not ended with '\0' char
@@ -41,7 +44,7 @@ ptr_string_t ptr_string(const char *str);
  * @param str string to be copied
  * @returns pointer to newly created string or NULL
  */ 
-ptr_string_t ptr_string_clone(const ptr_string_t const str);
+ptr_string_t ptr_string_clone(const ptr_string_t str);
 
 /**
  * Creates new string with allocated capacity of initial_length.
