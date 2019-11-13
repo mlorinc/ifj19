@@ -80,9 +80,11 @@ typedef enum {
     sKeyWord,   // Ending
 
     // Data types
-    sInteger,   // Ending (includes only 0)
+    sInteger0,   // Ending (includes only 0)
+    sInteger,   // Ending (e.g. 5906)
 
     sFloat,    // Ending (e.g. 1.332)
+    sFloatDot,  // Not ending (.)
     sFloatExponent,    // Not ending
     sFloatExponentOperator,    // Not ending (e.g. 1.2e-)
     sFloatExpondent,    // Ending
@@ -94,6 +96,7 @@ typedef enum {
     sString,    // Ending
 
     // Operators
+    sAssign, // =
 	sAdd, // +
 	sSub, // -
 	sMul, // *
@@ -104,6 +107,7 @@ typedef enum {
 	sLte, // <=
 	sGte, // >=
 	sEq, // ==
+    sExclMark, // Not ending (!)
 	sNe, // !=
 
     // Special characters
