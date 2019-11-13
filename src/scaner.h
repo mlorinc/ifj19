@@ -140,6 +140,6 @@ typedef struct {
 /**
  * Gets token from input
  */
-tToken getToken();
+tToken get_token();
 
 #endif //IFJ19_SCANER_H

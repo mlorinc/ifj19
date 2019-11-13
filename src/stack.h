@@ -3,7 +3,7 @@
 
 #include "deque.h"
 
-typedef struct stack *stack_t;
+typedef struct deque *stack_t;
 
 stack_t stack_init();
 int stack_destroy(stack_t stack);
