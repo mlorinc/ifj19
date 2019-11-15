@@ -30,6 +30,7 @@ typedef enum {
     // Function indentation
     TINDENT, // >> (i.e. two spaces)
     TDEDENT, // << (i.e. minus two spaces)
+    TFIRSTINDENT, // for declarate indent on begin
 
     // Numbers
     TINT, // integer
@@ -66,6 +67,9 @@ typedef enum {
 
     TENDOFLINE, // EOL
     TENDOFFILE, // EOF
+
+    TERR, // error
+    TNOTHING // do nothing
 
 } tToken_type;
 

@@ -22,6 +22,85 @@
 #include "ptr_string.h"
 #include <ctype.h>
 
+tToken_type last_token_type = TFIRSTINDENT;
+stack_t stack;
+
+int* p_int(int number)
+{
+    int* tmp = (int*) malloc(sizeof(int));
+    if(tmp != NULL)
+        *tmp = number;
+    return tmp;
+}
+
+tToken indent_counter()
+{
+    tToken token;
+    token.value = NULL;
+    token.type = TNOTHING;
+    int* p_number = NULL;
+
+    if(last_token_type == TFIRSTINDENT)
+    {
+        stack = stack_init();
+        if(stack == NULL)
+            token.type = TERR;
+        else
+        {        
+            p_number = p_int(0);
+            if(p_number == NULL)
+                token.type = TERR;
+            else if(stack_push(stack, p_number) != 0)
+            {
+                token.type = TERR;
+                free(p_number);
+            }
+            else
+                token.type = TNOTHING;
+        }
+    }
+    else if(last_token_type == TNEWLINE || last_token_type == TDEDENT)
+    {
+        int c;
+        int counter = 0;
+        int* number_on_top = stack_top(stack);
+        while((c = getchar()) == ' ')
+        {
+            counter++;
+        }
+        ungetc(c, stdin);
+        if(number_on_top < counter)
+        {
+            p_number = p_int(counter);
+            if(p_number == NULL)
+            {
+                token.type = TERR;
+                stack_destroy(stack);
+            }
+            else if(stack_push(stack, p_number) != 0)
+            {
+                token.type = TERR;
+                free(p_number);
+                stack_destroy(stack);
+            }
+            else
+                token.type = TINDENT;
+        }
+        else if(number_on_top > counter)
+        {
+            stack_pop(stack);
+            number_on_top = stack_top(stack);
+            if(*number_on_top == 0 && counter != 0)
+                token.type = TERR;
+            else
+            {
+                token.type = TDEDENT;
+            for(; counter != 0; counter--)
+        }
+    }
+    return token;
+}
+
 void start(char c, tState* state, ptr_string_t string)
 {
     c = tolower(c);
@@ -64,12 +143,10 @@ void start(char c, tState* state, ptr_string_t string)
     }
 }
 
-
 tToken get_token(){
 
     tToken token;
     int c; // New char on input
-    stack_t stack = stack_init();
     tState state = sStart;
     ptr_string_t string = NULL; // Space for something readed from input
 
