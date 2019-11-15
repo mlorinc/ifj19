@@ -1,11 +1,16 @@
 #include <gtest/gtest.h>
+#include <string>
 
 extern "C" {
-#include <scanner.h>
+#include <scaner.h>
 }
 
 /**
  * TESTS FOR LEXER
+ * RUN IT WITH stdin input which is written below
+ * ############INPUT##############
+ * ./(testname) <5+9 5.93 + 2129 * ((0.59 - 0.50) - 0.09) / 7 5     -                   7.059e3                     5         99.5634                448646             8.06    , ;
+ *
  */
 
 /**
@@ -16,7 +21,7 @@ extern "C" {
 void EXPECT_INT(int expected){
     auto token = getToken();
     EXPECT_EQ(token.type, TINT);
-    EXPECT_EQ(*((int*))token.value, expected)
+    EXPECT_EQ(*((int*)token.value), expected);
 }
 
 /**
@@ -27,11 +32,28 @@ void EXPECT_INT(int expected){
 void EXPECT_FLOAT(float expected){
     auto token = getToken();
     EXPECT_EQ(token.type, TFLOAT);
-    EXPECT_EQ(*((float*))token.value, expected)
+    EXPECT_EQ(*((float*)token.value), expected);
+}
+
+std::string load_input() {
+    std::string line;
+    while (std::getline(std::cin, line)) {
+        std::cout << line << std::endl;
+    }
+
+    return line;
 }
 
 namespace {
+
+    auto input = load_input();
+
     class LexerMath : public testing::Test {
+    protected:
+        tToken token;
+    };
+
+    class LexerSpecialChars : public testing::Test {
     protected:
         tToken token;
     };
@@ -69,7 +91,7 @@ namespace {
         token = getToken();
         EXPECT_EQ(token.type, TSUB);
 
-        EXPECT_FLOAT(0.50)
+        EXPECT_FLOAT(0.50);
 
         token = getToken();
         EXPECT_EQ(token.type, TRIGHTPAR);
@@ -77,16 +99,12 @@ namespace {
         token = getToken();
         EXPECT_EQ(token.type, TSUB);
 
-        EXPECT_FLOAT(0.09)
+        EXPECT_FLOAT(0.09);
 
         token = getToken();
         EXPECT_EQ(token.type, TRIGHTPAR);
 
         EXPECT_INT(7);
-    }
-
-    TEST_F(LexerMath, CancerAF){
-        //TODO
     }
 
     TEST_F(LexerMath, Spaces){

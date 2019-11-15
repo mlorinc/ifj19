@@ -19,4 +19,4 @@ macro(package_add_test TESTNAME)
     set_target_properties(${TESTNAME} PROPERTIES FOLDER tests)
 endmacro()
 
-package_add_test(deque deque.cpp)
+package_add_test(deque deque.cpp lexer_test.cpp string_test.cpp)
