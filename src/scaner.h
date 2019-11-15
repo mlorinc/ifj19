@@ -18,6 +18,7 @@
 #ifndef IFJ19_SCANER_H
 #define IFJ19_SCANER_H
 
+#define DEREFENCE_AS(value, type) (*((type*)value))
 
 typedef enum {
 
