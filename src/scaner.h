@@ -83,9 +83,7 @@ typedef enum {
     sNewLine,   // '\n'
     
     // Identificator and Keyword
-    sIdentificator, // Ending (Can start with "_")
-    sIdentificatorOrKeyWord,    // Not ending
-    sKeyWord,   // Ending
+    sIdentificatorOrKeyWord,    // Ending
 
     // Data types
     sInteger0,   // Ending (includes only 0)
