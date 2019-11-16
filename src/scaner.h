@@ -69,7 +69,8 @@ typedef enum {
     TENDOFLINE, // EOL
     TENDOFFILE, // EOF
 
-    TERR, // error
+    TERR, // Systerm error (e.g. malloc)
+    TLEXERR,    // Lexical error
     TNOTHING // do nothing
 
 
@@ -78,7 +79,8 @@ typedef enum {
 // Automata states
 typedef enum {
 
-    sStart, // Not ending (Can be tab, newline)
+    sStart, // Not ending
+    sNewLine,   // '\n'
     
     // Identificator and Keyword
     sIdentificator, // Ending (Can start with "_")
@@ -102,18 +104,18 @@ typedef enum {
 
     // Operators
     sAssign, // =
-	  sAdd, // +
-	  sSub, // -
-	  sMul, // *
-	  sDiv, // /
-	  sMod, // %
-	  sLt, // <
-	  sGt, // >
-	  sLte, // <=
-	  sGte, // >=
-	  sEq, // ==
+    sAdd, // +
+    sSub, // -
+    sMul, // *
+    sDiv, // /
+    sMod, // %
+    sLt, // <
+    sGt, // >
+    sLte, // <=
+    sGte, // >=
+    sEq, // ==
     sExclMark, // Not ending (!)
-	  sNe, // !=
+    sNe, // !=
 
     // Special characters
     sLeftPar, // )
@@ -127,13 +129,11 @@ typedef enum {
     sLineComment,  // Not ending (#)
     sBlockCommentStart1,  // Not ending (")
     sBlockCommentStart2,  // Not ending ("")
-    sBlockCommentStart3,  // Not ending (""")
 
     sBlockComment,  // Not ending (everything inside comment)
 
     sBlockCommentEnd1,  // Not ending (")
     sBlockCommentEnd2,  // Not ending ("")
-    sBlockCommentEnd3,  // Ending     (""")
 
     sLexErr = -1
 
