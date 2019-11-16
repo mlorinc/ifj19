@@ -22,7 +22,7 @@
 #include <ctype.h>
 
 tToken_type last_token_type = TFIRSTINDENT;
-stack_t stack;
+stack_t stack;  //stack for indent numbers
 
 /* These two numbers are for better error message */
 unsigned int row = 0;   // What row are we at
@@ -84,7 +84,11 @@ tToken indent_counter()
         {
             counter++;
         }
+        character_position = counter;
         ungetc(c, stdin);
+        if(c == '#' || c == '"')    //check for comment after indent
+            return token;
+
         if(number_on_top < counter)
         {
             token.type = push_indent_on_stack(counter);
@@ -97,15 +101,16 @@ tToken indent_counter()
         {
             stack_pop(stack);
             number_on_top = stack_top(stack);
-            if(*number_on_top < counter )
-                token.type = TERR;
+            if(*number_on_top < counter)
+            {
+                token.type = TLEXERR;
+                fprintf(stderr, "Indent error on line %d.", row);
+            }
             else
                 token.type = TDEDENT;
-            for(; counter != 0; counter--)
+            for(; counter != 0; counter--)  //this is for case, there will be more detent
                 ungetc(' ', stdin);
         }
-        else
-            token.type = TNOTHING;
     }
     return token;
 }
@@ -184,6 +189,10 @@ tToken get_token()
     int c; // New char on input
     tState state = sStart;
     ptr_string_t string = NULL; // Space for something readed from input
+
+    token = indent_counter();
+    if(token.type != TNOTHING)
+        return token;
 
     while ((c=getchar()) != EOF)    // Until whole input is readed
     {
