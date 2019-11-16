@@ -24,6 +24,10 @@
 tToken_type last_token_type = TFIRSTINDENT;
 stack_t stack;
 
+/* These two numbers are for better error message */
+unsigned int row = 0;   // What row are we at
+unsigned int character_position = 0;
+
 int* p_int(int number)
 {
     int* tmp = (int*) malloc(sizeof(int));
@@ -178,6 +182,7 @@ tToken get_token()
     while ((c=getchar()) != EOF)    // Until whole input is readed
     {
         ptr_string_append(&string, c); //TODO check if append was correct
+        character_position++;   // We've moved by one character
 
         switch(state)
         {
@@ -187,6 +192,7 @@ tToken get_token()
                 break;
 
             case sNewLine:
+                row++;  // We have moved one row
                 token_fill(&token, string, c, TNEWLINE);
                 token.value = NULL; // Fix the value to NULL, because it's not needed
                 return token;
@@ -275,6 +281,7 @@ tToken get_token()
                 }
                 break;
             case sBlockComment:
+            // TODO add if for '\n' to increase row global variable;
                 if (c == '"')   // It means now you have first '"'
                     *state = sBlockCommentEnd1;
                 else    // Everything inside the block comment
@@ -301,7 +308,7 @@ tToken get_token()
             
             /************************* Indetificator/Keyword *****************************/
             case sIdentificatorOrKeyWord:
-                
+
                 
         }
     }
