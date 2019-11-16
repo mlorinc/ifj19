@@ -105,11 +105,16 @@ tToken indent_counter()
     }
     return token;
 }
-
+/**
+ * Process all states from starting state of automata
+ * @param c Stdin char
+ * @param state Automata state
+ * @param string Temporary string that will be sent as token's contet
+ */
 void start_state(char c, tState* state, ptr_string_t string)
 {
     c = tolower(c);
-    if(c >= 49 && c <= 57) // interval <1...9>
+    if(c >= '1' && c <= '9')
         *state = sInteger;
     else if(c == '0')
         *state = sInteger0;
@@ -142,7 +147,12 @@ void start_state(char c, tState* state, ptr_string_t string)
     else if(c == ' ')
     {
         *state = sStart;
-        ptr_string_delete_last(string); //delete char ' ' from token string
+        ptr_string_delete_last(string); // Delete char ' ' from token value
+    }
+    else if (c == '\n')
+    {
+        *state = sNewLine;
+        ptr_string_delete_last(string); // Delete char '\n' from token value
     }
     else    // Undifiend char
         *state = sLexErr;
@@ -159,9 +169,9 @@ void start_state(char c, tState* state, ptr_string_t string)
 void token_fill(tToken *token_ptr, ptr_string_t string, char c, tToken_type token_type)
 {
     ptr_string_delete_last(string);
-    putchar(c); // Put it back to stdout
+    putchar(c); // Put the last char back to stdout
     token_ptr->value = string;
-    last_token_type = token->type = token_type;
+    last_token_type = token_ptr->type = token_type;
 }
 
 tToken get_token()
@@ -181,13 +191,20 @@ tToken get_token()
             case sStart:
                 start((char) c, &state, string);
                 break;
+
+            case sNewLine:
+                token_fill(&token, string, c, TNEWLINE);
+                token.value = NULL; // Fix the value to NULL, because it's not needed
+                return token;
+                break;
+
             /*************************** Numbers ********************************/
             case sInteger0:
                 if (c=getchar() == '.')
                     state = sFloatDot;
                 else
                 {
-                    token_fill(&token, string, c, TERR);
+                    token_fill(&token, string, c, TLEXERR);
                     return token;
                 }
                 break;
@@ -222,7 +239,7 @@ tToken get_token()
                     state = sExponentOperator;
                 else    // Error (not ending state)
                 {
-                    token_fill(&token, string, c, TERR);
+                    token_fill(&token, string, c, TLEXERR);
                     return token;
                 }
                 break;
@@ -231,9 +248,65 @@ tToken get_token()
                     state = sFloat;
                 else
                 {
-                    token_fill(&token, string, c, TERR);
+                    token_fill(&token, string, c, TLEXERR);
                     return token;
-                }      
+                }
+
+            /*************************** Comments ********************************/
+            case sLineComment:
+                if (c == '\n')  // End of comment
+                {
+                    *state = sStart;
+                    putchar(c); // Put the '/n' back to stdin
+                }
+                else
+                    *state = sLineComment;
+                break;
+            case sBlockCommentStart1:
+                if (c == '"')   // It means now you have second '""'
+                    *state = sBlockCommentStart2;
+                else
+                {
+                    token_fill(&token, string, c, TLEXERR);
+                    return token;
+                }
+                break;
+            case sBlockCommentStart2:
+                if (c == '"')   // It means now you have third '"""' and the comment has started
+                    *state = sBlockComment;
+                else
+                {
+                    token_fill(&token, string, c, TLEXERR);
+                    return token;
+                }
+                break;
+            case sBlockComment:
+                if (c == '"')   // It means now you have first '"'
+                    *state = sBlockCommentEnd1;
+                else    // Everything inside the block comment
+                    *state = sBlockComment;
+                break;
+            case sBlockCommentEnd1:
+                if (c == '"')   // It means now you have second '""'
+                    *state = sBlockCommentEnd2;
+                else
+                {
+                    token_fill(&token, string, c, TLEXERR);
+                    return token;
+                }
+                break;
+            case sBlockCommentEnd2:
+                if (c == '"')   // It means now you have third '"""' and the comment has ended
+                    *state = sStart;
+                else
+                {
+                    token_fill(&token, string, c, TLEXERR);
+                    return token;
+                }
+                break;    
+            
+                
+                
         }
     }
     
