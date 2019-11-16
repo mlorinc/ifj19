@@ -28,6 +28,9 @@ stack_t stack;
 unsigned int row = 0;   // What row are we at
 unsigned int character_position = 0;
 
+/* Global array of possible keywords */
+char *keywords[7] = {"def", "else", "if", "None", "pass", "return", "while"};
+
 int* p_int(int number)
 {
     int* tmp = (int*) malloc(sizeof(int));
@@ -168,8 +171,26 @@ void token_fill(tToken *token_ptr, ptr_string_t string, char c, tToken_type toke
 {
     ptr_string_delete_last(string);
     putchar(c); // Put the last char back to stdout
-    token_ptr->value = string;
+    if (token_type == TLEXERR)
+    {
+        token_ptr->value = NULL
+    }
+    else
+    {
+        token_ptr->value = string;
+    }
     last_token_type = token_ptr->type = token_type;
+}
+
+/**
+ * Prints the error message to stderr
+ * @param message Error message
+ * @param line Line in code
+ * @param position What is the position of error
+ */
+void error_print(char *message, unsigned int line, unsigned int position)
+{
+    fprintf(stderr, "%s\n Error on line: %d.\n On position: %d.\n", message, line, position);
 }
 
 tToken get_token()
@@ -200,11 +221,12 @@ tToken get_token()
 
             /*************************** Numbers ********************************/
             case sInteger0:
-                if (c=getchar() == '.')
-                    state = sFloatDot;
+                if (c == '.')
+                    state = sFloat;
                 else
                 {
                     token_fill(&token, string, c, TLEXERR);
+                    error_print("Char 'E' must be followed by '.'", row, character_position);
                     return token;
                 }
                 break;
@@ -240,6 +262,7 @@ tToken get_token()
                 else    // Error (not ending state)
                 {
                     token_fill(&token, string, c, TLEXERR);
+                    error_print("Char 'E' as exponent must be followed by '- or +' or a number", row, character_position);
                     return token;
                 }
                 break;
@@ -249,6 +272,7 @@ tToken get_token()
                 else
                 {
                     token_fill(&token, string, c, TLEXERR);
+                    error_print("Exponent must be followed by number", row, character_position);
                     return token;
                 }
 
@@ -256,59 +280,67 @@ tToken get_token()
             case sLineComment:
                 if (c == '\n')  // End of comment
                 {
-                    *state = sStart;
+                    state = sStart;
                     putchar(c); // Put the '/n' back to stdin
                 }
                 else
-                    *state = sLineComment;
+                    state = sLineComment;
                 break;
             case sBlockCommentStart1:
                 if (c == '"')   // It means now you have second '""'
-                    *state = sBlockCommentStart2;
+                    state = sBlockCommentStart2;
                 else
                 {
                     token_fill(&token, string, c, TLEXERR);
+                    error_print("Block comment is not valid", row, character_position);
                     return token;
                 }
                 break;
             case sBlockCommentStart2:
                 if (c == '"')   // It means now you have third '"""' and the comment has started
-                    *state = sBlockComment;
+                    state = sBlockComment;
                 else
                 {
                     token_fill(&token, string, c, TLEXERR);
+                    error_print("Block comment is not valid", row, character_position);
                     return token;
                 }
                 break;
             case sBlockComment:
-            // TODO add if for '\n' to increase row global variable;
+                if (c == '\n')  // We have moved by one line
+                {
+                    row++;
+                    character_position = 0; // New line so possition is 0
+                }
                 if (c == '"')   // It means now you have first '"'
-                    *state = sBlockCommentEnd1;
+                    state = sBlockCommentEnd1;
                 else    // Everything inside the block comment
-                    *state = sBlockComment;
+                    state = sBlockComment;
                 break;
             case sBlockCommentEnd1:
                 if (c == '"')   // It means now you have second '""'
-                    *state = sBlockCommentEnd2;
+                    state = sBlockCommentEnd2;
                 else
                 {
                     token_fill(&token, string, c, TLEXERR);
+                    error_print("Block comment is not valid", row, character_position);
                     return token;
                 }
                 break;
             case sBlockCommentEnd2:
                 if (c == '"')   // It means now you have third '"""' and the comment has ended
-                    *state = sStart;
+                    state = sStart;
                 else
                 {
                     token_fill(&token, string, c, TLEXERR);
+                    error_print("Block comment is not valid", row, character_position);
                     return token;
                 }
                 break;    
             
             /************************* Indetificator/Keyword *****************************/
             case sIdentificatorOrKeyWord:
-
+                // TODO after read is done, compare the string with array of keywords
                 
         }
     }
