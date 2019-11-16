@@ -82,6 +82,13 @@ size_t ptr_string_capacity(ptr_string_t const str);
 char *ptr_string_c_string(ptr_string_t const str);
 
 /**
+ * Cast string to unsigned integer
+ * @param string string
+ * @returns casted unsigned integer
+ */
+unsigned int ptr_string_c_string_to_int(const char *string);
+
+/**
  * Concats two strings together. If concatenated string is larger than capacity, the string will resize itself.
  * @param str source string
  * @param str_to_concat string to be concatenated to source string
