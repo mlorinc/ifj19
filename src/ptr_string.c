@@ -70,6 +70,13 @@ char *ptr_string_c_string(ptr_string_t const str)
     return stringValue;
 }
 
+unsigned int ptr_string_c_string_to_int(const char *string)
+{
+    unsigned int number;
+    number = strtol(string, NULL, 10);
+    return number;
+}
+
 ptr_string_t ptr_string(const char *str)
 {
     size_t str_len = strlen(str);

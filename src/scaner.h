@@ -18,6 +18,7 @@
 #ifndef IFJ19_SCANER_H
 #define IFJ19_SCANER_H
 
+#include "ptr_string.h"
 
 #define CHUNK 15    // Chunk for string that will be set as token's content
 
@@ -67,6 +68,8 @@ typedef enum {
     TENDOFLINE, // EOL
     TENDOFFILE, // EOF
 
+    TERR    // Something went wrong
+
 } tToken_type;
 
 // Automata states
@@ -83,11 +86,10 @@ typedef enum {
     sInteger0,   // Ending (includes only 0)
     sInteger,   // Ending (e.g. 5906)
 
-    sFloat,    // Ending (e.g. 1.332)
-    sFloatDot,  // Not ending (.)
-    sFloatExponent,    // Not ending
-    sFloatExponentOperator,    // Not ending (e.g. 1.2e-)
-    sFloatExpondent,    // Ending
+    sFloat,    // Ending (e.g. 1.332 or 0.233)
+    sExponent,    // Not ending
+    sExponentOperator,    // Not ending (e.g. 1.2e-)
+    sEndExpondent,    // Ending
 
     // String
     sStringStart,   // Not ending (')
@@ -130,13 +132,13 @@ typedef enum {
     sBlockCommentEnd2,  // Not ending ("")
     sBlockCommentEnd3,  // Ending     (""")
 
-    sLexErr = -1,
+    sLexErr = -1
 
 } tState;
 
 typedef struct {
 
-    void * value;   // Content of the token
+    ptr_string_t value;   // Content of the token
     tToken_type type;
 
 } tToken;
