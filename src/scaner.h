@@ -31,6 +31,7 @@ typedef enum {
     // Function indentation
     TINDENT, // >> (i.e. two spaces)
     TDEDENT, // << (i.e. minus two spaces)
+    TFIRSTINDENT, // for declarate indent on begin
 
     // Numbers
     TINT, // integer
@@ -68,7 +69,9 @@ typedef enum {
     TENDOFLINE, // EOL
     TENDOFFILE, // EOF
 
-    TERR    // Something went wrong
+    TERR, // error
+    TNOTHING // do nothing
+
 
 } tToken_type;
 
@@ -99,18 +102,18 @@ typedef enum {
 
     // Operators
     sAssign, // =
-	sAdd, // +
-	sSub, // -
-	sMul, // *
-	sDiv, // /
-	sMod, // %
-	sLt, // <
-	sGt, // >
-	sLte, // <=
-	sGte, // >=
-	sEq, // ==
+	  sAdd, // +
+	  sSub, // -
+	  sMul, // *
+	  sDiv, // /
+	  sMod, // %
+	  sLt, // <
+	  sGt, // >
+	  sLte, // <=
+	  sGte, // >=
+	  sEq, // ==
     sExclMark, // Not ending (!)
-	sNe, // !=
+	  sNe, // !=
 
     // Special characters
     sLeftPar, // )
