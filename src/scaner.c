@@ -103,7 +103,7 @@ tToken indent_counter()
 void start_state(char c, tState* state, ptr_string_t string)
 {
     c = tolower(c);
-    if(c >= 49 && c <= 57) // interval <1...9>
+    if(c >= '1' && c <= '9')
         *state = sInteger;
     else if(c == '0')
         *state = sInteger0;
@@ -155,7 +155,7 @@ void token_fill(tToken *token_ptr, ptr_string_t string, char c, tToken_type toke
     ptr_string_delete_last(string);
     putchar(c); // Put it back to stdout
     token_ptr->value = string;
-    last_token_type = token->type = token_type;
+    last_token_type = token_ptr->type = token_type;
 }
 
 tToken get_token()
