@@ -83,7 +83,8 @@ void ptr_string_set_char(ptr_string_t string, const size_t index, const char c)
     string->buffer[index] = c;
 }
 
-ptr_string_t ptr_string_new() {
+ptr_string_t ptr_string_new()
+{
     ptr_string_t str = ptr_string_new_with_length(PTR_STRING_CHUNK);
     str->length = 0;
     return str;
@@ -258,4 +259,16 @@ size_t ptr_string_find_char_from_index(ptr_string_t const str, const char c, con
             return i;
     }
     return -1;
+}
+
+bool ptr_string_equals(ptr_string_t this, ptr_string_t that)
+{
+    assert(this != NULL && that != NULL);
+    return (this == that) || (ptr_string_length(this) == ptr_string_length(that) && memcmp(this->buffer, that->buffer, ptr_string_length(this)) == 0);
+}
+
+bool ptr_string_c_equals(ptr_string_t this, char *that)
+{
+    assert(this != NULL && that != NULL);
+    return (this->buffer == that) || (ptr_string_length(this) == strlen(that) && memcmp(this->buffer, that, ptr_string_length(this)) == 0)
 }
