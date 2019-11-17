@@ -57,7 +57,7 @@ bool resize(ptr_string_t string, size_t extra_length)
         return false;
     }
 
-    string->length = new_capacity;
+    string->capacity = new_capacity;
     return true;
 }
 
@@ -73,14 +73,20 @@ size_t ptr_string_capacity(ptr_string_t string)
 
 char ptr_string_get_char(ptr_string_t string, const size_t index)
 {
-    assert(0 <= index && index < ptr_string_length(string));
+    assert(index < ptr_string_length(string));
     return string->buffer[index];
 }
 
 void ptr_string_set_char(ptr_string_t string, const size_t index, const char c)
 {
-    assert(0 <= index && index < ptr_string_length(string));
+    assert(index < ptr_string_length(string));
     string->buffer[index] = c;
+}
+
+ptr_string_t ptr_string_new() {
+    ptr_string_t str = ptr_string_new_with_length(PTR_STRING_CHUNK);
+    str->length = 0;
+    return str;
 }
 
 ptr_string_t ptr_string_new_with_length(const size_t initial_length)
@@ -95,6 +101,7 @@ ptr_string_t ptr_string_new_with_length(const size_t initial_length)
             error_exit(ERROR_INTERNAL);
         }
         new_ptr->length = initial_length;
+        new_ptr->capacity = initial_length;
     }
     else
     {
@@ -135,7 +142,7 @@ ptr_string_t ptr_string(const char *str)
 {
     size_t str_len = strlen(str);
     ptr_string_t casted_str = ptr_string_new_with_length(str_len);
-    if (casted_str == NULL)
+    if (casted_str == NULL && str_len == 0)
     {
         error_exit(ERROR_INTERNAL);
         return NULL;
@@ -143,7 +150,6 @@ ptr_string_t ptr_string(const char *str)
 
     // Copies whole string without '\\0'
     memcpy(casted_str->buffer, str, str_len);
-    casted_str->length = str_len;
     return casted_str;
 }
 
@@ -157,6 +163,7 @@ bool ptr_string_delete(ptr_string_t const str)
     free(str->buffer);
     str->buffer = NULL;
     str->length = 0;
+    str->capacity = 0;
 
     return true;
 }
@@ -227,7 +234,7 @@ ptr_string_t ptr_string_insert(ptr_string_t const str, ptr_string_t const str_to
 
     memmove(str->buffer + ptr_string_length(str_to_insert), str->buffer, ptr_string_length(str));
     memcpy(str->buffer, str_to_insert->buffer, ptr_string_length(str_to_insert));
-
+    str->length += str_to_insert->length;
     return str;
 }
 

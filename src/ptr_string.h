@@ -54,6 +54,12 @@ ptr_string_t ptr_string(const char *str);
 ptr_string_t ptr_string_clone(const ptr_string_t str);
 
 /**
+ * Creates new string with default allocated capacity.
+ * @returns pointer to newly created string or NULL
+ */ 
+ptr_string_t ptr_string_new();
+
+/**
  * Creates new string with allocated capacity of initial_length.
  * @param initial_length initial capacity of string
  * @returns pointer to newly created string or NULL
