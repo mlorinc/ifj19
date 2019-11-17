@@ -226,6 +226,24 @@ void error_print(char *message, unsigned int line, unsigned int position)
     fprintf(stderr, "%s\n Error on line: %d.\n On position: %d.\n", message, line, position);
 }
 
+/**
+ * Append c to str
+ * @param c char whitch will be append
+ * @param str string where I want append
+ * @return str + c
+ */
+ptr_string_t char_append(char c, ptr_string_t str)
+{
+    ptr_string_t newStr = NULL;
+    if((newStr = ptr_string_append(str, c)) == NULL)
+    {
+        newStr = ptr_string_new_with_length(1);
+        newStr = ptr_string_append(str, c);
+    }
+    free(str);
+    return newStr;
+}
+
 tToken get_token()
 {
     tToken token;
@@ -239,7 +257,12 @@ tToken get_token()
 
     while ((c=getchar()) != EOF)    // Until whole input is readed
     {
-        ptr_string_append(&string, c); //TODO check if append was correct
+        if((string = char_append(c, string)) == NULL) //check if append was successfully
+        {
+            token.type = TERR;
+            token.value = NULL;
+            return token;
+        }
         character_position++;   // We've moved by one character
 
         switch(state)
