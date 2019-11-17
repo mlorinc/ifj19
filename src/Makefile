@@ -2,7 +2,10 @@ STRING=ptr_string
 ERR=error
 MAIN=main
 
-TARGET=$(PRJ-NAME)-test
+# Define what project you want to compile
+PRJ-NAME=ifj19
+
+TARGET=$(PRJ-NAME)
 CC=gcc
 CFLAGS=-Wall -Werror -Wextra -Wpedantic -std=c99 -pedantic -lm
 
