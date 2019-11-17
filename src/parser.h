@@ -39,4 +39,6 @@ AST_T expression(parser_t parser);
 
 AST_T parse();
 
+AST_T functionDef();
+
 #endif

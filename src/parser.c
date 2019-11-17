@@ -139,11 +139,6 @@ AST_T parse()
     parser_t parser = parser_init();
     parser_next(parser);
 
-    //function parse
-    if (parser->token.type == THEADER){
-        //TODO function to parse header
-        //where the code begins
-    }
     if (parser->token.type == TINDENT){
         //TODO function to parse indent
     }
@@ -162,18 +157,21 @@ AST_T parse()
     if (parser->token.type == TKEYWORD){
         //TODO function to parse keyword
         //here we must identify, which keyword we got
-        //f.e -> if, pass, while, break, ...
+        //f.e -> deff, if, pass, while, break, ...
+        if (!strcmp(&(*(char*)parser->token.value), "def")){
+            functionDef();
+        }
         if (!strcmp(&(*(char*)parser->token.value), "if")){
-
+            //call function for statement
         }
         if (!strcmp(&(*(char*)parser->token.value), "else")){
-
+            //call function for else statement
         }
         if (!strcmp(&(*(char*)parser->token.value), "while")){
 
         }
         if (!strcmp(&(*(char*)parser->token.value), "pass")){
-
+            //call function for do nothing
         }
         if (!strcmp(&(*(char*)parser->token.value), "return")){
 
@@ -237,4 +235,12 @@ AST_T parse()
     parser_destroy(parser);
 }
 
+AST_T functionDef()
+{
+    parser_t parser = parser_init();
+    parser_next(parser);
 
+
+
+    parser_destroy(parser);
+}
