@@ -21,16 +21,23 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-typedef struct my_string {
-    /**
-     * Pointer to c string. Not ended with '\0' char
-     */
-    char *buffer;
-    /**
-     * Current length of string
-     */ 
-    size_t length;
-} *ptr_string_t;
+struct my_string;
+typedef struct my_string *ptr_string_t;
+
+/**
+ * Get character at index
+ * @param string string
+ * @param index index of character from 0
+ * @return character at index
+ */ 
+char ptr_string_get_char(ptr_string_t string, const size_t index);
+
+/**
+ * Sets character at index and MUTATES string
+ * @param string string
+ * @param index index where character will be placed
+ */ 
+void ptr_string_set_char(ptr_string_t string, const size_t index, const char c);
 
 /**
  * Casts c string to ptr_string
@@ -45,6 +52,12 @@ ptr_string_t ptr_string(const char *str);
  * @returns pointer to newly created string or NULL
  */ 
 ptr_string_t ptr_string_clone(const ptr_string_t str);
+
+/**
+ * Creates new string with default allocated capacity.
+ * @returns pointer to newly created string or NULL
+ */ 
+ptr_string_t ptr_string_new();
 
 /**
  * Creates new string with allocated capacity of initial_length.
@@ -77,7 +90,7 @@ size_t ptr_string_capacity(ptr_string_t const str);
 /**
  * Returns copy of buffer.
  * @param str string
- * @returns pointer to copy of buffer ended with null character
+ * @returns pointer to copy of buffer ended with null character (c string)
  */  
 char *ptr_string_c_string(ptr_string_t const str);
 
@@ -92,7 +105,7 @@ unsigned int ptr_string_c_string_to_int(const char *string);
  * Concats two strings together. If concatenated string is larger than capacity, the string will resize itself.
  * @param str source string
  * @param str_to_concat string to be concatenated to source string
- * @returns new concatenated string or NULL, when error occurs
+ * @returns reference to str or NULL, when error occurs
  */ 
 ptr_string_t ptr_string_concat(ptr_string_t const str, ptr_string_t const str_to_concat);
 
@@ -100,7 +113,7 @@ ptr_string_t ptr_string_concat(ptr_string_t const str, ptr_string_t const str_to
  * Inserts str_to_insert at beginning of str.
  * @param str source string
  * @param str_to_concat string to be inserted
- * @returns new string or NULL, when error occurs
+ * @returns reference to str or NULL, when error occurs
  */ 
 ptr_string_t ptr_string_insert(ptr_string_t const str, ptr_string_t const str_to_insert);
 
@@ -108,7 +121,7 @@ ptr_string_t ptr_string_insert(ptr_string_t const str, ptr_string_t const str_to
  * Appeds character at end of str.
  * @param str source string
  * @param c character to be appended
- * @returns new string or NULL, when error occurs
+ * @returns reference to str or NULL, when error occurs
  */ 
 ptr_string_t ptr_string_append(ptr_string_t const str, const char c);
 
@@ -117,7 +130,7 @@ ptr_string_t ptr_string_append(ptr_string_t const str, const char c);
  * @param str source string
  * @param start start index (inclusive)
  * @param end end index (exclusive)
- * @returns new string or NULL, when error occurs
+ * @returns reference to str or NULL, when error occurs
  */ 
 ptr_string_t ptr_string_substring(ptr_string_t const str, const size_t start, const size_t end);
 
@@ -139,6 +152,22 @@ size_t ptr_string_find_char(ptr_string_t const str, const char c);
 size_t ptr_string_find_char_from_index(ptr_string_t const str, const char c, const size_t index);
 
 /**
+
+ * Compares two strings
+ * @param this string a
+ * @param that string b
+ * @return true if strings are equal
+ */ 
+bool ptr_string_equals(ptr_string_t this, ptr_string_t that);
+
+/**
+ * Compares two strings
+ * @param this string a
+ * @param that string b
+ * @return true if strings are equal
+ */ 
+bool ptr_string_c_equals(ptr_string_t this, char *that);
+
  * Delete last char in string.
  * @param str source string
  */

@@ -20,6 +20,7 @@
 
 #include "ptr_string.h"
 
+#define DEREFENCE_AS(value, type) (*((type*)value))
 #define CHUNK 15    // Chunk for string that will be set as token's content
 
 typedef enum {
