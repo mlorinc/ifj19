@@ -139,6 +139,13 @@ char *ptr_string_c_string(ptr_string_t const str)
     return stringValue;
 }
 
+unsigned int ptr_string_c_string_to_int(const char *string)
+{
+    unsigned int number;
+    number = strtol(string, NULL, 10);
+    return number;
+}
+
 ptr_string_t ptr_string(const char *str)
 {
     size_t str_len = strlen(str);
@@ -271,4 +278,10 @@ bool ptr_string_c_equals(ptr_string_t this, char *that)
 {
     assert(this != NULL && that != NULL);
     return (this->buffer == that) || (ptr_string_length(this) == strlen(that) && memcmp(this->buffer, that, ptr_string_length(this)) == 0)
+}
+
+void ptr_string_delete_last(ptr_string_t str) //TODO problem with ptr_string_insert
+{
+    if(str->length != 0)
+        str->length = str->length-1;
 }

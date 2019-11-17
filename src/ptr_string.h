@@ -95,6 +95,13 @@ size_t ptr_string_capacity(ptr_string_t const str);
 char *ptr_string_c_string(ptr_string_t const str);
 
 /**
+ * Cast string to unsigned integer
+ * @param string string
+ * @returns casted unsigned integer
+ */
+unsigned int ptr_string_c_string_to_int(const char *string);
+
+/**
  * Concats two strings together. If concatenated string is larger than capacity, the string will resize itself.
  * @param str source string
  * @param str_to_concat string to be concatenated to source string
@@ -145,6 +152,7 @@ size_t ptr_string_find_char(ptr_string_t const str, const char c);
 size_t ptr_string_find_char_from_index(ptr_string_t const str, const char c, const size_t index);
 
 /**
+
  * Compares two strings
  * @param this string a
  * @param that string b
@@ -159,5 +167,14 @@ bool ptr_string_equals(ptr_string_t this, ptr_string_t that);
  * @return true if strings are equal
  */ 
 bool ptr_string_c_equals(ptr_string_t this, char *that);
+
+ * Delete last char in string.
+ * @param str source string
+ */
+void ptr_string_delete_last(ptr_string_t str);
+
+static inline size_t should_resize(size_t capacity, size_t length1, size_t length2) {
+    return capacity < length1 + length2;
+}
 
 #endif
