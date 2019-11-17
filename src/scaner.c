@@ -20,6 +20,9 @@
 #include <stdio.h>
 #include "stack.h"
 #include <ctype.h>
+#include <string.h>
+
+#define KEYWORDS_COUNT 7
 
 tToken_type last_token_type = TFIRSTINDENT;
 stack_t stack;  //stack for indent numbers
@@ -29,7 +32,7 @@ unsigned int row = 0;   // What row are we at
 unsigned int character_position = 0;
 
 /* Global array of possible keywords */
-char *keywords[7] = {"def", "else", "if", "None", "pass", "return", "while"};
+char *keywords[KEYWORDS_COUNT] = {"def", "else", "if", "None", "pass", "return", "while"};
 
 /**
  * Function for malloc pointer to int
@@ -145,7 +148,7 @@ tToken indent_counter()
  * @param state Automata state
  * @param string Temporary string that will be sent as token's contet
  */
-void start_state(char c, tState* state, ptr_string_t string)
+void start_state(char c, tState* state, ptr_string_t string, tToken token)
 {
     c = tolower(c);
     if(c >= '1' && c <= '9')
@@ -159,21 +162,31 @@ void start_state(char c, tState* state, ptr_string_t string)
     else if(c == '#')
         *state = sLineComment;
     else if(c == '+')
-        *state = sAdd;
+    {
+        last_token_type = token.type = TADD;
+        token.value = string;
+        return token;
+    }
     else if(c == '-')
-        *state = sSub;
+    {
+        last_token_type = token.type = TSUB;
+        token.value = string;
+        return token;
+    }
     else if(c == '*')
-        *state = sMul;
+    {
+        last_token_type = token.type = TMUL;
+        token.value = string;
+        return token;
+    }
     else if(c == '/')
-        *state = sDiv;
-    else if(c == '%')
-        *state =sMod;
+        *state = sDivOrFloorDiv;
     else if(c == '<')
-        *state = sLt;
+        *state = sLtOrLte;
     else if(c == '>')
-        *state = sGt;
+        *state = sGtOrGte;
     else if(c == '=')
-        *state = sAssign;
+        *state = sAssignOrEqual;
     else if(c == '!')
         *state = sExclMark;
     else if(c == '_' || c >= 97 && c<= 122)
@@ -200,19 +213,21 @@ void start_state(char c, tState* state, ptr_string_t string)
  * @param c Char that will be put back to stdin
  * @param token_type Token's type
  */
-void token_fill(tToken *token_ptr, ptr_string_t string, char c, tToken_type token_type)
+tToken token_fill(tToken *token_ptr, ptr_string_t string, char c, tToken_type token_type)
 {
     ptr_string_delete_last(string);
-    putchar(c); // Put the last char back to stdout
-    if (token_type == TLEXERR)
+    ungetc(c, stdin); // Put the last char back to stdin
+    if (token_type == TLEXERR || token_type == TNEWLINE)
     {
-        token_ptr->value = NULL
+        token_ptr->value = NULL;
+        ptr_string_delete(string);
     }
     else
     {
         token_ptr->value = string;
     }
     last_token_type = token_ptr->type = token_type;
+    return *token_ptr;
 }
 
 /**
@@ -275,9 +290,7 @@ tToken get_token()
 
             case sNewLine:
                 row++;  // We have moved one row
-                token_fill(&token, string, c, TNEWLINE);
-                token.value = NULL; // Fix the value to NULL, because it's not needed
-                return token;
+                return token_fill(&token, string, c, TNEWLINE);
                 break;
 
             /*************************** Numbers ********************************/
@@ -286,9 +299,8 @@ tToken get_token()
                     state = sFloat;
                 else
                 {
-                    token_fill(&token, string, c, TLEXERR);
                     error_print("Char 'E' must be followed by '.'", row, character_position);
-                    return token;
+                    return token_fill(&token, string, c, TLEXERR);
                 }
                 break;
             case sInteger:
@@ -299,10 +311,7 @@ tToken get_token()
                 else if (c == 'e' || c == 'E')
                     state = sExponent;
                 else    // End of the int number
-                {
-                    token_fill(&token, string, c, TINT);
-                    return token;
-                }
+                    return token_fill(&token, string, c, TINT);
                 break;
             case sFloat:
                 if (c >= '0' && c <= '9')
@@ -310,10 +319,7 @@ tToken get_token()
                 else if (c == 'e' || c == 'E')
                     state = sExponent;
                 else    // End of the float number
-                {
-                    token_fill(&token, string, c, TFLOAT);
-                    return token;
-                }
+                    return token_fill(&token, string, c, TFLOAT);
                 break;
             case sExponent:
                 if (c >= '0' && c <= '9')
@@ -322,9 +328,8 @@ tToken get_token()
                     state = sExponentOperator;
                 else    // Error (not ending state)
                 {
-                    token_fill(&token, string, c, TLEXERR);
                     error_print("Char 'E' as exponent must be followed by '- or +' or a number", row, character_position);
-                    return token;
+                    return token_fill(&token, string, c, TLEXERR);
                 }
                 break;
             case sExponentOperator:
@@ -332,9 +337,8 @@ tToken get_token()
                     state = sFloat;
                 else
                 {
-                    token_fill(&token, string, c, TLEXERR);
                     error_print("Exponent must be followed by number", row, character_position);
-                    return token;
+                    return token_fill(&token, string, c, TLEXERR);
                 }
 
             /*************************** Comments ********************************/
@@ -352,9 +356,8 @@ tToken get_token()
                     state = sBlockCommentStart2;
                 else
                 {
-                    token_fill(&token, string, c, TLEXERR);
                     error_print("Block comment is not valid", row, character_position);
-                    return token;
+                    return token_fill(&token, string, c, TLEXERR);
                 }
                 break;
             case sBlockCommentStart2:
@@ -362,9 +365,8 @@ tToken get_token()
                     state = sBlockComment;
                 else
                 {
-                    token_fill(&token, string, c, TLEXERR);
                     error_print("Block comment is not valid", row, character_position);
-                    return token;
+                    return token_fill(&token, string, c, TLEXERR);
                 }
                 break;
             case sBlockComment:
@@ -383,9 +385,8 @@ tToken get_token()
                     state = sBlockCommentEnd2;
                 else
                 {
-                    token_fill(&token, string, c, TLEXERR);
                     error_print("Block comment is not valid", row, character_position);
-                    return token;
+                    return token_fill(&token, string, c, TLEXERR);
                 }
                 break;
             case sBlockCommentEnd2:
@@ -393,16 +394,62 @@ tToken get_token()
                     state = sStart;
                 else
                 {
-                    token_fill(&token, string, c, TLEXERR);
                     error_print("Block comment is not valid", row, character_position);
-                    return token;
+                    return token_fill(&token, string, c, TLEXERR);
                 }
                 break;    
             
             /************************* Indetificator/Keyword *****************************/
             case sIdentificatorOrKeyWord:
                 // TODO after read is done, compare the string with array of keywords
-                
+                if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'))
+                    state = sIdentificatorOrKeyWord;
+                else
+                {
+                    char *tmp_string = ptr_string_c_string(string);
+                    for (unsigned short i = 0; i < KEYWORDS_COUNT; i++) // Check for keyword
+                    {
+                        if (!(strcmp(tmp_string, keywords[i])))
+                            return token_fill(&token, string, c, TKEYWORD);
+                    }   // Not a keyword
+                    return token_fill(&token, string, c, TIDENTIFICATOR);
+                }
+                break;
+            
+            /************************* Operators *****************************/
+            // Add, Sub and Mul is already done in sStart state
+            case sDivOrFloorDiv:
+                if (c == '/')   // Floor division
+                    state = sFloorDiv;
+                else    // Regular division
+                    return token_fill(&token, string, c, TDIV);
+                break;
+            case sFloorDiv:
+                return token_fill(&token, string, c, TFLOORDIV);
+            case sAssignOrEqual:
+                if (c == '=')   // Equal
+                    return token_fill(&token, string, c, TEQ);
+                else    // Assign
+                    return token_fill(&token, string, c, TASSIGN);
+            case sLtOrLte:
+                if (c == '=')   // Less than or Equal
+                    return token_fill(&token, string, c, TLTE);
+                else    // Less than
+                    return token_fill(&token, string, c, TLT);
+            case sGtOrGte:
+                if (c == '=')   // Greater than or Equal
+                    return token_fill(&token, string, c, TGTE);
+                else    // Greater than
+                    return token_fill(&token, string, c, TGT);
+            case sExclMark:
+                if (c == '=')   // Not equal
+                    return token_fill(&token, string, c, TNE);
+                else    // Error
+                {
+                    error_print("Exclamation mark should be followed by equal sign");
+                    return token_fill(&token, stirng, c, TLEXERR);
+                }
+            
         }
     }
     
