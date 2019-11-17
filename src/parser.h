@@ -2,7 +2,6 @@
 #define __H_PARSER
 
 #include "scaner.h"
-#include <string.h>
 
 struct AST
 {

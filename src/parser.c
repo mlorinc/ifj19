@@ -1,247 +1,207 @@
-// #include <stdlib.h>
-// #include <stdbool.h>
-// #include <assert.h>
-// #include "parser.h"
+#include <stdlib.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <assert.h>
+#include <string.h>
+#include "parser.h"
+#include "ptr_string.h"
 
-// AST_T node_init_empty() {
-//     return malloc(sizeof(struct AST));
-// }
+typedef AST_T (*universal_term_function)(parser_t parser);
 
-// AST_T node_init(tToken token)
-// {
-//     AST_T tree = node_init_empty();
-//     if (tree != NULL)
-//     {
-//         tree->token = token;
-//     }
-//     return tree;
-// }
+AST_T node_init_empty()
+{
+    return malloc(sizeof(struct AST));
+}
 
-// parser_t parser_init()
-// {
-//     return malloc(sizeof(struct parser));
-// }
+AST_T node_init(tToken token)
+{
+    AST_T tree = node_init_empty();
+    if (tree != NULL)
+    {
+        tree->token = token;
+    }
+    return tree;
+}
 
-// void parser_destroy(parser_t parser)
-// {
-//     assert(parser != NULL);
-//     free(parser);
-// }
+parser_t parser_init()
+{
+    return malloc(sizeof(struct parser));
+}
 
-// void parser_next(parser_t parser)
-// {
-//     assert(parser != NULL);
-//     parser->previousToken = parser->token;
-//     parser->token = getToken();
-// }
+void parser_destroy(parser_t parser)
+{
+    assert(parser != NULL);
+    free(parser);
+}
 
-// bool accept(parser_t parser, tToken_type token_type)
-// {
-//     if (parser->token.type == token_type)
-//     {
-//         parser_next(parser);
-//         return true;
-//     }
-//     return false;
-// }
+void parser_next(parser_t parser)
+{
+    assert(parser != NULL);
+    parser->previousToken = parser->token;
+    parser->token = getToken();
+}
 
-// AST_T factor(parser_t parser)
-// {
-//     if (accept(parser, TADD) || accept(parser, TSUB))
-//     {
-//         tToken operator= parser->previousToken;
-//         if (accept(parser, TFLOAT) || accept(parser, TINT))
-//         {
-//             tToken number = parser->previousToken;
-//             if (operator.type == TSUB)
-//             {
-//                 DEREFENCE_AS(number.value, int) = -DEREFENCE_AS(number.value, int);
-//             }
-//             return node_init(number);
-//         }
-//         else
-//         {
-//             return NULL;
-//         }
-//     }
-//     else
-//     {
-//         return NULL;
-//     }
-// }
+bool accept(parser_t parser, tToken_type token_type)
+{
+    if (parser->token.type == token_type)
+    {
+        parser_next(parser);
+        return true;
+    }
+    return false;
+}
 
-// AST_T term(parser_t parser) {
-//     AST_T f1 = factor(parser);
-//     if (f1 != NULL) {
-//         AST_T last_ast = node_init_empty();
-//         AST_T current_ast = node_init_empty();
-//         current_ast->left = f1;
-//         for (;;)
-//         {
-//             if (accept(parser, TMUL) || accept(parser, TDIV) || accept(parser, TMOD))
-//             {
-//                 current_ast->token = parser->previousToken;
+bool expect(parser_t parser, tToken_type token_type)
+{
+    if (accept(parser, token_type))
+    {
+        return true;
+    }
+    fprintf(stderr, "%s\n", "unexpected token");
+    return false;
+}
 
-//                 AST_T f2 = factor(parser);
-//                 if (f2 != NULL) {
-//                     current_ast->right = f2;
-//                 }
-//                 else {
-//                     return NULL;
-//                 }
-                
-//                 last_ast = current_ast;
-//                 current_ast = node_init_empty();
+AST_T factor(parser_t parser)
+{
+    if (accept(parser, TADD) || accept(parser, TSUB))
+    {
+        tToken operator= parser->previousToken;
+        if (accept(parser, TFLOAT) || accept(parser, TINT))
+        {
+            tToken number = parser->previousToken;
+            if (operator.type == TSUB)
+            {
+                DEREFENCE_AS(number.value, int) = -DEREFENCE_AS(number.value, int);
+            }
+            return node_init(number);
+        }
+        else
+        {
+            return NULL;
+        }
+    }
+    else
+    {
+        return NULL;
+    }
+}
 
-//                 current_ast->left = last_ast;
-//             }
-//             else {
-//                 return current_ast;
-//             }
-//         }
-        
-//     }
-//     else {
-//         return NULL;
-//     }
-// }
+AST_T universal_term(parser_t parser, universal_term_function fn, tToken_type operators[], size_t operators_length)
+{
+    AST_T f1 = fn(parser);
+    if (f1 != NULL)
+    {
+        AST_T last_ast = node_init_empty();
+        AST_T current_ast = node_init_empty();
+        current_ast->left = f1;
+        for (;;)
+        {
+            bool accepted = false;
+            for (size_t i = 0; i < operators_length; i++)
+            {
+                tToken_type op = operators[i];
+                if (accept(parser, op))
+                {
+                    current_ast->token = parser->previousToken;
 
-// AST_T expression(parser_t parser)
-// {
-//     if (accept(parser, TFLOAT) || accept(parser, TINT))
-//     {
-//         return node_init(parser->previousToken);
-//     }
-//     if (accept(parser, TLEFTPAR))
-//     {
-//         AST_T expr = expression(parser);
-//         if (expr != NULL)
-//         {
-//             if (accept(parser, TRIGHTPAR))
-//             {
-//                 return expr;
-//             }
-//             else
-//             {
-//                 return NULL;
-//             }
-//         }
-//         else
-//         {
-//             return NULL;
-//         }
-//     }
-//     return NULL;
-// }
+                    AST_T f2 = fn(parser);
+                    if (f2 != NULL)
+                    {
+                        current_ast->right = f2;
+                    }
+                    else
+                    {
+                        fprintf(stderr, "Line %ld: %s\n", line, "Missing second operand");
+                        return NULL;
+                    }
 
-// AST_T parse()
-// {
-//     parser_t parser = parser_init();
-//     parser_next(parser);
+                    last_ast = current_ast;
+                    current_ast = node_init_empty();
 
-//     if (parser->token.type == TINDENT){
-//         //TODO function to parse indent
-//     }
-//     if (parser->token.type == TDEDENT){
-//         //TODO function to parse dedent
-//     }
-//     if (parser->token.type == TINT){
-//         //TODO function to parse int
-//     }
-//     if (parser->token.type == TFLOAT){
-//         //TODO function to parse float
-//     }
-//     if (parser->token.type == TSTRING){
-//         //TODO function to parse string
-//     }
-//     if (parser->token.type == TKEYWORD){
-//         //TODO function to parse keyword
-//         //here we must identify, which keyword we got
-//         //f.e -> deff, if, pass, while, break, ...
-//         if (!strcmp(&(*(char*)parser->token.value), "def")){
-//             functionDef();
-//         }
-//         if (!strcmp(&(*(char*)parser->token.value), "if")){
-//             //call function for statement
-//         }
-//         if (!strcmp(&(*(char*)parser->token.value), "else")){
-//             //call function for else statement
-//         }
-//         if (!strcmp(&(*(char*)parser->token.value), "while")){
+                    current_ast->left = last_ast;
+                    accepted = true;
+                    break;
+                }
+            }
+            if (!accepted)
+            {
+                return current_ast;
+            }
+        }
+    }
+    else
+    {
+        fprintf(stderr, "Line %ld: %s\n", line, "Missing first operand");
+        return NULL;
+    }
+}
 
-//         }
-//         if (!strcmp(&(*(char*)parser->token.value), "pass")){
-//             //call function for do nothing
-//         }
-//         if (!strcmp(&(*(char*)parser->token.value), "return")){
+AST_T term(parser_t parser)
+{
+    tToken_type operators[] = {TMUL, TDIV, TFLOORDIVISION};
+    return universal_term(parser, factor, operators, 3)
+}
 
-//         }
-//     }
-//     if (parser->token.type == TIDENTIFICATOR){
-//         //TODO function to parse identificator
-//     }
-//     if (parser->token.type == TADD){
-//         //TODO function to parse add
-//     }
-//     if (parser->token.type == TSUB){
-//         //TODO function to parse sub
-//     }
-//     if (parser->token.type == TMUL){
-//         //TODO function to parse mul
-//     }
-//     if (parser->token.type == TDIV){
-//         //TODO function to parse div
-//     }
-//     if (parser->token.type == TMOD){
-//         //TODO function to parse mod
-//     }
+AST_T arithmetic_expression(parser_t parser)
+{
+    tToken_type operatos[] = {TADD, TSUB};
+    return universal_term(parser, term, operatos, 2)
+}
 
-//     /**
-//      * FROM THIS POINT IM NOT SURE IF THIS IS NECESSARY
-//      * TO HAVE THIS IN PARSE FUNCTION CAUSE WE EXPECT OTHERS
-//      * TOKENS FIRST
-//      *
-//      * TOMORROW WE HAVE TO DISCUSS THIS
-//      */
-//     if (parser->token.type == TLT){
-//         //TODO function to parse less than
-//     }
-//     if (parser->token.type == TGT){
-//         //TODO function to parse greater than
-//     }
-//     if (parser->token.type == TLTE){
-//         //TODO function to parse <=
-//     }
-//     if (parser->token.type == TGTE){
-//         //TODO function to parse >=
-//     }
-//     if (parser->token.type == TEQ){
-//         //TODO function to parse ==
-//     }
-//     if (parser->token.type == TNE){
-//         //TODO function to parse !=
-//     }
-//     if (parser->token.type == TLEFTPAR){
-//         //TODO function to parse (
-//     }
-//     if (parser->token.type == TRIGHTPAR){
-//         //TODO function to parse )
-//     }
-//     /**
-//      * END OF SECTION
-//      * MENTIONED UPWARDS
-//      */
+AST_T comparision(parser_t parser)
+{
+    tToken_type operators[] = {TLT, TGT, TEQ, TGTE, TLTE, TNE};
+    return universal_term(parser, arithmetic_expression, operators, 6);
+}
 
-//     parser_destroy(parser);
-// }
+AST_T not_test(parser_t parser) {
+    if (accept(parser, TKEYWORD)) {
+        if (ptr_string_c_equals(parser->previousToken.value, "not"))
+        {
+            fprintf(stderr, "Line %ld: %s %s\n", line,
+                    "Expecting not keyword, got", parser->previousToken.value);
+            return NULL;
+        }
+        AST_T ast;
+        tToken not_token = parser->previousToken;
 
-// AST_T functionDef()
-// {
-//     parser_t parser = parser_init();
-//     parser_next(parser);
+        ast = not_test(parser);
 
+        if (ast == NULL) {
+            ast = comparision(parser);
+            if (ast != NULL) {
+                AST_T parent = node_init(not_token);
+                parent->left = ast;
+                return parent;
+            }
+            else {
+                fprintf(stderr, "Line %ld: %s\n", line, "Expecting comparision");
+                return NULL;
+            }
+        }
+        else {
+            return node_init(parser->previousToken);
+        }
+    }
+    else {
+        return NULL;
+    }
+}
 
+AST_T and_test(parser_t parser) {
+    return universal_term(parser, not_test, TA);
+}
 
-//     parser_destroy(parser);
-// }
-int a = 42;
+AST_T parse()
+{
+    parser_t parser = parser_init();
+    parser_next(parser);
+
+    parser_destroy(parser);
+    return NULL;
+}
+
+AST_T functionDef(parser_t parser)
+{
+    return NULL;
+}
