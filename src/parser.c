@@ -268,10 +268,7 @@ AST_T parse()
     parser_t parser = parser_init();
     parser_next(parser);
 
-    queue_t queue = queue_init();
-
     parser_destroy(parser);
-    queue_destroy(queue);
     return NULL;
 }
 
@@ -357,4 +354,6 @@ void stderr_print(long int line, tToken type, parser_t parser)
 {
     fprintf(stderr, "Line %ld: %s %u %s %s\n", line,
             "Expecting ", type.type, " got", (char *)parser->previousToken.value);
+    parser_destroy(parser);
+    return NULL;
 }
