@@ -162,23 +162,11 @@ void start_state(char c, tState* state, ptr_string_t string, tToken token)
     else if(c == '#')
         *state = sLineComment;
     else if(c == '+')
-    {
-        last_token_type = token.type = TADD;
-        token.value = string;
-        return token;
-    }
+        return token_fill(&token, string, (int) -1, TADD);
     else if(c == '-')
-    {
-        last_token_type = token.type = TSUB;
-        token.value = string;
-        return token;
-    }
+        return token_fill(&token, string, (int) -1, TSUB);
     else if(c == '*')
-    {
-        last_token_type = token.type = TMUL;
-        token.value = string;
-        return token;
-    }
+        return token_fill(&token, string, (int) -1, TMUL);
     else if(c == '/')
         *state = sDivOrFloorDiv;
     else if(c == '<')
@@ -201,6 +189,15 @@ void start_state(char c, tState* state, ptr_string_t string, tToken token)
         *state = sNewLine;
         ptr_string_delete_last(string); // Delete char '\n' from token value
     }
+    else if (c == '(')
+        return token_fill(&token, string, (int) -1, TLEFTPAR);
+    else if (c == ')')
+        return token_fill(&token, string, (int) -1, TRIGHTPAR);
+    else if (c == ';')
+        return token_fill(&token, string, (int) -1, TSEMICOLON);
+    else if (c == ',')
+        return token_fill(&token, string, (int) -1, TCOMMA);
+
     else    // Undifiend char
         *state = sLexErr;
 }
@@ -216,7 +213,8 @@ void start_state(char c, tState* state, ptr_string_t string, tToken token)
 tToken token_fill(tToken *token_ptr, ptr_string_t string, char c, tToken_type token_type)
 {
     ptr_string_delete_last(string);
-    ungetc(c, stdin); // Put the last char back to stdin
+    if (c != -1)
+        ungetc(c, stdin); // Put the last char back to stdin
     if (token_type == TLEXERR || token_type == TNEWLINE)
     {
         token_ptr->value = NULL;
@@ -446,12 +444,9 @@ tToken get_token()
                     return token_fill(&token, string, c, TNE);
                 else    // Error
                 {
-                    error_print("Exclamation mark should be followed by equal sign");
+                    error_print("Exclamation mark should be followed by equal sign", row, character_position);
                     return token_fill(&token, stirng, c, TLEXERR);
                 }
-            
         }
     }
-    
-
 }
