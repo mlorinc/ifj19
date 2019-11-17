@@ -445,7 +445,7 @@ tToken get_token()
                 else    // Error
                 {
                     error_print("Exclamation mark should be followed by equal sign", row, character_position);
-                    return token_fill(&token, stirng, c, TLEXERR);
+                    return token_fill(&token, string, c, TLEXERR);
                 }
         }
     }
