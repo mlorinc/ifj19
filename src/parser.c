@@ -2,16 +2,6 @@
 #include <stdbool.h>
 #include <assert.h>
 #include "parser.h"
-#include "scaner.h"
-
-AST_T node_init(tToken token);
-
-typedef struct parser
-{
-    tToken token;
-    tToken previousToken;
-} * parser_t;
-
 
 AST_T node_init_empty() {
     return malloc(sizeof(struct AST));
@@ -79,8 +69,6 @@ AST_T factor(parser_t parser)
         return NULL;
     }
 }
-
-AST_T universal_term(parser_t parser, )
 
 AST_T term(parser_t parser) {
     AST_T f1 = factor(parser);
@@ -151,5 +139,102 @@ AST_T parse()
     parser_t parser = parser_init();
     parser_next(parser);
 
+    //function parse
+    if (parser->token.type == THEADER){
+        //TODO function to parse header
+        //where the code begins
+    }
+    if (parser->token.type == TINDENT){
+        //TODO function to parse indent
+    }
+    if (parser->token.type == TDEDENT){
+        //TODO function to parse dedent
+    }
+    if (parser->token.type == TINT){
+        //TODO function to parse int
+    }
+    if (parser->token.type == TFLOAT){
+        //TODO function to parse float
+    }
+    if (parser->token.type == TSTRING){
+        //TODO function to parse string
+    }
+    if (parser->token.type == TKEYWORD){
+        //TODO function to parse keyword
+        //here we must identify, which keyword we got
+        //f.e -> if, pass, while, break, ...
+        if (!strcmp(&(*(char*)parser->token.value), "if")){
+
+        }
+        if (!strcmp(&(*(char*)parser->token.value), "else")){
+
+        }
+        if (!strcmp(&(*(char*)parser->token.value), "while")){
+
+        }
+        if (!strcmp(&(*(char*)parser->token.value), "pass")){
+
+        }
+        if (!strcmp(&(*(char*)parser->token.value), "return")){
+
+        }
+    }
+    if (parser->token.type == TIDENTIFICATOR){
+        //TODO function to parse identificator
+    }
+    if (parser->token.type == TADD){
+        //TODO function to parse add
+    }
+    if (parser->token.type == TSUB){
+        //TODO function to parse sub
+    }
+    if (parser->token.type == TMUL){
+        //TODO function to parse mul
+    }
+    if (parser->token.type == TDIV){
+        //TODO function to parse div
+    }
+    if (parser->token.type == TMOD){
+        //TODO function to parse mod
+    }
+
+    /**
+     * FROM THIS POINT IM NOT SURE IF THIS IS NECESSARY
+     * TO HAVE THIS IN PARSE FUNCTION CAUSE WE EXPECT OTHERS
+     * TOKENS FIRST
+     *
+     * TOMORROW WE HAVE TO DISCUSS THIS
+     */
+    if (parser->token.type == TLT){
+        //TODO function to parse less than
+    }
+    if (parser->token.type == TGT){
+        //TODO function to parse greater than
+    }
+    if (parser->token.type == TLTE){
+        //TODO function to parse <=
+    }
+    if (parser->token.type == TGTE){
+        //TODO function to parse >=
+    }
+    if (parser->token.type == TEQ){
+        //TODO function to parse ==
+    }
+    if (parser->token.type == TNE){
+        //TODO function to parse !=
+    }
+    if (parser->token.type == TLEFTPAR){
+        //TODO function to parse (
+    }
+    if (parser->token.type == TRIGHTPAR){
+        //TODO function to parse )
+    }
+    /**
+     * END OF SECTION
+     * MENTIONED UPWARDS
+     */
+
     parser_destroy(parser);
 }
+
+
