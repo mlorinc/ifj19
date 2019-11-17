@@ -31,6 +31,11 @@ unsigned int character_position = 0;
 /* Global array of possible keywords */
 char *keywords[7] = {"def", "else", "if", "None", "pass", "return", "while"};
 
+/**
+ * Function for malloc pointer to int
+ * @param number number whitch will be in pointer
+ * @return pointer to int with value number
+ */
 int* p_int(int number)
 {
     int* tmp = (int*) malloc(sizeof(int));
@@ -39,6 +44,11 @@ int* p_int(int number)
     return tmp;
 }
 
+/**
+ * push number on stack and check if it was successfully
+ * @param indent_number integer whitch will be push
+ * @return TNOTHING if push was successfully else TERR
+ */
 tToken_type push_indent_on_stack(int indent_number)
 {
     int* p_number = NULL;
@@ -57,6 +67,10 @@ tToken_type push_indent_on_stack(int indent_number)
     return TNOTHING;
 }
 
+/**
+ * initialization stack and push on top 0
+ * @return TNOTHING if init was successfully else TERR
+ */
 tToken_type init_indent_counter()
 {
     stack = stack_init();
@@ -66,6 +80,13 @@ tToken_type init_indent_counter()
         return push_indent_on_stack(0);
 }
 
+/**
+ * Indent counter
+ * @return token with one of this token types:
+ *      TERR -> stack or malloc error
+ *      TNOTHING -> if indent is the same as before
+ *      TLEXERR -> indent error
+ */
 tToken indent_counter()
 {
     tToken token;
@@ -117,6 +138,7 @@ tToken indent_counter()
     }
     return token;
 }
+
 /**
  * Process all states from starting state of automata
  * @param c Stdin char
@@ -212,7 +234,7 @@ tToken get_token()
     ptr_string_t string = NULL; // Space for something readed from input
 
     token = indent_counter();
-    if(token.type != TNOTHING)
+    if(token.type != TNOTHING) //if indent wasn't the same as before
         return token;
 
     while ((c=getchar()) != EOF)    // Until whole input is readed
