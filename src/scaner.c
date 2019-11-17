@@ -240,7 +240,7 @@ ptr_string_t char_append(char c, ptr_string_t str)
         newStr = ptr_string_new_with_length(1);
         newStr = ptr_string_append(str, c);
     }
-    free(str);
+    ptr_string_delete(str);
     return newStr;
 }
 
@@ -252,6 +252,7 @@ tToken get_token()
     ptr_string_t string = NULL; // Space for something readed from input
 
     token = indent_counter();
+    last_token_type = token.type;
     if(token.type != TNOTHING) //if indent wasn't the same as before
         return token;
 
@@ -259,7 +260,7 @@ tToken get_token()
     {
         if((string = char_append(c, string)) == NULL) //check if append was successfully
         {
-            token.type = TERR;
+            last_token_type = token.type = TERR;
             token.value = NULL;
             return token;
         }
