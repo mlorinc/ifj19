@@ -52,7 +52,7 @@ typedef enum {
 	TSUB, // -
 	TMUL, // *
 	TDIV, // /
-	TMOD, // %
+    TFLOORDIV,  // //
 	TLT, // <
 	TGT, // >
 	TLTE, // <=
@@ -65,6 +65,7 @@ typedef enum {
     TRIGHTPAR, // (
     TSEMICOLON, // ;
     TCOMMA, // ,
+    TASSIGN,    // =
 
     TENDOFLINE, // EOL
     TENDOFFILE, // EOF
@@ -101,25 +102,21 @@ typedef enum {
     sString,    // Ending
 
     // Operators
-    sAssign, // =
-    sAdd, // +
-    sSub, // -
-    sMul, // *
-    sDiv, // /
-    sMod, // %
-    sLt, // <
-    sGt, // >
-    sLte, // <=
-    sGte, // >=
-    sEq, // ==
-    sExclMark, // Not ending (!)
-    sNe, // !=
+    sAssignOrEqual, // Ending '=', but can go into sEqual
+    sEqual,     // Ending '=='
+    sDivOrFloorDiv, // Ending '/', but can go into sFloorDiv
+    sFloorDiv,  // Ending '//'
+    sLtOrLte, // Ending '<', but can be '<='
+    sLte,   // Ending '<='
+    sGtOrGte, // Ending '>', but can be '>='
+    sGte,   // Ending '>='
 
     // Special characters
-    sLeftPar, // )
-    sRightPar, // (
-    sSemicolon, // ;
-    sComma, // ,
+    sLeftPar, // Ending ')'
+    sRightPar, // Ending '('
+    sExclMark, // Not ending '!'
+    sSemicolon, // Ending ';'
+    sComma, // Ending ','
 
     sEOL,
     sEOF,
