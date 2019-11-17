@@ -277,7 +277,7 @@ bool ptr_string_equals(ptr_string_t this, ptr_string_t that)
 bool ptr_string_c_equals(ptr_string_t this, char *that)
 {
     assert(this != NULL && that != NULL);
-    return (this->buffer == that) || (ptr_string_length(this) == strlen(that) && memcmp(this->buffer, that, ptr_string_length(this)) == 0)
+    return (this->buffer == that) || (ptr_string_length(this) == strlen(that) && memcmp(this->buffer, that, ptr_string_length(this)) == 0);
 }
 
 void ptr_string_delete_last(ptr_string_t str) //TODO problem with ptr_string_insert
