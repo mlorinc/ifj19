@@ -174,8 +174,5 @@ bool ptr_string_c_equals(ptr_string_t this, char *that);
  */
 void ptr_string_delete_last(ptr_string_t str);
 
-static inline size_t should_resize(size_t capacity, size_t length1, size_t length2) {
-    return capacity < length1 + length2;
-}
 
 #endif
