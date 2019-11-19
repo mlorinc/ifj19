@@ -104,13 +104,9 @@ typedef enum {
 
     // Operators
     sAssignOrEqual, // Ending '=', but can go into sEqual
-    sEqual,     // Ending '=='
     sDivOrFloorDiv, // Ending '/', but can go into sFloorDiv
-    sFloorDiv,  // Ending '//'
     sLtOrLte, // Ending '<', but can be '<='
-    sLte,   // Ending '<='
     sGtOrGte, // Ending '>', but can be '>='
-    sGte,   // Ending '>='
 
     // Special characters
     sLeftPar, // Ending ')'

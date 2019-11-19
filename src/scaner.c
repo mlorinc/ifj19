@@ -55,7 +55,7 @@ int* p_int(int number)
 tToken_type push_indent_on_stack(int indent_number)
 {
     int* p_number = NULL;
-    p_number = p_int(indent_counter);
+    p_number = p_int(indent_number);
     if(p_number == NULL)    //check for new malloc pointer to int
     {
         stack_destroy(stack);
@@ -116,7 +116,7 @@ tToken indent_counter()
         if(c == '#' || c == '"')    //check for comment after indent
             return token;
 
-        if(number_on_top < counter)
+        if(*number_on_top < counter)
         {
             token.type = push_indent_on_stack(counter);
             if(token.type == TERR)  //check if push on stack was unsuccessfully
@@ -124,7 +124,7 @@ tToken indent_counter()
             else
                 token.type = TINDENT;
         }
-        else if(number_on_top > counter)
+        else if(*number_on_top > counter)
         {
             stack_pop(stack);
             number_on_top = stack_top(stack);
@@ -143,12 +143,38 @@ tToken indent_counter()
 }
 
 /**
+ * Put the last char back to stdin and fill the token value and type, 
+ * also set the last_token_type.
+ * @param token_ptr Token pointer
+ * @param string String in token's value
+ * @param c Char that will be put back to stdin
+ * @param token_type Token's type
+ */
+tToken token_fill(tToken *token_ptr, ptr_string_t string, char c, tToken_type token_type)
+{
+    ptr_string_delete_last(string);
+    if (c != -1)
+        ungetc(c, stdin); // Put the last char back to stdin
+    if (token_type == TLEXERR || token_type == TNEWLINE)
+    {
+        token_ptr->value = NULL;
+        ptr_string_delete(string);
+    }
+    else
+    {
+        token_ptr->value = string;
+    }
+    last_token_type = token_ptr->type = token_type;
+    return *token_ptr;
+}
+
+/**
  * Process all states from starting state of automata
  * @param c Stdin char
  * @param state Automata state
  * @param string Temporary string that will be sent as token's contet
  */
-void start_state(char c, tState* state, ptr_string_t string, tToken token)
+void start_state(char c, tState* state, ptr_string_t string, tToken *token)
 {
     c = tolower(c);
     if(c >= '1' && c <= '9')
@@ -177,7 +203,7 @@ void start_state(char c, tState* state, ptr_string_t string, tToken token)
         *state = sAssignOrEqual;
     else if(c == '!')
         *state = sExclMark;
-    else if(c == '_' || c >= 97 && c<= 122)
+    else if(c == '_' || (c >= 97 && c<= 122))
         *state = sIdentificatorOrKeyWord;
     else if(c == ' ')
     {
@@ -202,31 +228,6 @@ void start_state(char c, tState* state, ptr_string_t string, tToken token)
         *state = sLexErr;
 }
 
-/**
- * Put the last char back to stdin and fill the token value and type, 
- * also set the last_token_type.
- * @param token_ptr Token pointer
- * @param string String in token's value
- * @param c Char that will be put back to stdin
- * @param token_type Token's type
- */
-tToken token_fill(tToken *token_ptr, ptr_string_t string, char c, tToken_type token_type)
-{
-    ptr_string_delete_last(string);
-    if (c != -1)
-        ungetc(c, stdin); // Put the last char back to stdin
-    if (token_type == TLEXERR || token_type == TNEWLINE)
-    {
-        token_ptr->value = NULL;
-        ptr_string_delete(string);
-    }
-    else
-    {
-        token_ptr->value = string;
-    }
-    last_token_type = token_ptr->type = token_type;
-    return *token_ptr;
-}
 
 /**
  * Prints the error message to stderr
@@ -283,7 +284,7 @@ tToken get_token()
         {
             /*************************** Start ********************************/   
             case sStart:
-                start((char) c, &state, string);
+                start_state((char) c, &state, string, &token);
                 break;
 
             case sNewLine:
@@ -418,12 +419,10 @@ tToken get_token()
             // Add, Sub and Mul is already done in sStart state
             case sDivOrFloorDiv:
                 if (c == '/')   // Floor division
-                    state = sFloorDiv;
+                    return token_fill(&token, string, c, TFLOORDIV);
                 else    // Regular division
                     return token_fill(&token, string, c, TDIV);
                 break;
-            case sFloorDiv:
-                return token_fill(&token, string, c, TFLOORDIV);
             case sAssignOrEqual:
                 if (c == '=')   // Equal
                     return token_fill(&token, string, c, TEQ);
@@ -447,6 +446,8 @@ tToken get_token()
                     error_print("Exclamation mark should be followed by equal sign", row, character_position);
                     return token_fill(&token, string, c, TLEXERR);
                 }
+            /************************* String *****************************/
+            // TODO string
         }
     }
 }
