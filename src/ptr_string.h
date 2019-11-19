@@ -168,6 +168,7 @@ bool ptr_string_equals(ptr_string_t this, ptr_string_t that);
  */ 
 bool ptr_string_c_equals(ptr_string_t this, char *that);
 
+/**
  * Delete last char in string.
  * @param str source string
  */

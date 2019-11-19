@@ -280,7 +280,7 @@ bool ptr_string_c_equals(ptr_string_t this, char *that)
     return (this->buffer == that) || (ptr_string_length(this) == strlen(that) && memcmp(this->buffer, that, ptr_string_length(this)) == 0)
 }
 
-void ptr_string_delete_last(ptr_string_t str) //TODO problem with ptr_string_insert
+void ptr_string_delete_last(ptr_string_t str)
 {
     if(str->length != 0)
         str->length = str->length-1;
