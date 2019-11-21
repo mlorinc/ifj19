@@ -66,6 +66,7 @@ typedef enum {
     TLEFTPAR, // )
     TRIGHTPAR, // (
     TSEMICOLON, // ;
+    TCOLON, // :
     TCOMMA, // ,
     TASSIGN,    // =
 
@@ -84,7 +85,7 @@ typedef enum {
 
     sStart, // Not ending
     sNewLine,   // '\n'
-    
+
     // Identificator and Keyword
     sIdentificatorOrKeyWord,    // Ending
 
@@ -113,6 +114,7 @@ typedef enum {
     sLeftPar, // Ending ')'
     sRightPar, // Ending '('
     sExclMark, // Not ending '!'
+    sColon, //?
     sSemicolon, // Ending ';'
     sComma, // Ending ','
 

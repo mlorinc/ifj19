@@ -43,12 +43,12 @@ void parser_destroy(parser_t parser)
 
 struct AST
 {
-    struct AST *node;
+    struct AST **node;
     tToken token;
 };
 
 typedef struct AST *AST_T;
-typedef struct AST **AST_ARRAY;
+typedef struct AST **AST_ARR;
 
 void parser_next(parser_t parser, tToken token);
 AST_T node_init_empty();
@@ -63,6 +63,7 @@ int main()
     * START OF LEXER SIMULATION
     * START OF LEXER SIMULATION
     * START OF LEXER SIMULATION
+    * simulation of: def foo(a,b):
     * *************************
     */
     tToken token1;
@@ -109,7 +110,8 @@ int main()
      * ********************
      */
 
-    AST_T ast;
+    AST_T ast; 
+    AST_ARR toDelete; //to free at the end of function
 
     parser_next(parser, token1);
     if (parser->token.type == TKEYWORD){
@@ -126,8 +128,7 @@ int main()
                     parser_next(parser, token4);
                     if (parser->token.type == TIDENTIFIER){ //now we know that we got params in function
                         //CALL PARAM FUNCTION TO SET PARAMS
-                        AST_T ast = node_init_empty();
-                        AST_ARRAY ast_arr = malloc(sizeof(AST_ARRAY));
+                        AST_ARR params = malloc(sizeof(AST_ARR));
 
                         /**
                          * SIMULATION OF WHILE
@@ -139,9 +140,9 @@ int main()
                         }*/
 
                         if (parser->token.type == TIDENTIFIER){
-                            ast_arr[0] = node_init_empty();
-                            ast_arr[0]->token.type = TIDENTIFIER;
-                            ast_arr[0]->token.value = parser->token.value;
+                            params[0] = node_init_empty();
+                            params[0]->token.type = TIDENTIFIER;
+                            params[0]->token.value = parser->token.value;
                         }
 
                         parser_next(parser, token5);
@@ -153,15 +154,16 @@ int main()
 
                         parser_next(parser, token6);
                         if (parser->token.type == TIDENTIFIER){
-                            ast_arr = realloc(ast_arr, 2*sizeof(AST_ARRAY));
-                            ast_arr[1] = node_init_empty();
-                            ast_arr[1]->token.type = TIDENTIFIER;
-                            ast_arr[1]->token.value = parser->token.value;
+                            params = realloc(params, 2*sizeof(AST_ARR));
+                            params[1] = node_init_empty();
+                            params[1]->token.type = TIDENTIFIER;
+                            params[1]->token.value = parser->token.value;
                         }
 
                         parser_next(parser, token7);
                         if (parser->token.type == TRIGHTPAR){
-                            ast->node = ast_arr;
+                            ast->node = params; //KVOLI TOMUTO MUSI BYT **node aby sme tam vopchali potom cely ten param strom / hocijaky vacsi rozvetveny
+                            toDelete = params;
                         }
                     }
                 }
@@ -177,8 +179,15 @@ int main()
      */
 
     printf("%u %s\n", ast->token.type, ast->token.value);
-    printf("%u %s\n", ast->node->token.type, ast->node->token.value);
+    printf("%u %s\n", ast->node[0]->token.type, ast->node[0]->token.value);
+    printf("%u %s\n", ast->node[1]->token.type, ast->node[1]->token.value);
 
+    for (int i = 0; i < 2; i++){
+        free(ast->node[i]);
+    }
+
+    free(ast);
+    free(toDelete);
     parser_destroy(parser);
     return 0;
 }
@@ -194,48 +203,3 @@ AST_T node_init_empty()
 {
     return malloc(sizeof(struct AST));
 }
-
-/*AST_T build_param_tree(parser_t parser)
-{
-    /*AST_T ast = node_init_empty();
-    AST_ARRAY ast_arr = malloc(sizeof(AST_ARRAY));*/
-
-    /**
-     * SIMULATION OF WHILE
-     */
-    /*while (parser->token.type != TRIGHTPAR) {
-        if (parser->token.type == TCOMMA) {
-
-        }
-    }
-
-    if (parser->token.type == TIDENTIFIER){
-        ast_arr[0] = node_init_empty();
-        ast_arr[0]->token.type = TIDENTIFIER;
-        ast_arr[0]->token.value = parser->token.value;
-    }
-
-    parser_next(parser, token5);
-    if (parser->token.type == TCOMMA){
-    }
-    else if (parser->token.type == TRIGHTPAR){
-        return ast;
-    }
-
-    parser_next(parser, token6);
-    if (parser->token.type == TIDENTIFIER){
-        ast_arr = realloc(ast_arr, 2*sizeof(AST_ARRAY));
-        ast_arr[1] = node_init_empty();
-        ast_arr[1]->token.type = TIDENTIFIER;
-        ast_arr[1]->token.value = parser->token.value;
-    }
-
-    parser_next(parser, token7);
-    if (parser->token.type == TRIGHTPAR){
-        ast->node = &ast_arr;
-        return ast;
-    }
-    else {
-        return NULL;
-    }
-}*/

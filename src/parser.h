@@ -2,6 +2,7 @@
 #define __H_PARSER
 
 #include "scaner.h"
+#include "queue.h"
 
 struct AST
 {
@@ -38,6 +39,10 @@ AST_T expression(parser_t parser);
 
 AST_T parse();
 
-AST_T functionDef();
+AST_T functionDef(parser_t parser, queue_t queue);
+
+AST_T functionParams(parser_t parser, AST_T ast);
+
+void stderr_print(long int line, tToken type, parser_t parser);
 
 #endif
