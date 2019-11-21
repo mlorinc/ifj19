@@ -2,7 +2,6 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <assert.h>
-#include <string.h>
 #include "parser.h"
 #include "queue.h"
 #include "ptr_string.h"
@@ -325,7 +324,6 @@ AST_T functionDef(parser_t parser, queue_t queue)
                 }
                 else
                 {
-                    stderr_print(line, TRIGHTPAR, parser);
                     return NULL;
                 }
             }
