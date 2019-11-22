@@ -12,18 +12,19 @@ typedef AST_T (*universal_term_function)(parser_t parser);
 AST_T node_init_empty()
 {
     AST_T ast = malloc(sizeof(struct AST));
-    if (ast != NULL) {
+    if (ast != NULL)
+    {
         ast->nodes = queue_init();
     }
     return ast;
 }
 
-AST_T node_init(tToken token)
+AST_T node_init(AST_node_type_t type)
 {
     AST_T tree = node_init_empty();
     if (tree != NULL)
     {
-        tree->token = token;
+        tree->node_type = type;
     }
     return tree;
 }
@@ -159,8 +160,10 @@ AST_T comparision(parser_t parser)
     return universal_term(parser, arithmetic_expression, operators, 6);
 }
 
-AST_T not_test(parser_t parser) {
-    if (accept(parser, TKEYWORD)) {
+AST_T not_test(parser_t parser)
+{
+    if (accept(parser, TKEYWORD))
+    {
         if (ptr_string_c_equals(parser->previousToken.value, "not"))
         {
             fprintf(stderr, "Line %ld: %s %s\n", line,
@@ -172,29 +175,92 @@ AST_T not_test(parser_t parser) {
 
         ast = not_test(parser);
 
-        if (ast == NULL) {
+        if (ast == NULL)
+        {
             ast = comparision(parser);
-            if (ast != NULL) {
+            if (ast != NULL)
+            {
                 AST_T parent = node_init(not_token);
                 parent->left = ast;
                 return parent;
             }
-            else {
+            else
+            {
                 fprintf(stderr, "Line %ld: %s\n", line, "Expecting comparision");
                 return NULL;
             }
         }
-        else {
+        else
+        {
             return node_init(parser->previousToken);
         }
     }
-    else {
+    else
+    {
         return NULL;
     }
 }
 
-AST_T and_test(parser_t parser) {
+AST_T and_test(parser_t parser)
+{
     return universal_term(parser, not_test, TA);
+}
+
+AST flow_statement(parser_t parser)
+{
+    if (accept(parser, TKEYWORD))
+    {
+        if (ptr_string_c_equals(parser->previousToken.value, "break"))
+        {
+            return node_init(BREAK);
+        }
+    }
+    if (accept(parser, TKEYWORD))
+    {
+        if (ptr_string_c_equals(parser->previousToken.value, "continue"))
+        {
+            return node_init(CONTINUE);
+        }
+    }
+    if (accept(parser, TKEYWORD))
+    {
+        if (ptr_string_c_equals(parser->previousToken.value, "return"))
+        {
+            return node_init(RETURN);
+        }
+    }
+}
+
+AST_T small_statement(parser_t parser)
+{
+    if (accept(parser, TKEYWORD))
+    {
+        if (ptr_string_c_equals(parser->previousToken.value, "pass"))
+        {
+            return node_init(PASS);
+        }
+    }
+}
+
+AST_T simple_statement(parser_t parser)
+{
+    AST_T small_stmt = small_statement(parser);
+
+    if (small_stmt != NULL)
+    {
+        if (accept(parser, TNEWLINE))
+        {
+            return small_stmt;
+        }
+    }
+}
+
+AST_T compund_statement(parser_t parser)
+{
+}
+
+AST_T statement(parser_t parser)
+{
 }
 
 AST_T parse()
@@ -223,44 +289,57 @@ AST_T parse()
 AST_T functionDef(parser_t parser, queue_t queue)
 {
     AST_T ast = node_init_empty();
-    if (accept(parser, TKEYWORD)) {
-        if (ptr_string_c_equals(parser->previousToken.value, "def")) {
+    if (accept(parser, TKEYWORD))
+    {
+        if (ptr_string_c_equals(parser->previousToken.value, "def"))
+        {
             stderr_print(line, TKEYWORD, parser);
             return NULL;
         }
 
-        if (accept(parser, TIDENTIFICATOR)){
+        if (accept(parser, TIDENTIFICATOR))
+        {
             AST_T parent = node_init(parser->previousToken);
-            if (accept(parser, TLEFTPAR)){
-                if (parser->token.type == TIDENTIFICATOR){
+            if (accept(parser, TLEFTPAR))
+            {
+                if (parser->token.type == TIDENTIFICATOR)
+                {
                     functionParams(parser, ast);
                 }
-                else if (accept(parser, TRIGHTPAR)){
-                    if (accept(parser, TCOLON)){
-                        if (parser->token.type == TENDOFLINE) {
+                else if (accept(parser, TRIGHTPAR))
+                {
+                    if (accept(parser, TCOLON))
+                    {
+                        if (parser->token.type == TENDOFLINE)
+                        {
                             return ast;
                         }
-                        else{
+                        else
+                        {
                             stderr_print(line, TNEWLINE, parser);
                             return NULL;
                         }
                     }
-                    else{
+                    else
+                    {
                         stderr_print(line, TKEYWORD, parser);
                         return NULL;
                     }
                 }
-                else {
+                else
+                {
                     stderr_print(line, TRIGHTPAR, parser);
                     return NULL;
                 }
             }
-            else{
+            else
+            {
                 stderr_print(line, TLEFTPAR, parser);
                 return NULL;
             }
         }
-        else {
+        else
+        {
             stderr_print(line, TIDENTIFICATOR, parser);
             return NULL;
             //lubim vinciho je to moje bubu
@@ -272,12 +351,10 @@ AST_T functionDef(parser_t parser, queue_t queue)
 
 AST_T functionParams(parser_t parser, AST_T ast)
 {
-
-
 }
 
 void stderr_print(long int line, tToken type, parser_t parser)
 {
     fprintf(stderr, "Line %ld: %s %u %s %s\n", line,
-            "Expecting ", type.type, " got", (char*)parser->previousToken.value);
+            "Expecting ", type.type, " got", (char *)parser->previousToken.value);
 }
