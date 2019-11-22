@@ -11,7 +11,11 @@ typedef AST_T (*universal_term_function)(parser_t parser);
 
 AST_T node_init_empty()
 {
-    return malloc(sizeof(struct AST));
+    AST_T ast = malloc(sizeof(struct AST));
+    if (ast != NULL) {
+        ast->nodes = queue_init();
+    }
+    return ast;
 }
 
 AST_T node_init(tToken token)
