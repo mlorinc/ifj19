@@ -188,7 +188,7 @@ void start_state(char c, tState* state, ptr_string_t string, tToken *token)
     else if(c == '0')
         *state = sInteger0;
     else if(c == '\'')
-        *state = sStringStart;
+        *state = sString;
     else if(c == '"')
         *state = sBlockCommentStart1;
     else if(c == '#')
@@ -231,7 +231,6 @@ void start_state(char c, tState* state, ptr_string_t string, tToken *token)
         token_fill(token, string, (int) -1, TSEMICOLON);
     else if (c == ',')
         token_fill(token, string, (int) -1, TCOMMA);
-
     else    // Undifiend char
         *state = sLexErr;
 }
@@ -439,13 +438,43 @@ tToken get_token()
                     error_print("Exclamation mark should be followed by equal sign", row, character_position);
                     return token_fill(&token, string, c, TLEXERR);
                 }
-            default:
-                token.value = ptr_string("NIE JE naimplementovane");
-                token.type = TNOTHING;
-                return(token);
-
             /************************* String *****************************/
             // TODO
+            case sString:
+                if (c > 31 && c != '\\' && c != '\'')
+                    state = sString;
+                else if (c == '\\')
+                    state = sStringEscape;
+                else if (c == '\'') // End of the string
+                    return token_fill(&token, string, (int) -1, TSTRING);   // -1 because we don't want to unget that char (')
+                break;
+            case sStringEscape:
+                if (c == '"' || c == '\\' || c == '\'' || c == 'n' || c == 't') // Valid escape sequence
+                    state = sString;
+                else if (c == 'x')  // Hexa number
+                    state = sStringEscapeNumber1;
+                else    // Not valid, nothing happens
+                    state = sString;
+                break;
+            case sStringEscapeNumber1:
+                if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))
+                    state = sStringEscapeNumber2;
+                else
+                {
+                    error_print("Hexadecimal number in string must have two valid digits/symbols", row, character_position);
+                    return token_fill(&token, string, c, TLEXERR);
+                }
+                break;
+            case sStringEscapeNumber2:
+                if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))
+                    // End of the hex number
+                    state = sString;
+                else
+                {
+                    error_print("Hexadecimal number in string must have two digits/symbols", row, character_position);
+                    return token_fill(&token, string, c, TLEXERR);
+                }
+                break;
         }
     }
     stack_destroy(stack);
