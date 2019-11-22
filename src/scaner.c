@@ -28,8 +28,8 @@ tToken_type last_token_type = TFIRSTINDENT;
 stack_t stack;  //stack for indent numbers
 
 /* These two numbers are for better error message */
-unsigned int row = 0;   // What row are we at
-unsigned int character_position = 0;
+unsigned int row = 1;   // What row are we at
+unsigned int character_position = 1;
 
 /* Global array of possible keywords */
 char *keywords[KEYWORDS_COUNT] = {"def", "else", "if", "None", "pass", "return", "while"};
@@ -55,16 +55,18 @@ int* p_int(int number)
 tToken_type push_indent_on_stack(int indent_number)
 {
     int* p_number = NULL;
-    p_number = p_int(indent_counter);
+    p_number = p_int(indent_number);
     if(p_number == NULL)    //check for new malloc pointer to int
     {
         stack_destroy(stack);
+        free(stack);
         return TERR;
     }
     else if(stack_push(stack, p_number) != 0)   //check if stack push was unsuccessfully
     {
         free(p_number);
         stack_destroy(stack);
+        free(stack);
         return TERR;
     }
     return TNOTHING;
@@ -116,7 +118,7 @@ tToken indent_counter()
         if(c == '#' || c == '"')    //check for comment after indent
             return token;
 
-        if(number_on_top < counter)
+        if(*number_on_top < counter)
         {
             token.type = push_indent_on_stack(counter);
             if(token.type == TERR)  //check if push on stack was unsuccessfully
@@ -124,14 +126,15 @@ tToken indent_counter()
             else
                 token.type = TINDENT;
         }
-        else if(number_on_top > counter)
+        else if(*number_on_top > counter)
         {
+            free(number_on_top);
             stack_pop(stack);
             number_on_top = stack_top(stack);
             if(*number_on_top < counter)
             {
                 token.type = TLEXERR;
-                fprintf(stderr, "Indent error on line %d.", row);
+                fprintf(stderr, "Indent error on line %d.\n", row);
             }
             else
                 token.type = TDEDENT;
@@ -140,66 +143,6 @@ tToken indent_counter()
         }
     }
     return token;
-}
-
-/**
- * Process all states from starting state of automata
- * @param c Stdin char
- * @param state Automata state
- * @param string Temporary string that will be sent as token's contet
- */
-void start_state(char c, tState* state, ptr_string_t string, tToken token)
-{
-    c = tolower(c);
-    if(c >= '1' && c <= '9')
-        *state = sInteger;
-    else if(c == '0')
-        *state = sInteger0;
-    else if(c == '\'')
-        *state = sStringStart;
-    else if(c == '"')
-        *state = sBlockCommentStart1;
-    else if(c == '#')
-        *state = sLineComment;
-    else if(c == '+')
-        return token_fill(&token, string, (int) -1, TADD);
-    else if(c == '-')
-        return token_fill(&token, string, (int) -1, TSUB);
-    else if(c == '*')
-        return token_fill(&token, string, (int) -1, TMUL);
-    else if(c == '/')
-        *state = sDivOrFloorDiv;
-    else if(c == '<')
-        *state = sLtOrLte;
-    else if(c == '>')
-        *state = sGtOrGte;
-    else if(c == '=')
-        *state = sAssignOrEqual;
-    else if(c == '!')
-        *state = sExclMark;
-    else if(c == '_' || c >= 97 && c<= 122)
-        *state = sIdentificatorOrKeyWord;
-    else if(c == ' ')
-    {
-        *state = sStart;
-        ptr_string_delete_last(string); // Delete char ' ' from token value
-    }
-    else if (c == '\n')
-    {
-        *state = sNewLine;
-        ptr_string_delete_last(string); // Delete char '\n' from token value
-    }
-    else if (c == '(')
-        return token_fill(&token, string, (int) -1, TLEFTPAR);
-    else if (c == ')')
-        return token_fill(&token, string, (int) -1, TRIGHTPAR);
-    else if (c == ';')
-        return token_fill(&token, string, (int) -1, TSEMICOLON);
-    else if (c == ',')
-        return token_fill(&token, string, (int) -1, TCOMMA);
-
-    else    // Undifiend char
-        *state = sLexErr;
 }
 
 /**
@@ -212,7 +155,10 @@ void start_state(char c, tState* state, ptr_string_t string, tToken token)
  */
 tToken token_fill(tToken *token_ptr, ptr_string_t string, char c, tToken_type token_type)
 {
-    ptr_string_delete_last(string);
+    if(token_type != TIDENTIFICATOR && token_type != TKEYWORD)
+    {
+        ptr_string_delete_last(string);
+    }
     if (c != -1)
         ungetc(c, stdin); // Put the last char back to stdin
     if (token_type == TLEXERR || token_type == TNEWLINE)
@@ -229,6 +175,68 @@ tToken token_fill(tToken *token_ptr, ptr_string_t string, char c, tToken_type to
 }
 
 /**
+ * Process all states in starting state of automata
+ * @param c Stdin char
+ * @param state Automata state
+ * @param string Temporary string that will be sent as token's contet
+ */
+void start_state(char c, tState* state, ptr_string_t string, tToken *token)
+{
+    c = tolower(c);
+    if(c >= '1' && c <= '9')
+        *state = sInteger;
+    else if(c == '0')
+        *state = sInteger0;
+    else if(c == '\'')
+        *state = sStringStart;
+    else if(c == '"')
+        *state = sBlockCommentStart1;
+    else if(c == '#')
+        *state = sLineComment;
+    else if(c == '+')
+        token_fill(token, string, (int) -1, TADD);
+    else if(c == '-')
+        token_fill(token, string, (int) -1, TSUB);
+    else if(c == '*')
+        token_fill(token, string, (int) -1, TMUL);
+    else if(c == ':')
+        token_fill(token, string, (int) -1, TCOLON);
+    else if(c == '/')
+        *state = sDivOrFloorDiv;
+    else if(c == '<')
+        *state = sLtOrLte;
+    else if(c == '>')
+        *state = sGtOrGte;
+    else if(c == '=')
+        *state = sAssignOrEqual;
+    else if(c == '!')
+        *state = sExclMark;
+    else if(c == '_' || (c >= 'a' && c<= 'z'))
+        *state = sIdentificatorOrKeyWord;
+    else if(c == ' ')
+    {
+        *state = sStart;
+        ptr_string_delete_last(string); // Delete char ' ' from token value
+    }
+    else if (c == '\n')
+    {
+        *state = sNewLine;
+        ptr_string_delete_last(string); // Delete char '\n' from token value
+    }
+    else if (c == '(')
+        token_fill(token, string, (int) -1, TLEFTPAR);
+    else if (c == ')')
+        token_fill(token, string, (int) -1, TRIGHTPAR);
+    else if (c == ';')
+        token_fill(token, string, (int) -1, TSEMICOLON);
+    else if (c == ',')
+        token_fill(token, string, (int) -1, TCOMMA);
+
+    else    // Undifiend char
+        *state = sLexErr;
+}
+
+/**
  * Prints the error message to stderr
  * @param message Error message
  * @param line Line in code
@@ -239,51 +247,35 @@ void error_print(char *message, unsigned int line, unsigned int position)
     fprintf(stderr, "%s\n Error on line: %d.\n On position: %d.\n", message, line, position);
 }
 
-/**
- * Append c to str
- * @param c char whitch will be append
- * @param str string where I want append
- * @return str + c
- */
-ptr_string_t char_append(char c, ptr_string_t str)
-{
-    ptr_string_t newStr = NULL;
-    if((newStr = ptr_string_append(str, c)) == NULL)
-    {
-        newStr = ptr_string_new_with_length(1);
-        newStr = ptr_string_append(str, c);
-    }
-    ptr_string_delete(str);
-    return newStr;
-}
-
 tToken get_token()
 {
     tToken token;
     int c; // New char on input
     tState state = sStart;
-    ptr_string_t string = NULL; // Space for something readed from input
 
     token = indent_counter();
     last_token_type = token.type;
+    token.value = NULL;
     if(token.type != TNOTHING) //if indent wasn't the same as before
+    {
         return token;
+    }
+
+    ptr_string_t string = ptr_string_new(); // Space for something readed from input
 
     while ((c=getchar()) != EOF)    // Until whole input is readed
     {
-        if((string = char_append(c, string)) == NULL) //check if append was successfully
-        {
-            last_token_type = token.type = TERR;
-            token.value = NULL;
-            return token;
-        }
+        ptr_string_append(string, c);
+
         character_position++;   // We've moved by one character
 
         switch(state)
         {
             /*************************** Start ********************************/   
             case sStart:
-                start((char) c, &state, string);
+                start_state((char) c, &state, string, &token);
+                if (token.value != NULL)
+                    return token;
                 break;
 
             case sNewLine:
@@ -321,7 +313,7 @@ tToken get_token()
                 break;
             case sExponent:
                 if (c >= '0' && c <= '9')
-                    state = sEndExpondent;
+                    state = sFloat;
                 else if (c == '-' || c == '+')
                     state = sExponentOperator;
                 else    // Error (not ending state)
@@ -397,18 +389,20 @@ tToken get_token()
                 }
                 break;    
             
-            /************************* Indetificator/Keyword *****************************/
+            /************************* Idetificator/Keyword *****************************/
             case sIdentificatorOrKeyWord:
                 // TODO after read is done, compare the string with array of keywords
-                if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'))
+                if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_')
                     state = sIdentificatorOrKeyWord;
                 else
                 {
-                    char *tmp_string = ptr_string_c_string(string);
+                    ptr_string_delete_last(string);
                     for (unsigned short i = 0; i < KEYWORDS_COUNT; i++) // Check for keyword
                     {
-                        if (!(strcmp(tmp_string, keywords[i])))
+                        if (ptr_string_c_equals(string, keywords[i]))
+                        {
                             return token_fill(&token, string, c, TKEYWORD);
+                        }
                     }   // Not a keyword
                     return token_fill(&token, string, c, TIDENTIFICATOR);
                 }
@@ -418,12 +412,10 @@ tToken get_token()
             // Add, Sub and Mul is already done in sStart state
             case sDivOrFloorDiv:
                 if (c == '/')   // Floor division
-                    state = sFloorDiv;
+                    return token_fill(&token, string, c, TFLOORDIV);
                 else    // Regular division
                     return token_fill(&token, string, c, TDIV);
                 break;
-            case sFloorDiv:
-                return token_fill(&token, string, c, TFLOORDIV);
             case sAssignOrEqual:
                 if (c == '=')   // Equal
                     return token_fill(&token, string, c, TEQ);
@@ -445,8 +437,22 @@ tToken get_token()
                 else    // Error
                 {
                     error_print("Exclamation mark should be followed by equal sign", row, character_position);
-                    return token_fill(&token, stirng, c, TLEXERR);
+                    return token_fill(&token, string, c, TLEXERR);
                 }
+            default:
+                token.value = ptr_string("NIE JE naimplementovane");
+                token.type = TNOTHING;
+                return(token);
+
+            /************************* String *****************************/
+            // TODO
         }
     }
+    stack_destroy(stack);
+    free(stack);
+    ptr_string_delete(string);
+
+    token.value = NULL;
+    last_token_type = token.type = TENDOFFILE;
+    return(token);
 }
