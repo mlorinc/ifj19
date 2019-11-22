@@ -1,29 +1,16 @@
-STRING=ptr_string
-ERR=error
 MAIN=main
 
-# Define what project you want to compile
 PRJ-NAME=ifj19
 
-TARGET=$(PRJ-NAME)
+SOURCES=deque.c  error.c iterator.c ptr_string.c  queue.c  scaner.c  stack.c
 CC=gcc
-CFLAGS=-Wall -Werror -Wextra -Wpedantic -std=c99 -pedantic -lm
+CFLAGS=-Wall -Werror -Wextra -Wpedantic -std=c99 -pedantic -g -O0
+LDFLAGS=-lm
+
+all:
+	$(CC) $(CFLAGS) -o $(PRJ-NAME) $(MAIN).c $(SOURCES) $(LDFLAGS)
 
 .PHONY : all
 
-all: $(TARGET)
-
-$(TARGET): $(STRING).o $(ERR).o $(MAIN).o
-	$(CC) $(CFLAGS) $^ -o $@
-
-$(STRING).o: $(STRING).c $(ERR).h $(STRING).h
-	$(CC) $(CFLAGS) -c $<
-
-$(ERR).o: $(ERR).c $(ERR).h
-	$(CC) $(CFLAGS) -c $<
-
-$(MAIN).o: $(MAIN).c $(ERR).h $(STRING).h
-	$(CC) $(CFLAGS) -c $<
-
 clean:
-	rm -f *.o $(TARGET)
+	rm -f *.o $(PRJ-NAME)
