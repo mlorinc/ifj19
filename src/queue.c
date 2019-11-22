@@ -19,3 +19,11 @@ int queue_pop(queue_t queue) {
 void *queue_front(queue_t queue) {
     return deque_front(queue);
 }
+
+iterator_t queue_begin(queue_t queue) {
+    return deque_begin(queue);
+}
+
+iterator_t queue_end(queue_t queue) {
+    return deque_end(queue);
+}
