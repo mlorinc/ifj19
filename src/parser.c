@@ -324,6 +324,7 @@ AST_T functionDef(parser_t parser, queue_t queue)
                 }
                 else
                 {
+                    stderr_print(line, TRIGHTPAR, parser);
                     return NULL;
                 }
             }
