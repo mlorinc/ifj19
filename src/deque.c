@@ -28,6 +28,7 @@ int deque_destroy(deque_t deque) {
     {
         deque_item_t oldFirst = current;
         current = current->next;
+        free(oldFirst->value);
         free(oldFirst);
     }
     deque->first = deque->last = NULL;
