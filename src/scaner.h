@@ -96,10 +96,11 @@ typedef enum {
     sExponentOperator,    // Not ending (e.g. 1.2e-)
 
     // String
-    sStringStart,   // Not ending (')
+    sString,   // Not ending (') and getting all the characters
     sStringEscape,  // Not ending (\)
-    sStringEscapeNumber,    // Not ending ([\x27] it is ['])
-    sString,    // Ending
+    sStringEscapeNumber1,    // Not ending first digit of hexa number
+    sStringEscapeNumber2,    // Not ending second digit of hexa number
+    // sString after getting (') returns token
 
     // Operators
     sAssignOrEqual, // Ending '=', but can be '=='
