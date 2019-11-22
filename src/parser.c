@@ -206,7 +206,7 @@ AST_T and_test(parser_t parser)
     return universal_term(parser, not_test, TA);
 }
 
-AST flow_statement(parser_t parser)
+AST_T flow_statement(parser_t parser)
 {
     if (accept(parser, TKEYWORD))
     {

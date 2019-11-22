@@ -9,7 +9,7 @@ set(MySources
     ${PROJECT_SOURCE_DIR}/src/queue.c 
     ${PROJECT_SOURCE_DIR}/src/scaner.c 
     ${PROJECT_SOURCE_DIR}/src/stack.c
-)
+        expression.c expression.h)
 
 add_library(ifj ${MySources})
 
