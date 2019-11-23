@@ -228,9 +228,9 @@ void start_state(char c, tState* state, ptr_string_t string, tToken *token)
     else if (c == ')')
         token_fill(token, string, (int) -1, TRIGHTPAR);
     else if (c == ';')
-        return token_fill(&token, string, (int) -1, TSEMICOLON);
+        token_fill(token, string, (int) -1, TSEMICOLON);
     else if (c == ':')
-        return token_fill(&token, string, (int) -1, TCOLON);
+        token_fill(token, string, (int) -1, TCOLON);
     else if (c == ',')
         token_fill(token, string, (int) -1, TCOMMA);
     else    // Undifiend char

@@ -53,7 +53,6 @@ typedef enum {
 	TSUB, // -
 	TMUL, // *
 	TDIV, // /
-    TCOLON, // :
     TFLOORDIV,  // //
 	TLT, // <
 	TGT, // >
@@ -111,13 +110,7 @@ typedef enum {
     sGtOrGte, // Ending '>', but can be '>='
 
     // Special characters
-    sLeftPar, // Ending ')'
-    sRightPar, // Ending '('
     sExclMark, // Not ending '!'
-    sColon, //?
-    sSemicolon, // Ending ';'
-    sComma, // Ending ','
-
     sEOL,
     sEOF,
 
