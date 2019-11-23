@@ -9,6 +9,6 @@
  * @param parser parser object
  * @return postfix expression or NULL if parse error occurred
  */ 
-queue_t parse_expression(parser_t parser);
+ast_t parse_expression(parser_t parser);
 
 #endif 
