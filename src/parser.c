@@ -1,18 +1,30 @@
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <assert.h>
+#include <string.h>
 #include "parser.h"
+#include "queue.h"
+#include "ptr_string.h"
 
-AST_T node_init_empty() {
-    return malloc(sizeof(struct AST));
+typedef AST_T (*universal_term_function)(parser_t parser);
+
+AST_T node_init_empty()
+{
+    AST_T ast = malloc(sizeof(struct AST));
+    if (ast != NULL)
+    {
+        ast->nodes = queue_init();
+    }
+    return ast;
 }
 
-AST_T node_init(tToken token)
+AST_T node_init(AST_node_type_t type)
 {
     AST_T tree = node_init_empty();
     if (tree != NULL)
     {
-        tree->token = token;
+        tree->node_type = type;
     }
     return tree;
 }
@@ -32,7 +44,7 @@ void parser_next(parser_t parser)
 {
     assert(parser != NULL);
     parser->previousToken = parser->token;
-    parser->token = getToken();
+    parser->token = get_token();
 }
 
 bool accept(parser_t parser, tToken_type token_type)
@@ -42,6 +54,16 @@ bool accept(parser_t parser, tToken_type token_type)
         parser_next(parser);
         return true;
     }
+    return false;
+}
+
+bool expect(parser_t parser, tToken_type token_type)
+{
+    if (accept(parser, token_type))
+    {
+        return true;
+    }
+    fprintf(stderr, "%s\n", "unexpected token");
     return false;
 }
 
@@ -70,68 +92,175 @@ AST_T factor(parser_t parser)
     }
 }
 
-AST_T term(parser_t parser) {
-    AST_T f1 = factor(parser);
-    if (f1 != NULL) {
+AST_T universal_term(parser_t parser, universal_term_function fn, const tToken_type operators[], size_t operators_length)
+{
+    AST_T f1 = fn(parser);
+    if (f1 != NULL)
+    {
         AST_T last_ast = node_init_empty();
         AST_T current_ast = node_init_empty();
         current_ast->left = f1;
         for (;;)
         {
-            if (accept(parser, TMUL) || accept(parser, TDIV) || accept(parser, TMOD))
+            bool accepted = false;
+            for (size_t i = 0; i < operators_length; i++)
             {
-                current_ast->token = parser->previousToken;
+                tToken_type op = operators[i];
+                if (accept(parser, op))
+                {
+                    current_ast->token = parser->previousToken;
 
-                AST_T f2 = factor(parser);
-                if (f2 != NULL) {
-                    current_ast->right = f2;
-                }
-                else {
-                    return NULL;
-                }
-                
-                last_ast = current_ast;
-                current_ast = node_init_empty();
+                    AST_T f2 = fn(parser);
+                    if (f2 != NULL)
+                    {
+                        current_ast->right = f2;
+                    }
+                    else
+                    {
+                        fprintf(stderr, "Line %ld: %s\n", line, "Missing second operand");
+                        return NULL;
+                    }
 
-                current_ast->left = last_ast;
+                    last_ast = current_ast;
+                    current_ast = node_init_empty();
+
+                    current_ast->left = last_ast;
+                    accepted = true;
+                    break;
+                }
             }
-            else {
+            if (!accepted)
+            {
                 return current_ast;
             }
         }
-        
     }
-    else {
+    else
+    {
+        fprintf(stderr, "Line %ld: %s\n", line, "Missing first operand");
         return NULL;
     }
 }
 
-AST_T expression(parser_t parser)
+AST_T term(parser_t parser)
 {
-    if (accept(parser, TFLOAT) || accept(parser, TINT))
+    tToken_type operators[] = {TMUL, TDIV, TFLOORDIV};
+    return universal_term(parser, factor, operators, 3);
+}
+
+AST_T arithmetic_expression(parser_t parser)
+{
+    tToken_type operatos[] = {TADD, TSUB};
+    return universal_term(parser, term, operatos, 2);
+}
+
+AST_T comparision(parser_t parser)
+{
+    tToken_type operators[] = {TLT, TGT, TEQ, TGTE, TLTE, TNE};
+    return universal_term(parser, arithmetic_expression, operators, 6);
+}
+
+AST_T not_test(parser_t parser)
+{
+    if (accept(parser, TKEYWORD))
     {
-        return node_init(parser->previousToken);
-    }
-    if (accept(parser, TLEFTPAR))
-    {
-        AST_T expr = expression(parser);
-        if (expr != NULL)
+        if (ptr_string_c_equals(parser->previousToken.value, "not"))
         {
-            if (accept(parser, TRIGHTPAR))
+            fprintf(stderr, "Line %ld: %s %s\n", line,
+                    "Expecting not keyword, got", parser->previousToken.value);
+            return NULL;
+        }
+        AST_T ast;
+        tToken not_token = parser->previousToken;
+
+        ast = not_test(parser);
+
+        if (ast == NULL)
+        {
+            ast = comparision(parser);
+            if (ast != NULL)
             {
-                return expr;
+                AST_T parent = node_init(not_token);
+                parent->left = ast;
+                return parent;
             }
             else
             {
+                fprintf(stderr, "Line %ld: %s\n", line, "Expecting comparision");
                 return NULL;
             }
         }
         else
         {
-            return NULL;
+            return node_init(parser->previousToken);
         }
     }
-    return NULL;
+    else
+    {
+        return NULL;
+    }
+}
+
+AST_T and_test(parser_t parser)
+{
+    return universal_term(parser, not_test, TA);
+}
+
+AST_T flow_statement(parser_t parser)
+{
+    if (accept(parser, TKEYWORD))
+    {
+        if (ptr_string_c_equals(parser->previousToken.value, "break"))
+        {
+            return node_init(BREAK);
+        }
+    }
+    if (accept(parser, TKEYWORD))
+    {
+        if (ptr_string_c_equals(parser->previousToken.value, "continue"))
+        {
+            return node_init(CONTINUE);
+        }
+    }
+    if (accept(parser, TKEYWORD))
+    {
+        if (ptr_string_c_equals(parser->previousToken.value, "return"))
+        {
+            return node_init(RETURN);
+        }
+    }
+}
+
+AST_T small_statement(parser_t parser)
+{
+    if (accept(parser, TKEYWORD))
+    {
+        if (ptr_string_c_equals(parser->previousToken.value, "pass"))
+        {
+            return node_init(PASS);
+        }
+    }
+}
+
+AST_T simple_statement(parser_t parser)
+{
+    AST_T small_stmt = small_statement(parser);
+
+    if (small_stmt != NULL)
+    {
+        if (accept(parser, TNEWLINE))
+        {
+            return small_stmt;
+        }
+    }
+}
+
+AST_T compund_statement(parser_t parser)
+{
+}
+
+AST_T statement(parser_t parser)
+{
 }
 
 AST_T parse()
@@ -139,108 +268,93 @@ AST_T parse()
     parser_t parser = parser_init();
     parser_next(parser);
 
-    if (parser->token.type == TINDENT){
-        //TODO function to parse indent
-    }
-    if (parser->token.type == TDEDENT){
-        //TODO function to parse dedent
-    }
-    if (parser->token.type == TINT){
-        //TODO function to parse int
-    }
-    if (parser->token.type == TFLOAT){
-        //TODO function to parse float
-    }
-    if (parser->token.type == TSTRING){
-        //TODO function to parse string
-    }
-    if (parser->token.type == TKEYWORD){
-        //TODO function to parse keyword
-        //here we must identify, which keyword we got
-        //f.e -> deff, if, pass, while, break, ...
-        if (!strcmp(&(*(char*)parser->token.value), "def")){
-            functionDef();
-        }
-        if (!strcmp(&(*(char*)parser->token.value), "if")){
-            //call function for statement
-        }
-        if (!strcmp(&(*(char*)parser->token.value), "else")){
-            //call function for else statement
-        }
-        if (!strcmp(&(*(char*)parser->token.value), "while")){
-
-        }
-        if (!strcmp(&(*(char*)parser->token.value), "pass")){
-            //call function for do nothing
-        }
-        if (!strcmp(&(*(char*)parser->token.value), "return")){
-
-        }
-    }
-    if (parser->token.type == TIDENTIFICATOR){
-        //TODO function to parse identificator
-    }
-    if (parser->token.type == TADD){
-        //TODO function to parse add
-    }
-    if (parser->token.type == TSUB){
-        //TODO function to parse sub
-    }
-    if (parser->token.type == TMUL){
-        //TODO function to parse mul
-    }
-    if (parser->token.type == TDIV){
-        //TODO function to parse div
-    }
-    if (parser->token.type == TMOD){
-        //TODO function to parse mod
-    }
-
-    /**
-     * FROM THIS POINT IM NOT SURE IF THIS IS NECESSARY
-     * TO HAVE THIS IN PARSE FUNCTION CAUSE WE EXPECT OTHERS
-     * TOKENS FIRST
-     *
-     * TOMORROW WE HAVE TO DISCUSS THIS
-     */
-    if (parser->token.type == TLT){
-        //TODO function to parse less than
-    }
-    if (parser->token.type == TGT){
-        //TODO function to parse greater than
-    }
-    if (parser->token.type == TLTE){
-        //TODO function to parse <=
-    }
-    if (parser->token.type == TGTE){
-        //TODO function to parse >=
-    }
-    if (parser->token.type == TEQ){
-        //TODO function to parse ==
-    }
-    if (parser->token.type == TNE){
-        //TODO function to parse !=
-    }
-    if (parser->token.type == TLEFTPAR){
-        //TODO function to parse (
-    }
-    if (parser->token.type == TRIGHTPAR){
-        //TODO function to parse )
-    }
-    /**
-     * END OF SECTION
-     * MENTIONED UPWARDS
-     */
+    queue_t queue = queue_init();
 
     parser_destroy(parser);
+    queue_destroy(queue);
+    return NULL;
 }
 
-AST_T functionDef()
+/**
+ *                            FNC NAME
+ *                              /  \
+ *                             /   \
+ *                            /    \
+ *                        PARAMS   BODY
+ *                          /        \
+ *                         /         \
+ *                        /          \
+ *               list of params    body of function
+ */
+AST_T functionDef(parser_t parser, queue_t queue)
 {
-    parser_t parser = parser_init();
-    parser_next(parser);
+    AST_T ast = node_init_empty();
+    if (accept(parser, TKEYWORD))
+    {
+        if (ptr_string_c_equals(parser->previousToken.value, "def"))
+        {
+            stderr_print(line, TKEYWORD, parser);
+            return NULL;
+        }
 
+        if (accept(parser, TIDENTIFICATOR))
+        {
+            AST_T parent = node_init(parser->previousToken);
+            if (accept(parser, TLEFTPAR))
+            {
+                if (parser->token.type == TIDENTIFICATOR)
+                {
+                    functionParams(parser, ast);
+                }
+                else if (accept(parser, TRIGHTPAR))
+                {
+                    if (accept(parser, TCOLON))
+                    {
+                        if (parser->token.type == TENDOFLINE)
+                        {
+                            return ast;
+                        }
+                        else
+                        {
+                            stderr_print(line, TNEWLINE, parser);
+                            return NULL;
+                        }
+                    }
+                    else
+                    {
+                        stderr_print(line, TKEYWORD, parser);
+                        return NULL;
+                    }
+                }
+                else
+                {
+                    stderr_print(line, TRIGHTPAR, parser);
+                    return NULL;
+                }
+            }
+            else
+            {
+                stderr_print(line, TLEFTPAR, parser);
+                return NULL;
+            }
+        }
+        else
+        {
+            stderr_print(line, TIDENTIFICATOR, parser);
+            return NULL;
+            //lubim vinciho je to moje bubu
+        }
+    }
 
+    return NULL;
+}
 
-    parser_destroy(parser);
+AST_T functionParams(parser_t parser, AST_T ast)
+{
+}
+
+void stderr_print(long int line, tToken type, parser_t parser)
+{
+    fprintf(stderr, "Line %ld: %s %u %s %s\n", line,
+            "Expecting ", type.type, " got", (char *)parser->previousToken.value);
 }
