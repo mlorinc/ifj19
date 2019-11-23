@@ -53,6 +53,7 @@ typedef enum {
 	TSUB, // -
 	TMUL, // *
 	TDIV, // /
+    TCOLON, // :
     TFLOORDIV,  // //
 	TLT, // <
 	TGT, // >
@@ -65,6 +66,7 @@ typedef enum {
     TLEFTPAR, // )
     TRIGHTPAR, // (
     TSEMICOLON, // ;
+    TCOLON, // :
     TCOMMA, // ,
     TASSIGN,    // =
 
@@ -83,7 +85,7 @@ typedef enum {
 
     sStart, // Not ending
     sNewLine,   // '\n'
-    
+
     // Identificator and Keyword
     sIdentificatorOrKeyWord,    // Ending
 
@@ -91,20 +93,20 @@ typedef enum {
     sInteger0,   // Ending (includes only 0)
     sInteger,   // Ending (e.g. 5906)
 
-    sFloat,    // Ending (e.g. 1.332 or 0.233)
+    sFloat,    // Ending (e.g. 1.332 or 0.233 or 1.2e-22)
     sExponent,    // Not ending
     sExponentOperator,    // Not ending (e.g. 1.2e-)
-    sEndExpondent,    // Ending
 
     // String
-    sStringStart,   // Not ending (')
+    sString,   // Not ending (') and getting all the characters
     sStringEscape,  // Not ending (\)
-    sStringEscapeNumber,    // Not ending ([\x27] it is ['])
-    sString,    // Ending
+    sStringEscapeNumber1,    // Not ending first digit of hexa number
+    sStringEscapeNumber2,    // Not ending second digit of hexa number
+    // sString after getting (') returns token
 
     // Operators
-    sAssignOrEqual, // Ending '=', but can go into sEqual
-    sDivOrFloorDiv, // Ending '/', but can go into sFloorDiv
+    sAssignOrEqual, // Ending '=', but can be '=='
+    sDivOrFloorDiv, // Ending '/', but can be '//'
     sLtOrLte, // Ending '<', but can be '<='
     sGtOrGte, // Ending '>', but can be '>='
 
@@ -112,6 +114,7 @@ typedef enum {
     sLeftPar, // Ending ')'
     sRightPar, // Ending '('
     sExclMark, // Not ending '!'
+    sColon, //?
     sSemicolon, // Ending ';'
     sComma, // Ending ','
 

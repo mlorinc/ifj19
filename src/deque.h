@@ -17,6 +17,8 @@ deque_t deque_init();
 
 int deque_destroy(deque_t deque);
 
+size_t deque_size(deque_t deque);
+
 /**
  * Pushes element to end of collection
  * @param deque deque on which operation will be performed

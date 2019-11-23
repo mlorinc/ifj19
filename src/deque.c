@@ -18,7 +18,14 @@ struct deque
 
 deque_t deque_init() {
     deque_t deque = calloc(1, sizeof(struct deque));
-    return deque != NULL ? deque : NULL;
+    if (deque != NULL) {
+        deque->size = 0;
+    }
+    return deque;
+}
+
+size_t deque_size(deque_t deque) {
+    return deque->size;
 }
 
 int deque_destroy(deque_t deque) {
@@ -28,6 +35,7 @@ int deque_destroy(deque_t deque) {
     {
         deque_item_t oldFirst = current;
         current = current->next;
+        free(oldFirst->value);
         free(oldFirst);
     }
     deque->first = deque->last = NULL;

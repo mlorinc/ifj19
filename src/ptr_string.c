@@ -92,7 +92,7 @@ ptr_string_t ptr_string_new()
 
 ptr_string_t ptr_string_new_with_length(const size_t initial_length)
 {
-    ptr_string_t new_ptr = malloc(sizeof(ptr_string_t));
+    ptr_string_t new_ptr = malloc(sizeof(struct my_string));
     if (new_ptr != NULL)
     {
         new_ptr->buffer = malloc(sizeof(char) * initial_length);
@@ -101,8 +101,11 @@ ptr_string_t ptr_string_new_with_length(const size_t initial_length)
             free(new_ptr);
             error_exit(ERROR_INTERNAL);
         }
-        new_ptr->length = initial_length;
-        new_ptr->capacity = initial_length;
+        else
+        {
+            new_ptr->length = initial_length;
+            new_ptr->capacity = initial_length;
+        }
     }
     else
     {
@@ -128,11 +131,11 @@ ptr_string_t ptr_string_clone(const ptr_string_t str)
 
 char *ptr_string_c_string(ptr_string_t const str)
 {
-    size_t length = str->length + 1;
-    char *stringValue = (char *)malloc(sizeof(char) * length);
+    size_t length = str->length;
+    char *stringValue = (char *)malloc(sizeof(char) * (length + 1));
     if (stringValue != NULL)
     {
-        memcpy(stringValue, str->buffer, length - 1);
+        memcpy(stringValue, str->buffer, length);
         stringValue[length] = '\0';
     }
 
@@ -169,9 +172,7 @@ bool ptr_string_delete(ptr_string_t const str)
     }
 
     free(str->buffer);
-    str->buffer = NULL;
-    str->length = 0;
-    str->capacity = 0;
+    free(str);
 
     return true;
 }
@@ -268,20 +269,24 @@ size_t ptr_string_find_char_from_index(ptr_string_t const str, const char c, con
     return -1;
 }
 
-bool ptr_string_equals(ptr_string_t this, ptr_string_t that)
+bool ptr_string_equals(ptr_string_t thiz, ptr_string_t that)
 {
-    assert(this != NULL && that != NULL);
-    return (this == that) || (ptr_string_length(this) == ptr_string_length(that) && memcmp(this->buffer, that->buffer, ptr_string_length(this)) == 0);
+    assert(thiz != NULL && that != NULL);
+    return (thiz == that) || (ptr_string_length(thiz) == ptr_string_length(that) && memcmp(thiz->buffer, that->buffer, ptr_string_length(thiz)) == 0);
 }
 
-bool ptr_string_c_equals(ptr_string_t this, char *that)
+bool ptr_string_c_equals(ptr_string_t thiz, char *that)
 {
-    assert(this != NULL && that != NULL);
-    return (this->buffer == that) || (ptr_string_length(this) == strlen(that) && memcmp(this->buffer, that, ptr_string_length(this)) == 0);
+    assert(thiz != NULL && that != NULL);
+    return (thiz->buffer == that) || (ptr_string_length(thiz) == strlen(that) && memcmp(thiz->buffer, that, ptr_string_length(thiz)) == 0);
 }
 
-void ptr_string_delete_last(ptr_string_t str) //TODO problem with ptr_string_insert
+bool ptr_string_delete_last(ptr_string_t str) 
 {
     if(str->length != 0)
+    {
         str->length = str->length-1;
+        return true;
+    }
+    return false;
 }
