@@ -19,3 +19,7 @@ int stack_pop(stack_t stack) {
 void *stack_top(stack_t stack) {
     return deque_back(stack);
 }
+
+bool stack_empty(stack_t stack) {
+    return deque_size(stack) == 0;
+}

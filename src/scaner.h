@@ -53,7 +53,6 @@ typedef enum {
 	TSUB, // -
 	TMUL, // *
 	TDIV, // /
-    TCOLON, // :
     TFLOORDIV,  // //
 	TLT, // <
 	TGT, // >
@@ -66,6 +65,7 @@ typedef enum {
     TLEFTPAR, // )
     TRIGHTPAR, // (
     TSEMICOLON, // ;
+    TCOLON, // :
     TCOMMA, // ,
     TASSIGN,    // =
 
@@ -84,7 +84,7 @@ typedef enum {
 
     sStart, // Not ending
     sNewLine,   // '\n'
-    
+
     // Identificator and Keyword
     sIdentificatorOrKeyWord,    // Ending
 
@@ -110,12 +110,7 @@ typedef enum {
     sGtOrGte, // Ending '>', but can be '>='
 
     // Special characters
-    sLeftPar, // Ending ')'
-    sRightPar, // Ending '('
     sExclMark, // Not ending '!'
-    sSemicolon, // Ending ';'
-    sComma, // Ending ','
-
     sEOL,
     sEOF,
 

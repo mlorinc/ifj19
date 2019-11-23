@@ -2,13 +2,40 @@
 #define __H_PARSER
 
 #include "scaner.h"
-#include <string.h>
+#include "queue.h"
+
+typedef enum {
+    PASS,
+    RETURN,
+    BREAK,
+    CONTINUE,
+    FUNCTION,
+    FUNCTION_DEFINITION,
+    ID,
+    CONSTANT,
+    PLUS_OP,
+    MINUS_OP,
+    MULTIPLY_OP,
+    DIVIDE_OP,
+    FLOOR_DIVIDE_OP,
+    EQUALS,
+    ASSIGN,
+    LESS_THAN,
+    GREATER_THAN,
+    LESS_THAN_EQUAL,
+    GREATER_THAN_EQUAL,
+    NOT_EQUAL,
+    WHILE,
+    IF,
+    ELIF,
+    ELSE,
+    NONE
+} AST_node_type_t;
 
 struct AST
 {
-    struct AST *left;
-    struct AST *right;
-    tToken token;
+    queue_t nodes;
+    AST_node_type_t node_type;
 };
 
 typedef struct AST *AST_T;
@@ -21,7 +48,7 @@ typedef struct parser
 
 AST_T node_init_empty();
 
-AST_T node_init(tToken token);
+AST_T node_init(AST_node_type_t type);
 
 parser_t parser_init();
 
@@ -39,6 +66,10 @@ AST_T expression(parser_t parser);
 
 AST_T parse();
 
-AST_T functionDef();
+AST_T functionDef(parser_t parser, queue_t queue);
+
+AST_T functionParams(parser_t parser, AST_T ast);
+
+void stderr_print(long int line, tToken type, parser_t parser);
 
 #endif
