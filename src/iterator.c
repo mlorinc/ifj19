@@ -23,7 +23,7 @@ iterator_t iterator_advance(iterator_t ite, int distance) {
 }
 
 size_t iterator_distance(iterator_t start, iterator_t end) {
-    return end.position - start.position;
+    return (end.position - start.position);
 }
 
 bool iterator_equal(iterator_t a, iterator_t b) {

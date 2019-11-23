@@ -16,10 +16,10 @@ extern "C" {
 /**
  * Help function, which expect token.type as INT
  * and expect token.value == expected param
- * @param expected -> expected value from function getToken()
+ * @param expected -> expected value from function get_token()
  */
 void EXPECT_INT(int expected){
-    auto token = getToken();
+    auto token = get_token();
     EXPECT_EQ(token.type, TINT);
     EXPECT_EQ(*((int*)token.value), expected);
 }
@@ -27,10 +27,10 @@ void EXPECT_INT(int expected){
 /**
  * Help function, which expect token.type as FLOAT
  * and expect token.value == expected param
- * @param expected -> expected value from function getToken()
+ * @param expected -> expected value from function get_token()
  */
 void EXPECT_FLOAT(float expected){
-    auto token = getToken();
+    auto token = get_token();
     EXPECT_EQ(token.type, TFLOAT);
     EXPECT_EQ(*((float*)token.value), expected);
 }
@@ -62,7 +62,7 @@ namespace {
         //INPUT: <(5+9)
         EXPECT_INT(5);
 
-        token = getToken();
+        token = get_token();
         EXPECT_EQ(token.type, TADD);
 
         EXPECT_INT(9);
@@ -72,36 +72,36 @@ namespace {
         //INPUT: <(5.93 + 2129 * ((0.59 - 0.50) - 0.09) / 7)
         EXPECT_FLOAT(5.93);
 
-        token = getToken();
+        token = get_token();
         EXPECT_EQ(token.type, TADD);
 
         EXPECT_INT(2129);
 
-        token = getToken();
+        token = get_token();
         EXPECT_EQ(token.type, TMUL);
 
-        token = getToken();
+        token = get_token();
         EXPECT_EQ(token.type, TLEFTPAR);
 
-        token = getToken();
+        token = get_token();
         EXPECT_EQ(token.type, TLEFTPAR);
 
         EXPECT_FLOAT(0.59);
 
-        token = getToken();
+        token = get_token();
         EXPECT_EQ(token.type, TSUB);
 
         EXPECT_FLOAT(0.50);
 
-        token = getToken();
+        token = get_token();
         EXPECT_EQ(token.type, TRIGHTPAR);
 
-        token = getToken();
+        token = get_token();
         EXPECT_EQ(token.type, TSUB);
 
         EXPECT_FLOAT(0.09);
 
-        token = getToken();
+        token = get_token();
         EXPECT_EQ(token.type, TRIGHTPAR);
 
         EXPECT_INT(7);
@@ -111,7 +111,7 @@ namespace {
         //INPUT: <(5     -                   7.059e3)
         EXPECT_INT(5);
 
-        token = getToken();
+        token = get_token();
         EXPECT_EQ(token.type, TADD);
 
         EXPECT_FLOAT(7.059e3);
@@ -126,20 +126,20 @@ namespace {
 
     TEST_F(LexerSpecialChars, ComAndSemiCol){
         //INPUT: ,
-        token = getToken();
+        token = get_token();
         EXPECT_EQ(token.type, TCOMMA);
 
         //INPUT: ;
-        token = getToken();
+        token = get_token();
         EXPECT_EQ(token.type, TSEMICOLON);
     }
 
     TEST_F(LexerSpecialChars, TryToBreak){
         //End of LINE + FILE Test
-        token = getToken();
+        token = get_token();
         EXPECT_EQ(token.type, TENDOFLINE);
 
-        token = getToken();
+        token = get_token();
         EXPECT_EQ(token.type, TENDOFFILE);
     }
 

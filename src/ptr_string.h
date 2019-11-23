@@ -158,7 +158,7 @@ size_t ptr_string_find_char_from_index(ptr_string_t const str, const char c, con
  * @param that string b
  * @return true if strings are equal
  */ 
-bool ptr_string_equals(ptr_string_t this, ptr_string_t that);
+bool ptr_string_equals(ptr_string_t thiz, ptr_string_t that);
 
 /**
  * Compares two strings
@@ -166,7 +166,7 @@ bool ptr_string_equals(ptr_string_t this, ptr_string_t that);
  * @param that string b
  * @return true if strings are equal
  */ 
-bool ptr_string_c_equals(ptr_string_t this, char *that);
+bool ptr_string_c_equals(ptr_string_t thiz, char *that);
 
 /**
  * Delete last char in string.
