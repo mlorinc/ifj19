@@ -4,6 +4,10 @@ queue_t queue_init() {
     return deque_init();
 }
 
+size_t queue_size(queue_t queue) {
+    return deque_size(queue);
+}
+
 int queue_destroy(queue_t queue) {
     return deque_destroy(queue);
 }
