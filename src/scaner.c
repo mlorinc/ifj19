@@ -377,6 +377,12 @@ tToken get_token()
                 }
                 if (c == '"')   // It means now you have first '"'
                     state = sBlockCommentEnd1;
+                else if (c == '\0')     // If EOF, it's syntax error (Ending of the comment is missing)
+                {
+                    error_print("Block comment is not valid", row, character_position);
+                    return token_fill(&token, string, c, TLEXERR);
+                }
+                
                 else    // Everything inside the block comment
                     state = sBlockComment;
                 break;
@@ -391,7 +397,10 @@ tToken get_token()
                 break;
             case sBlockCommentEnd2:
                 if (c == '"')   // It means now you have third '"""' and the comment has ended
+                {
+                    string = NULL;  // Ignore the block comment
                     state = sStart;
+                }
                 else
                 {
                     error_print("Block comment is not valid", row, character_position);
