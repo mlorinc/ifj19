@@ -25,8 +25,6 @@
 
 typedef enum {
 
-    THEADER, // Header (.ifj19)
-
     TNEWLINE, // Newline
 
     // Function indentation
