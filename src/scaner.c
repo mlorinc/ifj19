@@ -178,6 +178,17 @@ tToken token_fill(tToken *token_ptr, ptr_string_t string, char c, tToken_type to
 }
 
 /**
+ * Prints the error message to stderr
+ * @param message Error message
+ * @param line Line in code
+ * @param position What is the position of error
+ */
+void error_print(char *message, unsigned int line, unsigned int position)
+{
+    fprintf(stderr, "%s\n Error on line: %d.\n On position: %d.\n", message, line, position);
+}
+
+/**
  * Process all states in starting state of automata
  * @param c Stdin char
  * @param state Automata state
@@ -237,18 +248,10 @@ void start_state(char c, tState* state, ptr_string_t string, tToken *token)
     else if (c == ',')
         token_fill(token, string, (int) -1, TCOMMA);
     else    // Undifiend char
+    {
+        error_print("Undefined char on stdin", row, character_position);
         token_fill(token, string, (int) -1, TLEXERR);
-}
-
-/**
- * Prints the error message to stderr
- * @param message Error message
- * @param line Line in code
- * @param position What is the position of error
- */
-void error_print(char *message, unsigned int line, unsigned int position)
-{
-    fprintf(stderr, "%s\n Error on line: %d.\n On position: %d.\n", message, line, position);
+    }
 }
 
 tToken get_token()
@@ -291,9 +294,11 @@ tToken get_token()
             case sInteger0:
                 if (c == '.')
                     state = sFloat;
+                else if (c == ' ')      // Just zero
+                    return token_fill(&token, string, c, TINT);
                 else
                 {
-                    error_print("Char 'E' must be followed by '.'", row, character_position);
+                    error_print("Digit '0' must be followed by '.' or left alone", row, character_position);
                     return token_fill(&token, string, c, TLEXERR);
                 }
                 break;
@@ -392,7 +397,8 @@ tToken get_token()
             case sBlockCommentEnd2:
                 if (c == '"')   // It means now you have third '"""' and the comment has ended
                 {
-                    string = NULL;  // Ignore the block comment
+                    ptr_string_delete(string);  // Ignore the block comment
+                    string = ptr_string_new();  // Need to be here, because of /n state segfault
                     state = sStart;
                 }
                 else
