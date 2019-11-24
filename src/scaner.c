@@ -160,7 +160,10 @@ tToken token_fill(tToken *token_ptr, ptr_string_t string, char c, tToken_type to
         ptr_string_delete_last(string);
     }
     if (c != -1)
+    {
+        character_position--;
         ungetc(c, stdin); // Put the last char back to stdin
+    }
     if (token_type == TLEXERR || token_type == TNEWLINE)
     {
         token_ptr->value = NULL;
@@ -389,7 +392,8 @@ tToken get_token()
             case sBlockCommentEnd2:
                 if (c == '"')   // It means now you have third '"""' and the comment has ended
                 {
-                    string = NULL;  // Ignore the block comment
+                    ptr_string_delete(string);  // Ignore the block comment
+                    string = ptr_string_new();  // Need to be here, because of /n state segfault
                     state = sStart;
                 }
                 else
