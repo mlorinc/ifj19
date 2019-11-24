@@ -392,7 +392,8 @@ tToken get_token()
             case sBlockCommentEnd2:
                 if (c == '"')   // It means now you have third '"""' and the comment has ended
                 {
-                    string = NULL;  // Ignore the block comment
+                    ptr_string_delete(string);  // Ignore the block comment
+                    string = ptr_string_new();  // Need to be here, because of /n state segfault
                     state = sStart;
                 }
                 else
