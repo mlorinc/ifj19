@@ -59,14 +59,12 @@ tToken_type push_indent_on_stack(int indent_number)
     if(p_number == NULL)    //check for new malloc pointer to int
     {
         stack_destroy(stack);
-        free(stack);
         return TERR;
     }
     else if(!stack_push(stack, p_number))   //check if stack push was unsuccessful
     {
         free(p_number);
         stack_destroy(stack);
-        free(stack);
         return TERR;
     }
     return TNOTHING;
@@ -505,7 +503,6 @@ tToken get_token()
         }
     } while (c != EOF);    // Until whole input is readed
     stack_destroy(stack);
-    free(stack);
     ptr_string_delete(string);
 
     token.value = NULL;
