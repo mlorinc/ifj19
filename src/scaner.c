@@ -160,7 +160,10 @@ tToken token_fill(tToken *token_ptr, ptr_string_t string, char c, tToken_type to
         ptr_string_delete_last(string);
     }
     if (c != -1)
+    {
+        character_position--;
         ungetc(c, stdin); // Put the last char back to stdin
+    }
     if (token_type == TLEXERR || token_type == TNEWLINE)
     {
         token_ptr->value = NULL;
@@ -234,7 +237,7 @@ void start_state(char c, tState* state, ptr_string_t string, tToken *token)
     else if (c == ',')
         token_fill(token, string, (int) -1, TCOMMA);
     else    // Undifiend char
-        *state = sLexErr;
+        token_fill(token, string, (int) -1, TLEXERR);
 }
 
 /**
@@ -389,7 +392,8 @@ tToken get_token()
             case sBlockCommentEnd2:
                 if (c == '"')   // It means now you have third '"""' and the comment has ended
                 {
-                    string = NULL;  // Ignore the block comment
+                    ptr_string_delete(string);  // Ignore the block comment
+                    string = ptr_string_new();  // Need to be here, because of /n state segfault
                     state = sStart;
                 }
                 else
@@ -399,7 +403,7 @@ tToken get_token()
                 }
                 break;    
             
-            /************************* Idetificator/Keyword *****************************/
+            /************************* Identificator/Keyword *****************************/
             case sIdentificatorOrKeyWord:
                 // TODO after read is done, compare the string with array of keywords
                 if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_')
