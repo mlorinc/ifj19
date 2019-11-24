@@ -111,8 +111,8 @@ typedef enum {
 
     // Special characters
     sExclMark, // Not ending '!'
-    sEOL,
-    sEOF,
+//    sEOL,
+//    sEOF,
 
     sLineComment,  // Not ending (#)
     sBlockCommentStart1,  // Not ending (")
@@ -123,7 +123,7 @@ typedef enum {
     sBlockCommentEnd1,  // Not ending (")
     sBlockCommentEnd2,  // Not ending ("")
 
-    sLexErr = -1
+//    sLexErr = -1
 
 } tState;
 

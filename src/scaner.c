@@ -234,7 +234,7 @@ void start_state(char c, tState* state, ptr_string_t string, tToken *token)
     else if (c == ',')
         token_fill(token, string, (int) -1, TCOMMA);
     else    // Undifiend char
-        *state = sLexErr;
+        token_fill(token, string, (int) -1, TLEXERR);
 }
 
 /**
@@ -399,7 +399,7 @@ tToken get_token()
                 }
                 break;    
             
-            /************************* Idetificator/Keyword *****************************/
+            /************************* Identificator/Keyword *****************************/
             case sIdentificatorOrKeyWord:
                 // TODO after read is done, compare the string with array of keywords
                 if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_')
