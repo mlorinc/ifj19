@@ -62,7 +62,7 @@ tToken_type push_indent_on_stack(int indent_number)
         free(stack);
         return TERR;
     }
-    else if(stack_push(stack, p_number) != 0)   //check if stack push was unsuccessfully
+    else if(stack_push(stack, p_number) != 0)   //check if stack push was unsuccessful
     {
         free(p_number);
         stack_destroy(stack);
@@ -101,7 +101,7 @@ tToken indent_counter()
     if(last_token_type == TFIRSTINDENT) //initial counter for indent
     {
         token.type = init_indent_counter();
-        if(token.type == TERR) //if initialization of counter was unsuccessfully
+        if(token.type == TERR) //if initialization of counter was unsuccessful
             return token;
     }
     if(last_token_type == TNEWLINE || last_token_type == TDEDENT || last_token_type == TFIRSTINDENT)
@@ -115,13 +115,13 @@ tToken indent_counter()
         }
         character_position = counter;
         ungetc(c, stdin);
-        if(c == '#' || c == '"')    //check for comment after indent
+        if(c == '#' || c == '"' || c == '\n')    //check for comment after indent or EOL
             return token;
 
         if(*number_on_top < counter)
         {
             token.type = push_indent_on_stack(counter);
-            if(token.type == TERR)  //check if push on stack was unsuccessfully
+            if(token.type == TERR)  //check if push on stack was unsuccessful
                 return token;
             else
                 token.type = TINDENT;
@@ -202,7 +202,10 @@ void start_state(char c, tState* state, ptr_string_t string, tToken *token)
     else if(c == '0')
         *state = sInteger0;
     else if(c == '\'')
+    {
         *state = sString;
+        ptr_string_delete_last(string);
+    }
     else if(c == '"')
         *state = sBlockCommentStart1;
     else if(c == '#')
@@ -344,8 +347,9 @@ tToken get_token()
             case sLineComment:
                 if (c == '\n')  // End of comment
                 {
-                    state = sStart;
-                    putchar(c); // Put the '/n' back to stdin
+                    state = sNewLine;
+                    ptr_string_delete(string);
+                    string = ptr_string_new();
                 }
                 else
                     state = sLineComment;
