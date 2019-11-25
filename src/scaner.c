@@ -62,7 +62,7 @@ tToken_type push_indent_on_stack(int indent_number)
         free(stack);
         return TERR;
     }
-    else if(stack_push(stack, p_number) != 0)   //check if stack push was unsuccessfully
+    else if(stack_push(stack, p_number) != 0)   //check if stack push was unsuccessful
     {
         free(p_number);
         stack_destroy(stack);
@@ -101,7 +101,7 @@ tToken indent_counter()
     if(last_token_type == TFIRSTINDENT) //initial counter for indent
     {
         token.type = init_indent_counter();
-        if(token.type == TERR) //if initialization of counter was unsuccessfully
+        if(token.type == TERR) //if initialization of counter was unsuccessful
             return token;
     }
     if(last_token_type == TNEWLINE || last_token_type == TDEDENT || last_token_type == TFIRSTINDENT)
@@ -115,13 +115,13 @@ tToken indent_counter()
         }
         character_position = counter;
         ungetc(c, stdin);
-        if(c == '#' || c == '"')    //check for comment after indent
+        if(c == '#' || c == '"' || c == '\n')    //check for comment after indent or EOL
             return token;
 
         if(*number_on_top < counter)
         {
             token.type = push_indent_on_stack(counter);
-            if(token.type == TERR)  //check if push on stack was unsuccessfully
+            if(token.type == TERR)  //check if push on stack was unsuccessful
                 return token;
             else
                 token.type = TINDENT;
@@ -178,6 +178,17 @@ tToken token_fill(tToken *token_ptr, ptr_string_t string, char c, tToken_type to
 }
 
 /**
+ * Prints the error message to stderr
+ * @param message Error message
+ * @param line Line in code
+ * @param position What is the position of error
+ */
+void error_print(char *message, unsigned int line, unsigned int position)
+{
+    fprintf(stderr, "%s\n Error on line: %d.\n On position: %d.\n", message, line, position);
+}
+
+/**
  * Process all states in starting state of automata
  * @param c Stdin char
  * @param state Automata state
@@ -191,7 +202,10 @@ void start_state(char c, tState* state, ptr_string_t string, tToken *token)
     else if(c == '0')
         *state = sInteger0;
     else if(c == '\'')
+    {
         *state = sString;
+        ptr_string_delete_last(string);
+    }
     else if(c == '"')
         *state = sBlockCommentStart1;
     else if(c == '#')
@@ -236,19 +250,13 @@ void start_state(char c, tState* state, ptr_string_t string, tToken *token)
         token_fill(token, string, (int) -1, TCOLON);
     else if (c == ',')
         token_fill(token, string, (int) -1, TCOMMA);
+    else if (c == EOF)  // If EOF do nothing, do-while will end
+        return;
     else    // Undifiend char
+    {
+        error_print("Undefined char on stdin", row, character_position);
         token_fill(token, string, (int) -1, TLEXERR);
-}
-
-/**
- * Prints the error message to stderr
- * @param message Error message
- * @param line Line in code
- * @param position What is the position of error
- */
-void error_print(char *message, unsigned int line, unsigned int position)
-{
-    fprintf(stderr, "%s\n Error on line: %d.\n On position: %d.\n", message, line, position);
+    }
 }
 
 tToken get_token()
@@ -267,8 +275,9 @@ tToken get_token()
 
     ptr_string_t string = ptr_string_new(); // Space for something readed from input
 
-    while ((c=getchar()) != EOF)    // Until whole input is readed
+    do
     {
+        c=getchar();
         ptr_string_append(string, c);
 
         character_position++;   // We've moved by one character
@@ -291,9 +300,11 @@ tToken get_token()
             case sInteger0:
                 if (c == '.')
                     state = sFloat;
+                else if (c == ' ')      // Just zero
+                    return token_fill(&token, string, c, TINT);
                 else
                 {
-                    error_print("Char 'E' must be followed by '.'", row, character_position);
+                    error_print("Digit '0' must be followed by '.' or left alone", row, character_position);
                     return token_fill(&token, string, c, TLEXERR);
                 }
                 break;
@@ -339,8 +350,9 @@ tToken get_token()
             case sLineComment:
                 if (c == '\n')  // End of comment
                 {
-                    state = sStart;
-                    putchar(c); // Put the '/n' back to stdin
+                    state = sNewLine;
+                    ptr_string_delete(string);
+                    string = ptr_string_new();
                 }
                 else
                     state = sLineComment;
@@ -491,7 +503,7 @@ tToken get_token()
                 }
                 break;
         }
-    }
+    } while (c != EOF);    // Until whole input is readed
     stack_destroy(stack);
     free(stack);
     ptr_string_delete(string);
