@@ -20,19 +20,34 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+/**
+ * Convert hexadecimal char into decimal int.
+ * <0...F> => <0...15>
+ * @param c hexadecimal char
+ * @return decimal int
+ */
 int hex_to_decimal(char c)
 {
     c = toupper(c);
     if(c >= 48 && c <= 57)
     {
-        return c-48;
+        return c-48;    //<0...9>
     }
     else
     {
-        return c-55;
+        return c-55;    //<A...F>
     }
 }
 
+
+/**
+ * Convert special character after escape char.
+ * special characters: \" \' \\ \n \t \xhh
+ * @param string where will be append special char
+ * @param ifj_string string which is converting
+ * @param escape_index position in ifj_string where was found escape char
+ * @return number of read chars 
+ */
 int special_char(ptr_string_t string, ptr_string_t ifj_string, int escape_index)
 {
     char after_escape = ptr_string_get_char(ifj_string, escape_index+1);
@@ -62,6 +77,11 @@ int special_char(ptr_string_t string, ptr_string_t ifj_string, int escape_index)
     }
 }
 
+/**
+ * Convert string from language IFJ19 into normal c string.
+ * @param ifj_string in corect format for language IFJ19
+ * @return string without special characters
+ */
 ptr_string_t ifj_string_to_string(ptr_string_t ifj_string)
 {
     int index_escape = 0;
@@ -70,7 +90,7 @@ ptr_string_t ifj_string_to_string(ptr_string_t ifj_string)
     ptr_string_t string = ptr_string_new();
     ptr_string_t tmp = NULL;
 
-    while ((index_escape = ptr_string_find_char_from_index(ifj_string, '\\', index_start)) != -1)
+    while ((index_escape = ptr_string_find_char_from_index(ifj_string, '\\', index_start)) != -1)   //searching escape char
     {
         if(index_start != index_escape)
         {
@@ -81,13 +101,14 @@ ptr_string_t ifj_string_to_string(ptr_string_t ifj_string)
         index_start = index_escape;
         index_start += special_char(string, ifj_string, index_escape);
     }
-    if(tmp == NULL)
+    if(tmp == NULL)    //if ifj_string hasn't escape char
     {
+        ptr_string_delete(string);
         string = ptr_string_clone(ifj_string);
     }
     else
     {
-        if(index_start != index_end)
+        if(index_start != index_end)    //if last char wasn't special char with escape char
         {
             tmp = ptr_string_substring(ifj_string, index_start, index_end);
             ptr_string_concat(string, tmp);
@@ -135,10 +156,6 @@ ptr_string_t ifj_string_to_code_string(ptr_string_t ifj_string)
                     break;
                 case 2:
                     tmp_char_code = ptr_string("\\0");
-                    ptr_string_insert(char_code, tmp_char_code);
-                    break;
-                case 3:
-                    tmp_char_code = ptr_string("\\");
                     ptr_string_insert(char_code, tmp_char_code);
                     break;
             }
