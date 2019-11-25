@@ -202,7 +202,7 @@ ptr_string_t ptr_string_substring(ptr_string_t const str, const size_t start, co
     if (str == NULL || str->buffer == NULL)
         return NULL;
     assert(end > start);
-    assert(str->length > start && str->length <= end);
+    assert(str->length > start && str->length >= end);
 
     size_t length = end - start;
     ptr_string_t newStr = ptr_string_new_with_length(length);
