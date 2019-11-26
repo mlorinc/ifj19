@@ -62,7 +62,7 @@ tToken_type push_indent_on_stack(int indent_number)
         free(stack);
         return TERR;
     }
-    else if(stack_push(stack, p_number) != 0)   //check if stack push was unsuccessful
+    else if(!stack_push(stack, p_number))   //check if stack push was unsuccessful
     {
         free(p_number);
         stack_destroy(stack);
