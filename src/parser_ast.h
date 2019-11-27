@@ -1,8 +1,9 @@
 #ifndef __H_PARSER_AST
 #define __H_PARSER_AST
 
-#include "queue.h"
 #include <stdbool.h>
+#include "queue.h"
+#include "array_nodes.h"
 
 typedef enum {
     PASS,
@@ -11,6 +12,7 @@ typedef enum {
     CONTINUE,
     FUNCTION,
     FUNCTION_DEFINITION,
+    FUNCTION_PARAMETERS,
     ID,
     CONSTANT,
     PLUS_OP,
@@ -36,7 +38,7 @@ typedef enum {
 
 struct ast
 {
-    queue_t nodes;
+    array_nodes_t nodes;
     ast_node_type_t node_type;
     void *data;
 };
