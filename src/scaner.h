@@ -60,7 +60,7 @@ typedef enum {
 	TNE, // !=
 
     // Special characters
-    TLEFTPAR, // ()
+    TLEFTPAR, // (
     TRIGHTPAR, // )
     TSEMICOLON, // ;
     TCOLON, // :
