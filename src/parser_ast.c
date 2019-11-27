@@ -9,7 +9,7 @@ ast_t ast_node_init_empty()
     ast_t ast = malloc(sizeof(struct ast));
     if (ast != NULL)
     {
-        ast->nodes = queue_init();
+        ast->nodes = array_nodes_init();
     }
     return ast;
 }
@@ -28,7 +28,7 @@ ast_t ast_node_init(ast_node_type_t type, void *data)
 bool ast_delete(ast_t root) {
     if (root == NULL)
 	{
-		return;
+		return true;
 	}
 
 	stack_t nodes = stack_init();
@@ -41,22 +41,22 @@ bool ast_delete(ast_t root) {
 	
 	while (!stack_empty(nodes))
 	{
-		ast_t node = stack_top(nodes);
-        stack_pop(nodes);
+		ast_t node = stack_pop(nodes);
 
 		if (node == NULL)
 		{
 			continue;
 		};
 
-        iterator_t end = queue_end(node->nodes);
-        for (iterator_t ite = queue_begin(node->nodes); !iterator_equal(ite, end); ite = iterator_next(ite))
+
+        for (size_t i = 0; i < array_nodes_size(node->nodes); i++)
         {
-            stack_push(nodes, deque_iterator_value(ite));
+            stack_push(nodes, array_nodes_get(node->nodes, i));
         }
         
-        queue_destroy(node->nodes);
+        array_nodes_destroy(node->nodes);
 
+        
         if (node->data != NULL) {
             free(node->data);
         }
@@ -64,11 +64,12 @@ bool ast_delete(ast_t root) {
 		free(node);
 	}
 
+    stack_destroy(nodes);
     return true;
 }
 
 bool ast_add_node(ast_t parent, ast_t node) {
-    return queue_push(parent->nodes, node);
+    return array_nodes_push(parent->nodes, node);
 }
 
 void *allocate_value_to_heap(void *value, size_t size) {
