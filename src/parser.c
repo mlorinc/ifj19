@@ -1,6 +1,6 @@
 #include <stdlib.h>
-#include <stdbool.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <assert.h>
 #include <stdarg.h>
 #include <string.h>
@@ -11,6 +11,8 @@
 #include "expression_parser.h"
 
 typedef parser_result_t (*parser_method_t)(parser_t parser);
+
+parser_result_t suite(parser_t parser);
 
 parser_t parser_init()
 {
@@ -54,7 +56,6 @@ void parser_next(parser_t parser)
         free(queue_pop(parser->returned_tokens));
         parser->token = token;
     }
-    parser->token = get_token();
 }
 
 bool accept(parser_t parser, tToken_type token_type)
@@ -223,66 +224,6 @@ parser_result_t simple_statement(parser_t parser)
     return small_stmt;
 }
 
-parser_result_t suite(parser_t parser)
-{
-    parser_result_t simple_stmt = simple_statement(parser);
-
-    // if there is error, propagate it
-    if (simple_stmt.error)
-    {
-        return simple_stmt;
-    }
-
-    // check if found simple statement, if we did so, return it
-    if (simple_stmt.ast != NULL)
-    {
-        return simple_stmt;
-    }
-
-    if (accept(parser, TNEWLINE))
-    {
-        tToken eol = parser->previousToken;
-        if (accept(parser, TINDENT))
-        {
-            ast_t consequent = ast_node_init(CONSEQUENT, NULL);
-
-            for (ast_t stmt = statement(parser); stmt != NULL; stmt = statement(parser))
-            {
-                // todo: this is opportunity to generate code without building whole ast
-                ast_add_node(consequent, stmt);
-            }
-
-            // empty suite, thats error
-            if (queue_empty(consequent->nodes))
-            {
-                return parser_error(consequent, "Body requires at least one statement\n");
-            }
-
-            if (accept(parser, TDEDENT))
-            {
-                return parser_result(consequent);
-            }
-            else
-            {
-                // it was not followed with dedent, which is error
-                return parser_error(consequent, "DEDENT syntax error\n");
-            }
-        }
-        else
-        {
-            // we found newline, but it did not follow up by indent, so we dont know
-            // even though, we better return it
-            parser_return_back(parser, eol);
-            return parser_result(NULL);
-        }
-    }
-    else
-    {
-        // we dont know what it is
-        return parser_result(NULL);
-    }
-}
-
 parser_result_t if_and_elif(parser_t parser, char *keyword)
 {
     // ensure we call it with if or elif only
@@ -407,68 +348,202 @@ parser_result_t while_statement(parser_t parser)
 {
     if (accept_keyword(parser, "while"))
     {
+        ast_t while_stmt = ast_node_init(WHILE, NULL);
+        parser_result_t comp = parse_expression(parser);
+
+        // check condition for error
+        if (comp.error)
         {
-            ast_t while_stmt = ast_node_init(WHILE, NULL);
-            parser_result_t comp = parse_expression(parser);
+            ast_delete(while_stmt);
+            return comp;
+        }
 
-            // check condition for error
-            if (comp.error)
+        if (comp.ast == NULL)
+        {
+            return parser_error(while_stmt, "While statement is missing condition\n");
+        }
+        // end check condition for error
+
+        ast_add_node(while_stmt, comp.ast);
+
+        // check suite for error
+        parser_result_t suites = suite(parser);
+
+        if (suites.error)
+        {
+            ast_delete(while_stmt);
+            return suites;
+        }
+
+        if (suites.ast == NULL)
+        {
+            return parser_error(while_stmt, "While statement is missing body\n");
+        }
+        // end check suite for error
+
+        ast_add_node(while_stmt, suites.ast);
+
+        if (accept_keyword(parser, "else"))
+        {
+            if (accept(parser, TCOLON))
             {
-                ast_delete(while_stmt);
-                return comp;
-            }
-
-            if (comp.ast == NULL)
-            {
-                return parser_error(while_stmt, "While statement is missing condition\n");
-            }
-            // end check condition for error
-
-            ast_add_node(while_stmt, comp.ast);
-
-            // check suite for error
-            parser_result_t suites = suite(parser);
-
-            if (suites.error)
-            {
-                ast_delete(while_stmt);
-                return suites;
-            }
-
-            if (suites.ast == NULL)
-            {
-                return parser_error(while_stmt, "While statement is missing body\n");
-            }
-            // end check suite for error
-
-            ast_add_node(while_stmt, suites.ast);
-
-            if (accept_keyword(parser, "else"))
-            {
-                if (accept(parser, TCOLON))
+                if (suites.error)
                 {
-                    if (suites.error)
-                    {
-                        ast_delete(while_stmt);
-                        return suites;
-                    }
+                    ast_delete(while_stmt);
+                    return suites;
+                }
 
-                    if (suites.ast == NULL)
-                    {
-                        return parser_error(while_stmt, "Else after While statement is missing body\n");
-                    }
+                if (suites.ast == NULL)
+                {
+                    return parser_error(while_stmt, "Else after While statement is missing body\n");
+                }
 
-                    // add alternate node
-                    ast_add_node(while_stmt, suites.ast);
+                // add alternate node
+                ast_add_node(while_stmt, suites.ast);
 
-                    return parser_result(while_stmt);
+                return parser_result(while_stmt);
+            }
+            else
+            {
+                return parser_error(while_stmt, "Else after While statement is missing colon\n");
+            }
+        }
+        else
+        {
+            return parser_result(while_stmt);
+        }
+    }
+    else
+    {
+        // this is not while statement
+        return parser_result(NULL);
+    }
+}
+
+parser_result_t function_definition_parameter(parser_t parser)
+{
+    if (accept(parser, TIDENTIFICATOR))
+    {
+        return parser_result(ast_node_init(ID, parser->previousToken.value));
+    }
+    else
+    {
+        return parser_result(NULL);
+    }
+}
+
+parser_result_t function_definition_paramaters(parser_t parser)
+{
+    // function parameter list must begin with (
+    if (!accept(parser, TLEFTPAR))
+    {
+        return parser_error(NULL, "Expecting left parenthesis after function name\n");
+    }
+
+    parser_result_t param = function_definition_parameter(parser);
+    ast_t parameters = ast_node_init(FUNCTION_PARAMETERS, NULL);
+
+    ast_add_node(parameters, param.ast);
+
+    while (param.ast != NULL)
+    {
+        if (accept(parser, TCOMMA))
+        {
+            param = function_definition_parameter(parser);
+
+            if (param.ast == NULL)
+            {
+                return parser_error(parameters, "Invalid trailing comma");
+            }
+            else
+            {
+                ast_add_node(parameters, param.ast);
+            }
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    // function parameter list must end with )
+    if (!accept(parser, TRIGHTPAR))
+    {
+        return parser_error(parameters, "Expecting right parentthesis after function parameters\n");
+    }
+
+    return parser_result(parameters);
+}
+
+parser_result_t function_body_suite(parser_t parser)
+{
+    return suite(parser);
+}
+
+/**
+ *                            FNC NAME
+ *                              /  \
+ *                             /   \
+ *                            /    \
+ *                        PARAMS   BODY
+ *                          /        \
+ *                         /         \
+ *                        /          \
+ *               list of params    body of function
+ */
+parser_result_t function_def(parser_t parser)
+{
+    if (accept_keyword(parser, "def"))
+    {
+        if (accept(parser, TIDENTIFICATOR))
+        {
+            // initialize function definition node with name of function
+            ast_t fn_def = ast_node_init(FUNCTION_DEFINITION, parser->previousToken.value);
+
+            if (accept_keyword(parser, ":"))
+            {
+                // get parameters of function
+                parser_result_t parameters = function_definition_paramaters(parser);
+
+                // check errors
+                if (parameters.error)
+                {
+                    return parameters;
+                }
+
+                // get body of function, its ast must not be null and must not error
+                parser_result_t function_body_suites = function_body_suite(parser);
+
+                ast_add_node(fn_def, parameters.ast);
+                ast_add_node(fn_def, function_body_suites.ast);
+
+                if (function_body_suites.error)
+                {
+                    return parser_error_ptr_string(fn_def, function_body_suites.error);
+                }
+                else if (function_body_suites.ast == NULL)
+                {
+                    return parser_error(fn_def, "Expecting function body after definition\n");
                 }
                 else
                 {
-                    return parser_error(while_stmt, "Else after While statement is missing colon\n");
+                    return parser_result(fn_def);
                 }
             }
+            else
+            {
+                return parser_error(fn_def, "Expecting colon after argument list\n");
+            }
         }
+        else
+        {
+            return parser_error(NULL, "Expecting function name after def\n");
+        }
+    }
+    else
+    {
+        // not function definition
+        return parser_result(NULL);
     }
 }
 
@@ -497,15 +572,75 @@ parser_result_t try_statements(parser_t parser, parser_method_t methods[], size_
 
 parser_result_t compound_statement(parser_t parser)
 {
-    parser_method_t methods[] = {if_statement, while_statement, functionDef};
+    parser_method_t methods[] = {if_statement, while_statement, function_def};
 
     return try_statements(parser, methods, 3);
 }
 
 parser_result_t statement(parser_t parser)
 {
-    parser_method_t methods[] = {simple_statement, compound_statement};
+    parser_method_t methods[] = {simple_statement, compound_statement, assign_statemnt};
     return try_statements(parser, methods, 2);
+}
+
+parser_result_t suite(parser_t parser)
+{
+    parser_result_t simple_stmt = simple_statement(parser);
+
+    // if there is error, propagate it
+    if (simple_stmt.error)
+    {
+        return simple_stmt;
+    }
+
+    // check if found simple statement, if we did so, return it
+    if (simple_stmt.ast != NULL)
+    {
+        return simple_stmt;
+    }
+
+    if (accept(parser, TNEWLINE))
+    {
+        tToken eol = parser->previousToken;
+        if (accept(parser, TINDENT))
+        {
+            ast_t consequent = ast_node_init(CONSEQUENT, NULL);
+
+            for (parser_result_t stmt = statement(parser); stmt.ast != NULL || stmt.error != NULL; stmt = statement(parser))
+            {
+                // todo: error checking
+                ast_add_node(consequent, stmt.ast);
+            }
+
+            // empty suite, thats error
+            if (queue_empty(consequent->nodes))
+            {
+                return parser_error(consequent, "Body requires at least one statement\n");
+            }
+
+            if (accept(parser, TDEDENT))
+            {
+                return parser_result(consequent);
+            }
+            else
+            {
+                // it was not followed with dedent, which is error
+                return parser_error(consequent, "DEDENT syntax error\n");
+            }
+        }
+        else
+        {
+            // we found newline, but it did not follow up by indent, so we dont know
+            // even though, we better return it
+            parser_return_back(parser, eol);
+            return parser_result(NULL);
+        }
+    }
+    else
+    {
+        // we dont know what it is
+        return parser_result(NULL);
+    }
 }
 
 ast_t parse()
@@ -513,94 +648,42 @@ ast_t parse()
     parser_t parser = parser_init();
     parser_next(parser);
 
-    // todo: parsing
+    ast_t program = ast_node_init(CONSEQUENT, NULL);
+    bool building_tree = true;
 
-    parser_destroy(parser);
-    return NULL;
-}
-
-/**
- *                            FNC NAME
- *                              /  \
- *                             /   \
- *                            /    \
- *                        PARAMS   BODY
- *                          /        \
- *                         /         \
- *                        /          \
- *               list of params    body of function
- */
-ast_t functionDef(parser_t parser, queue_t queue)
-{
-    ast_t ast = ast_node_init_empty();
-    if (accept(parser, TKEYWORD))
+    for (parser_result_t stmt = statement(parser); parser->token.type != TENDOFFILE; stmt = statement(parser))
     {
-        if (ptr_string_c_equals(parser->previousToken.value, "def"))
+        if (stmt.error)
         {
-            stderr_print(line, TKEYWORD, parser);
-            return NULL;
-        }
+            char *err = ptr_string_c_string(stmt.error);
+            fprintf(stderr, "[PARSER]: %s", err);
 
-        if (accept(parser, TIDENTIFICATOR))
+            free(err);
+            parser_error_dispose(stmt);
+
+            if (program != NULL)
+            {
+                ast_delete(program);
+            }
+
+            building_tree = false;
+            program = NULL;
+        }
+        else if(stmt.ast == NULL) {
+            // error occurred before, and it left unprocessed tokens
+            // so skip them
+            parser_next(parser);
+        }
+        else if (building_tree)
         {
-            ast_t parent = ast_node_init(parser->previousToken);
-            if (accept(parser, TLEFTPAR))
-            {
-                if (parser->token.type == TIDENTIFICATOR)
-                {
-                    functionParams(parser, ast);
-                }
-                else if (accept(parser, TRIGHTPAR))
-                {
-                    if (accept(parser, TCOLON))
-                    {
-                        if (parser->token.type == TENDOFLINE)
-                        {
-                            return ast;
-                        }
-                        else
-                        {
-                            stderr_print(line, TNEWLINE, parser);
-                            return NULL;
-                        }
-                    }
-                    else
-                    {
-                        stderr_print(line, TKEYWORD, parser);
-                        return NULL;
-                    }
-                }
-                else
-                {
-                    stderr_print(line, TRIGHTPAR, parser);
-                    return NULL;
-                }
-            }
-            else
-            {
-                stderr_print(line, TLEFTPAR, parser);
-                return NULL;
-            }
+            ast_add_node(program, stmt.ast);
         }
         else
         {
-            stderr_print(line, TIDENTIFICATOR, parser);
-            return NULL;
-            //lubim vinciho je to moje bubu
+            // well its right, but we dont build tree anymore, because syntax error happened
         }
     }
 
-    return NULL;
-}
-
-ast_t functionParams(parser_t parser, ast_t ast)
-{
-}
-
-void stderr_print(long int line, tToken type, parser_t parser)
-{
-    fprintf(stderr, "Line %ld: %s %u %s %s\n", line,
-            "Expecting ", type.type, " got", (char *)parser->previousToken.value);
     parser_destroy(parser);
-    return NULL;
+    return program;
 }
