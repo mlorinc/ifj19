@@ -1,8 +1,8 @@
 #ifndef __H_EXPRESSION_PARSER
 #define __H_EXPRESSION_PARSER
 
+#include "parser_result.h"
 #include "parser.h"
-#include "queue.h"
 
 /**
  * Parses expression and adds elements to queue in polish notation

@@ -1,10 +1,14 @@
 
 #include "expression_parser.h"
 #include "stack.h"
+#include "parser_ast.h"
+#include "queue.h"
+#include "ptr_string.h"
+#include <stdbool.h>
 
 #define table_size (7)
 
-typedef enum precedent_element
+enum precedent_element
 {
     P1, // <, <=, >, >=, ==, !=
     P2, // +, -
@@ -13,7 +17,7 @@ typedef enum precedent_element
     Prp, // )
     Po, // constant, variable
     Pend // end of expression
-}*precedent_e;
+};
 
 char precedent_table[table_size][table_size] =
 {
@@ -24,8 +28,14 @@ char precedent_table[table_size][table_size] =
     {'<','<','<','<','=','<',' '},  //Plp
     {'>','>','>',' ','>',' ','>'},  //Prp
     {'>','>','>',' ','>',' ','>'},  //Po
-    {'<','<','<','<',' ','<',' '}   //Pend
+    {'<','<','<','<',' ','<','#'}   //Pend
 };
+
+typedef struct table_value
+{  
+    enum precedent_element element;
+    tToken* token;
+}* p_table_value;
 
 int token_to_precedent_e(tToken_type token)
 {
@@ -34,6 +44,7 @@ int token_to_precedent_e(tToken_type token)
         case TINT:
         case TFLOAT:
         case TIDENTIFICATOR:
+        case TSTRING:
             return Po;
         case TLT:
         case TGT:
@@ -58,44 +69,114 @@ int token_to_precedent_e(tToken_type token)
     }
 }
 
+p_table_value create_table_value(tToken token, enum precedent_element element)
+{
+    p_table_value new = malloc(sizeof(struct table_value));
+    if(new != NULL)
+    {
+        new->element = element;
+        tToken* ptoken = malloc(sizeof(tToken)); 
+        if(ptoken != NULL)
+        {
+            ptoken->type = token.type;
+            ptoken->value = token.value;
+        }
+        new->token = ptoken;
+    }
+    return new;
+}
+
+bool read_table(stack_t precedent_stack, queue_t postfix, p_table_value new_value)
+{
+    p_table_value top_on_stack = stack_top(precedent_stack);
+    char operation = precedent_table[top_on_stack->element][new_value->element];
+    switch(operation)
+    {
+        case '<':
+            stack_push(precedent_stack, new_value);
+            return true;
+        case '>':
+            queue_push(postfix, top_on_stack->token);
+            stack_pop(precedent_stack);
+            free(top_on_stack->token);
+            free(top_on_stack);
+            return read_table(precedent_stack, postfix, new_value);
+        case '=':
+            stack_pop(precedent_stack);
+            free(top_on_stack->token);
+            free(top_on_stack);
+            return true;
+        case ' ':
+            while (!stack_empty(precedent_stack))
+            {
+                free(top_on_stack->token);
+                free(top_on_stack);
+                top_on_stack = stack_pop(precedent_stack);
+            }
+            deque_destroy(postfix);
+            stack_destroy(precedent_stack);
+            return false;
+        default:
+            return true;
+    }
+}
+
 parser_result_t parse_expression(parser_t parser)
 {
-    stack_t stack = stack_init();
+    queue_t postfix = queue_init();
+    stack_t precedent_stack = stack_init();
+
+    ast_t ast = malloc(sizeof(struct ast));
+    ast->nodes = NULL;
+    ast->node_type = EXPRESSION;
+    ast->data = postfix;
+
+    parser_result_t result;
+    result.ast = ast;
+    result.error = NULL;
+
     tToken token = get_token();
-    char operation;
-    int precedent_elem = token_to_precedent_e(token.type);
-    int* end_of_stack = malloc(sizeof(int));
-    *end_of_stack = Pend;
-    stack_push(stack, end_of_stack);
-    int* top_of_stack = NULL;
+    p_table_value table_value = create_table_value(token, token_to_precedent_e(token.type));
 
-    while(precedent_elem != Pend)
+    parser->previousToken = parser->token;
+    parser->token = token;
+    queue_push(parser->returned_tokens, table_value->token);
+
+    tToken end_of_stack;
+    end_of_stack.type = TNOTHING;
+    end_of_stack.value = NULL;
+    stack_push(precedent_stack, create_table_value(end_of_stack, Pend));
+
+    p_table_value top_of_stack;
+
+    do
     {
-        top_of_stack = stack_top(stack);
-        operation = precedent_table[*top_of_stack][precedent_elem];
-
-        switch(operation)
+        if(!read_table(precedent_stack, postfix, table_value))
         {
-            case ' ':
-                queue_destroy();
-                stack_destroy(stack);
-                return NULL;
-                break;
-            case '=':
-                stack_push(stack, token);
-                break;
-            case '<':
-                //push < and token
-                break;
-            case '>':
-                //pop while <
-                break;
+            result.ast->data = NULL;
+            result.error = ptr_string("Expression error.");
+            return result;
         }
 
+        if(table_value->element != Pend)
+        {
+            token = get_token();
+            table_value = create_table_value(token, token_to_precedent_e(token.type));
 
-        token = get_token();
-        precedent_elem = token_to_precedent_e(token.type);
+            parser->previousToken = parser->token;
+            parser->token = token;
+            queue_push(parser->returned_tokens, table_value->token);
+        }
+        top_of_stack = stack_top(precedent_stack);
+    }while(top_of_stack->element != Pend);
+
+    if(queue_empty(postfix))
+    {
+        queue_destroy(postfix);
+        result.ast->data = NULL;
+        result.error = ptr_string("Not an expression.");
     }
 
-    stack_destroy(stack);
+    stack_destroy(precedent_stack);
+    return result;
 }
