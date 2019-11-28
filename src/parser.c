@@ -613,7 +613,7 @@ parser_result_t suite(parser_t parser)
             }
 
             // empty suite, thats error
-            if (queue_empty(consequent->nodes))
+            if (array_nodes_empty(consequent->nodes))
             {
                 return parser_error(consequent, "Body requires at least one statement\n");
             }
