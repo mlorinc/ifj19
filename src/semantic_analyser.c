@@ -299,6 +299,7 @@ scope_t handle_node(scope_t current_scope, ast_t node, deque_t tree_traversing_d
         return handle_assign(current_scope, node, tree_traversing_deque);
 
     case WHILE:
+        return handle_while(current_scope, node, tree_traversing_deque);
 
     case IF:
     case ELIF:
