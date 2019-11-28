@@ -9,6 +9,8 @@ set(MySources
     ${PROJECT_SOURCE_DIR}/src/queue
     ${PROJECT_SOURCE_DIR}/src/scaner
     ${PROJECT_SOURCE_DIR}/src/stack
+    ${PROJECT_SOURCE_DIR}/src/symtable
+    ${PROJECT_SOURCE_DIR}/src/semantic_analyser
 )
 
 foreach(source ${MySource})
