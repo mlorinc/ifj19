@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include "array_nodes.h"
 #include "string.h"
+#include <assert.h>
 
 struct array_nodes
 {
@@ -15,6 +16,7 @@ array_nodes_t array_nodes_init() {
 
     array->capacity = __ARRAY_CHUNK;
     array->size = 0;
+    return array;
 }
 
 bool array_nodes_empty(array_nodes_t array) {
