@@ -37,6 +37,11 @@ typedef struct table_value
     tToken* token;
 }* p_table_value;
 
+/**
+ * Convert token to precedent element.
+ * @param token converting token
+ * @return element type
+ */
 int token_to_precedent_e(tToken_type token)
 {
     switch(token)
@@ -69,6 +74,12 @@ int token_to_precedent_e(tToken_type token)
     }
 }
 
+/**
+ * Create table value which will be store on stack
+ * @param token value for table_value
+ * @param element value for table_value
+ * @return pointer on table_value
+ */
 p_table_value create_table_value(tToken token, enum precedent_element element)
 {
     p_table_value new = malloc(sizeof(struct table_value));
@@ -86,6 +97,13 @@ p_table_value create_table_value(tToken token, enum precedent_element element)
     return new;
 }
 
+/**
+ * Do precedent analyze
+ * @param precedent_stack stack for precedent analyze
+ * @param postfix output queue for tokens
+ * @param new_value table_value on input
+ * @return if syntactic error return false, else true
+ */
 bool read_table(stack_t precedent_stack, queue_t postfix, p_table_value new_value)
 {
     p_table_value top_on_stack = stack_top(precedent_stack);
@@ -158,7 +176,7 @@ parser_result_t parse_expression(parser_t parser)
             return result;
         }
 
-        if(table_value->element != Pend)
+        if(table_value->element != Pend)    //  If token on input is still expression token.
         {
             token = get_token();
             table_value = create_table_value(token, token_to_precedent_e(token.type));
@@ -170,7 +188,7 @@ parser_result_t parse_expression(parser_t parser)
         top_of_stack = stack_top(precedent_stack);
     }while(top_of_stack->element != Pend);
 
-    if(queue_empty(postfix))
+    if(queue_empty(postfix))    //  Expression wasn't found.
     {
         queue_destroy(postfix);
         result.ast->data = NULL;
