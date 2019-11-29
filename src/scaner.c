@@ -468,7 +468,7 @@ tToken get_token()
                     state = sString;
                 else if (c == '\\')
                     state = sStringEscape;
-                else if (c == '\'') // End of the string
+                else if (c == 39) // End of the string
                     return token_fill(&token, string, (int) -1, TSTRING);   // -1 because we don't want to unget that char (')
                 break;
             case sStringEscape:
