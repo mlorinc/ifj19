@@ -2,7 +2,7 @@ MAIN=main
 
 PRJ-NAME=ifj19
 
-SOURCES=ast_structures.c  deque.c  error.c  iterator.c  parser_ast.c  parser.c  parser_result.c  ptr_string.c  queue.c  scaner.c  semantic_analyser.c  stack.c  symtable.c
+SOURCES=array_nodes.c  error.c iterator.c  parser_ast.c ptr_string.c  scaner.c stack.c deque.c parser.c parser_result.c expression_parser.c queue.c semantic_analyser.c  symtable.c
 CC=gcc
 CFLAGS=-Wall -Werror -Wextra -Wpedantic -std=c99 -pedantic -g -O0
 LDFLAGS=-lm
