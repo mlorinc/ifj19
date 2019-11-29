@@ -643,17 +643,34 @@ parser_result_t suite(parser_t parser)
     }
 }
 
-ast_t parse()
+parser_result_t parse()
 {
     parser_t parser = parser_init();
     parser_next(parser);
 
     ast_t program = ast_node_init(CONSEQUENT, NULL);
     bool building_tree = true;
+    enum error_codes status = ERROR_OK;
 
     for (parser_result_t stmt = statement(parser); parser->token.type != TENDOFFILE; stmt = statement(parser))
     {
-        if (stmt.error)
+        if (parser->token.type == TLEXERR)
+        {
+            if (status == ERROR_OK)
+            {
+                status = ERROR_LEX;
+            }
+            parser_next(parser);
+        }
+        else if (parser->token.type == TERR)
+        {
+            if (status == ERROR_OK)
+            {
+                status = ERROR_INTERNAL;
+            }
+            parser_next(parser);
+        }
+        else if (stmt.error)
         {
             char *err = ptr_string_c_string(stmt.error);
             fprintf(stderr, "[PARSER]: %s", err);
@@ -669,7 +686,8 @@ ast_t parse()
             building_tree = false;
             program = NULL;
         }
-        else if(stmt.ast == NULL) {
+        else if (stmt.ast == NULL)
+        {
             // error occurred before, and it left unprocessed tokens
             // so skip them
             parser_next(parser);
@@ -685,5 +703,9 @@ ast_t parse()
     }
 
     parser_destroy(parser);
-    return program;
+
+    parser_result_t result = parser_result(program);
+    result.error_code = status;
+
+    return result;
 }
