@@ -51,9 +51,9 @@ typedef enum {
 	TSUB, // -
 	TMUL, // *
 	TDIV, // /
-    TFLOORDIV,  // //
 	TLT, // <
 	TGT, // >
+    TFLOORDIV,  // //
 	TLTE, // <=
 	TGTE, // >=
 	TEQ, // ==
