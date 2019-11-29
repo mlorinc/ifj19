@@ -17,6 +17,10 @@ array_nodes_t array_nodes_init() {
     array->size = 0;
 }
 
+bool array_nodes_empty(array_nodes_t array) {
+    return array->size == 0;
+}
+
 size_t array_nodes_size(array_nodes_t array) {
     return array->size;
 }
@@ -30,9 +34,13 @@ ast_t array_nodes_get(array_nodes_t array, size_t index) {
     return array->nodes[index];
 }
 
+ast_t array_nodes_try_get(array_nodes_t array, size_t index) {
+    }
+    return array->nodes[index];
+}
+
 bool array_nodes_set(array_nodes_t array, size_t index, ast_t node) {
     assert(index < array->size);
-    array->nodes[index] = node;
 }
 
 bool array_nodes_push(array_nodes_t array, ast_t node) {
@@ -42,9 +50,7 @@ bool array_nodes_push(array_nodes_t array, ast_t node) {
         array->capacity = new_capacity;
     }
     array->nodes[array->size] = node;
-}
-
-bool array_nodes_destroy(array_nodes_t array) {
+    array->size++;
     free(array->nodes);
     free(array);
 }
