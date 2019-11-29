@@ -8,7 +8,7 @@ CFLAGS=-Wall -Werror -Wextra -Wpedantic -std=c99 -pedantic -g -O0
 LDFLAGS=-lm
 
 all:
-	$(CC) $(CFLAGS) $(MAIN).c -o $(PRJ-NAME) $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $(PRJ-NAME) $(MAIN).c $(SOURCES) $(LDFLAGS)
 
 .PHONY : all
 

@@ -36,8 +36,9 @@ ast_t array_nodes_get(array_nodes_t array, size_t index) {
 }
 
 ast_t array_nodes_try_get(array_nodes_t array, size_t index) {
-    if (index >= array->size)
+    if (index >= array->size) {
         return NULL;
+    }
     return array->nodes[index];
 }
 
@@ -61,5 +62,5 @@ bool array_nodes_push(array_nodes_t array, ast_t node) {
 bool array_nodes_destroy(array_nodes_t array) {
     free(array->nodes);
     free(array);
-    return 1;
+    return true;
 }

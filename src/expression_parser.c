@@ -114,19 +114,28 @@ bool read_table(stack_t precedent_stack, queue_t postfix, p_table_value new_valu
             stack_push(precedent_stack, new_value);
             return true;
         case '>':
-            queue_push(postfix, top_on_stack->token);
+            if(top_on_stack->element != Prp && top_on_stack->element != Plp)
+            {
+                queue_push(postfix, top_on_stack->token);
+            }
             stack_pop(precedent_stack);
-            free(top_on_stack->token);
+            if(top_on_stack->element == Prp)
+            {
+                if(((p_table_value) stack_top(precedent_stack))->element == Plp)
+                {
+                    free(top_on_stack);
+                    top_on_stack = stack_pop(precedent_stack);
+                }
+            }
             free(top_on_stack);
             return read_table(precedent_stack, postfix, new_value);
         case '=':
-            stack_pop(precedent_stack);
-            free(top_on_stack->token);
-            free(top_on_stack);
+            stack_push(precedent_stack, new_value);
             return true;
         case ' ':
             while (!stack_empty(precedent_stack))
             {
+                stack_pop(precedent_stack);
                 free(top_on_stack->token);
                 free(top_on_stack);
                 top_on_stack = stack_pop(precedent_stack);
@@ -186,7 +195,15 @@ parser_result_t parse_expression(parser_t parser)
             queue_push(parser->returned_tokens, table_value->token);
         }
         top_of_stack = stack_top(precedent_stack);
-    }while(top_of_stack->element != Pend);
+    }while(top_of_stack->element != Pend || table_value->element != Pend);
+
+    int last_expresion_element = token_to_precedent_e(parser->previousToken.type);
+    if(last_expresion_element != Prp && last_expresion_element != Po)
+    {
+        queue_destroy(postfix);
+        result.ast->data = NULL;
+        result.error = ptr_string("Expression error.");
+    }
 
     if(queue_empty(postfix))    //  Expression wasn't found.
     {
