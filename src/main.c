@@ -1,27 +1,35 @@
 #include <stdio.h>
+#include "array_nodes.c"
+#include "deque.c"
+#include "error.c"
+#include "expression_parser.c"
+#include "iterator.c"
+#include "parser_ast.c"
+#include "parser_result.c"
+#include "parser.c"
+#include "ptr_string.c"
+#include "queue.c"
+#include "scaner.c"
+//#include "semantic_analyser.c"
+#include "stack.c"
+#include "symtable.c"
+#include "array_nodes.h"
+#include "deque.h"
+#include "error.h"
 #include "expression_parser.h"
+#include "iterator.h"
+#include "parser_ast.h"
+#include "parser_result.h"
+#include "parser.h"
 #include "ptr_string.h"
 #include "queue.h"
-
-parser_t parser_init()
-{
-    parser_t parser = malloc(sizeof(struct parser));
-
-    if (parser == NULL)
-    {
-        return NULL;
-    }
-
-    parser->returned_tokens = queue_init();
-
-    if (parser->returned_tokens == NULL)
-    {
-        free(parser);
-        return NULL;
-    }
-
-    return parser;
-}
+#include "scaner.h"
+//#include "semantic_analyser.h"
+#include "stack.h"
+#include "symtable.h"
+//#include "expression_parser.h"
+//#include "ptr_string.h"
+//#include "queue.h"
 
 
 int main(void)
