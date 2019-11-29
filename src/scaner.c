@@ -153,7 +153,7 @@ tToken indent_counter()
  */
 tToken token_fill(tToken *token_ptr, ptr_string_t string, char c, tToken_type token_type)
 {
-    if(token_type != TIDENTIFICATOR && token_type != TKEYWORD)
+    if(token_type != TIDENTIFICATOR && token_type != TKEYWORD && (token_type < TFLOORDIV && token_type > TNE))
     {
         ptr_string_delete_last(string);
     }
@@ -415,7 +415,6 @@ tToken get_token()
             
             /************************* Identificator/Keyword *****************************/
             case sIdentificatorOrKeyWord:
-                // TODO after read is done, compare the string with array of keywords
                 if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_')
                     state = sIdentificatorOrKeyWord;
                 else
@@ -436,41 +435,40 @@ tToken get_token()
             // Add, Sub and Mul is already done in sStart state
             case sDivOrFloorDiv:
                 if (c == '/')   // Floor division
-                    return token_fill(&token, string, c, TFLOORDIV);
+                    return token_fill(&token, string, (int) -1, TFLOORDIV);
                 else    // Regular division
                     return token_fill(&token, string, c, TDIV);
                 break;
             case sAssignOrEqual:
                 if (c == '=')   // Equal
-                    return token_fill(&token, string, c, TEQ);
+                    return token_fill(&token, string, (int) -1, TEQ);
                 else    // Assign
-                    return token_fill(&token, string, c, TASSIGN);
+                    return token_fill(&token, string, c , TASSIGN);
             case sLtOrLte:
                 if (c == '=')   // Less than or Equal
-                    return token_fill(&token, string, c, TLTE);
+                    return token_fill(&token, string, (int) -1, TLTE);
                 else    // Less than
-                    return token_fill(&token, string, c, TLT);
+                    return token_fill(&token, string, c , TLT);
             case sGtOrGte:
                 if (c == '=')   // Greater than or Equal
-                    return token_fill(&token, string, c, TGTE);
+                    return token_fill(&token, string, (int) -1, TGTE);
                 else    // Greater than
-                    return token_fill(&token, string, c, TGT);
+                    return token_fill(&token, string, c , TGT);
             case sExclMark:
                 if (c == '=')   // Not equal
-                    return token_fill(&token, string, c, TNE);
+                    return token_fill(&token, string, (int) -1, TNE);
                 else    // Error
                 {
                     error_print("Exclamation mark should be followed by equal sign", row, character_position);
                     return token_fill(&token, string, c, TLEXERR);
                 }
             /************************* String *****************************/
-            // TODO
             case sString:
                 if (c > 31 && c != '\\' && c != '\'')
                     state = sString;
                 else if (c == '\\')
                     state = sStringEscape;
-                else if (c == '\'') // End of the string
+                else if (c == 39) // End of the string
                     return token_fill(&token, string, (int) -1, TSTRING);   // -1 because we don't want to unget that char (')
                 break;
             case sStringEscape:
