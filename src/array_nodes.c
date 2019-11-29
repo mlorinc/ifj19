@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include "array_nodes.h"
-#include "string.h"
 #include <assert.h>
 
 struct array_nodes
@@ -46,19 +45,22 @@ ast_t array_nodes_try_get(array_nodes_t array, size_t index) {
 bool array_nodes_set(array_nodes_t array, size_t index, ast_t node) {
     assert(index < array->size);
     array->nodes[index] = node;
+    return true;
 }
 
 bool array_nodes_push(array_nodes_t array, ast_t node) {
     if (array->size >= array->capacity) {
         size_t new_capacity = array->capacity + __ARRAY_CHUNK;
-        array->nodes = realloc(array->nodes, sizeof(ast_t) * new_capacity;
+        array->nodes = realloc(array->nodes, sizeof(ast_t) * new_capacity);
         array->capacity = new_capacity;
     }
     array->nodes[array->size] = node;
     array->size++;
+    return true;
 }
 
 bool array_nodes_destroy(array_nodes_t array) {
     free(array->nodes);
     free(array);
+    return true;
 }
