@@ -2,10 +2,12 @@
 #define __H_PARSER_RESULT
 
 #include "parser.h"
+#include "error.h"
 
 struct parser_result {
     ast_t ast;
     ptr_string_t error;
+    enum error_codes error_code;
 };
 
 typedef struct parser_result parser_result_t;

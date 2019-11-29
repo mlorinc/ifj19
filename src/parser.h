@@ -23,4 +23,6 @@ bool accept(parser_t parser, tToken_type token_type);
 
 void parser_return_back(parser_t parser, tToken token);
 
+parser_result_t parse();
+
 #endif

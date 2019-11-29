@@ -3,15 +3,9 @@
 
 #include <stdbool.h>
 #include "queue.h"
-<<<<<<< HEAD
-#include "array_nodes.h"
-
-typedef enum {
-=======
 
 typedef enum {
     LEAVE_SCOPE,
->>>>>>> origin/master
     PASS,
     RETURN,
     BREAK,
