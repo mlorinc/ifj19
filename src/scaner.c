@@ -285,7 +285,7 @@ tToken get_token()
             /*************************** Start ********************************/   
             case sStart:
                 start_state((char) c, &state, string, &token);
-                if (token.value != NULL)
+                if (token.value != NULL || token.type == TLEXERR || token.type == TERR)
                     return token;
                 break;
 
