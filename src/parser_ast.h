@@ -3,9 +3,15 @@
 
 #include <stdbool.h>
 #include "queue.h"
+<<<<<<< HEAD
 #include "array_nodes.h"
 
 typedef enum {
+=======
+
+typedef enum {
+    LEAVE_SCOPE,
+>>>>>>> origin/master
     PASS,
     RETURN,
     BREAK,
@@ -31,14 +37,17 @@ typedef enum {
     IF,
     ELIF,
     ELSE,
+    WHILE_ELSE,
     NONE,
     EXPRESSION,
     CONSEQUENT
 } ast_node_type_t;
 
+struct array_nodes;
+
 struct ast
 {
-    array_nodes_t nodes;
+    struct array_nodes *nodes;
     ast_node_type_t node_type;
     void *data;
 };
@@ -55,5 +64,7 @@ bool ast_delete(ast_t root);
 bool ast_add_node(ast_t parent, ast_t node);
 
 void *allocate_value_to_heap(void *value, size_t size);
+
+#include "array_nodes.h"
 
 #endif

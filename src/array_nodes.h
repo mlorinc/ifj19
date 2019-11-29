@@ -10,14 +10,15 @@
 #endif
 
 struct array_nodes;
-
 typedef struct array_nodes *array_nodes_t;
 
-array_nodes_t array_nodes_init();
 
+array_nodes_t array_nodes_init();
 size_t array_nodes_size(array_nodes_t array);
+bool array_nodes_empty(array_nodes_t array);
 size_t array_nodes_capacity(array_nodes_t array);
 ast_t array_nodes_get(array_nodes_t array, size_t index);
+ast_t array_nodes_try_get(array_nodes_t array, size_t index);
 bool array_nodes_set(array_nodes_t array, size_t index, ast_t node);
 bool array_nodes_push(array_nodes_t array, ast_t node);
 bool array_nodes_destroy(array_nodes_t array);
