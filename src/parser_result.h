@@ -1,8 +1,9 @@
 #ifndef __H_PARSER_RESULT
 #define __H_PARSER_RESULT
 
-#include "parser.h"
 #include "error.h"
+#include "parser_ast.h"
+#include "ptr_string.h"
 
 struct parser_result {
     ast_t ast;

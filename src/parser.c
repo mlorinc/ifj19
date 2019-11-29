@@ -70,6 +70,11 @@ bool accept(parser_t parser, tToken_type token_type)
 
 bool accept_keyword(parser_t parser, const char *keyword)
 {
+    if (parser->previousToken.value == NULL)
+    {
+        return false;
+    }
+
     if (parser->token.type == TKEYWORD && ptr_string_c_equals(parser->previousToken.value, keyword))
     {
         parser_next(parser);
@@ -189,10 +194,22 @@ parser_result_t small_statement(parser_t parser)
     {
         return parser_result(ast_node_init(PASS, parser->previousToken.value));
     }
-    else
+
+    parser_result_t flow_stmt = flow_statement(parser);
+
+    if (flow_stmt.ast != NULL || flow_stmt.error)
     {
-        return flow_statement(parser);
+        return flow_stmt;
     }
+
+    parser_result_t expr = parse_expression(parser);
+
+    if (expr.ast != NULL || expr.error)
+    {
+        return expr;
+    }
+
+    return parser_result(NULL);
 }
 
 parser_result_t simple_statement(parser_t parser)
@@ -217,6 +234,8 @@ parser_result_t simple_statement(parser_t parser)
         {
             // it does not end with endline which is syntax error
             // data holds literal of flow statement or pass
+            printf("Last token %d\n", parser->previousToken.type);
+            // printf("Last token %s\n", parser->previousToken.value);
             return parser_error(small_stmt.ast, "Missing newline after symbol %s\n", small_stmt.ast->data);
         }
     }
@@ -649,6 +668,7 @@ parser_result_t parse()
     parser_next(parser);
 
     ast_t program = ast_node_init(CONSEQUENT, NULL);
+
     bool building_tree = true;
     enum error_codes status = ERROR_OK;
 
@@ -673,7 +693,7 @@ parser_result_t parse()
         else if (stmt.error)
         {
             char *err = ptr_string_c_string(stmt.error);
-            fprintf(stderr, "[PARSER]: %s", err);
+            fprintf(stderr, "[PARSER]: %s\n", err);
 
             free(err);
             parser_error_dispose(stmt);
@@ -681,6 +701,11 @@ parser_result_t parse()
             if (program != NULL)
             {
                 ast_delete(program);
+            }
+
+            if (status == ERROR_OK)
+            {
+                status = ERROR_SYNTAX;
             }
 
             building_tree = false;

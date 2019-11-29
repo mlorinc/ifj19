@@ -48,7 +48,7 @@ bool ast_delete(ast_t root) {
 			continue;
 		};
 
-
+    
         for (size_t i = 0; i < array_nodes_size(node->nodes); i++)
         {
             stack_push(nodes, array_nodes_get(node->nodes, i));
