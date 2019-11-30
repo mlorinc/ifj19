@@ -1,3 +1,19 @@
+/**
+ * IFJ2019 @ VUT FIT Brno
+ * 30.11.2019
+ *
+ * Variant 2
+ * Team: 054
+ *
+ * Authors:
+ * Marian Lorinc (xlorin01)
+ * Lukas Javorsky (xjavor20)
+ * Patrik Ondriga (xondri08)
+ * Peter Vinarcik (xvinar00)
+ *
+ * File: expression_parser.c
+ *
+ */
 
 #include "expression_parser.h"
 #include "stack.h"
@@ -198,18 +214,18 @@ parser_result_t parse_expression(parser_t parser)
     }while(top_of_stack->element != Pend || table_value->element != Pend);
 
     int last_expresion_element = token_to_precedent_e(parser->previousToken.type);
-    if(last_expresion_element != Prp && last_expresion_element != Po)
-    {
-        queue_destroy(postfix);
-        result.ast->data = NULL;
-        result.error = ptr_string("Expression error.");
-    }
 
     if(queue_empty(postfix))    //  Expression wasn't found.
     {
         queue_destroy(postfix);
         result.ast->data = NULL;
         result.error = ptr_string("Not an expression.");
+    }
+    else if(last_expresion_element != Prp && last_expresion_element != Po)
+    {
+        queue_destroy(postfix);
+        result.ast->data = NULL;
+        result.error = ptr_string("Expression error.");
     }
 
     stack_destroy(precedent_stack);
