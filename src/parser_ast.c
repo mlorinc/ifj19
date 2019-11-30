@@ -14,13 +14,15 @@ ast_t ast_node_init_empty()
     return ast;
 }
 
-ast_t ast_node_init(ast_node_type_t type, void *data)
+ast_t ast_node_init(ast_node_type_t type, unsigned line, unsigned pos, void *data)
 {
     ast_t tree = ast_node_init_empty();
     if (tree != NULL)
     {
         tree->node_type = type;
         tree->data = data;
+        tree->line = line;
+        tree->pos = pos;
     }
     return tree;
 }

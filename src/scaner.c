@@ -172,6 +172,8 @@ tToken token_fill(tToken *token_ptr, ptr_string_t string, char c, tToken_type to
         token_ptr->value = string;
     }
     last_token_type = token_ptr->type = token_type;
+    token_ptr->line = row;
+    token_ptr->pos = character_position;
     return *token_ptr;
 }
 
