@@ -234,8 +234,6 @@ parser_result_t simple_statement(parser_t parser)
         {
             // it does not end with endline which is syntax error
             // data holds literal of flow statement or pass
-            printf("Last token %d\n", parser->previousToken.type);
-            // printf("Last token %s\n", parser->previousToken.value);
             return parser_error(small_stmt.ast, "Missing newline after symbol %s\n", small_stmt.ast->data);
         }
     }
