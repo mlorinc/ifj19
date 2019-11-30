@@ -1,0 +1,87 @@
+.IFJcode19
+JUMP main
+
+LABEL foo_while
+PUSHFRAME
+DEFVAR LF@%retval
+MOVE LF@%retval nil@nil
+DEFVAR LF@param1
+MOVE LF@param1 LF@%1
+DEFVAR LF@param2
+MOVE LF@param2 LF@%2
+DEFVAR LF@c
+ADD LF@c LF@param1 LF@param2
+JUMPIFEQ $if$label LF@c int@15
+JUMPIFEQ $elif$label LF@c int@10
+
+#else
+MOVE LF@%retval string@No\03215\032or\03210\032:(\010
+POPFRAME
+RETURN
+
+LABEL $if$label
+MOVE LF@%retval LF@c
+POPFRAME
+RETURN
+
+LABEL $elif$label
+MOVE LF@%retval LF@c
+POPFRAME
+RETURN
+
+#MAIN BODY
+LABEL main
+DEFVAR GF@_x
+DEFVAR GF@_y
+DEFVAR GF@_z
+
+#c is different then 15 or 10
+CREATEFRAME
+DEFVAR TF@%1
+MOVE TF@%1 int@4
+DEFVAR TF@%2
+MOVE TF@%2 int@8
+CALL foo_while
+MOVE GF@_x TF@%retval
+WRITE GF@_x
+WRITE string@\010
+
+#c is equal to 10
+CREATEFRAME
+DEFVAR TF@%1
+MOVE TF@%1 int@2
+DEFVAR TF@%2
+MOVE TF@%2 int@8
+CALL foo_while
+MOVE GF@_y TF@%retval
+WRITE GF@_y
+WRITE string@\010
+
+#c is equal to 15
+CREATEFRAME
+DEFVAR TF@%1
+MOVE TF@%1 int@15
+DEFVAR TF@%2
+MOVE TF@%2 int@0
+CALL foo_while
+MOVE GF@_z TF@%retval
+WRITE GF@_z
+WRITE string@\010
+
+
+#def if_foo(a,b):
+#    c = a+b
+#    if c == 15:
+#        return c
+#    elif c == 10:
+#        return c
+#    else:
+#        print('No 15 or 10 :(\n')
+#        return c
+#
+#_x = if_foo(4,8)
+#print(_x\n)
+#_y = if_foo(2,8)
+#print(_y\n)
+#_z = if_foo(15,0)
+#print(_z\n)
