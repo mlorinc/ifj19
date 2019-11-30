@@ -1,0 +1,35 @@
+#INPUT:
+#def foo(a,b)
+    #a = a+b
+    #print(a)
+    #return
+#
+#foo(7,13)
+#
+#OUTPUT = 20
+
+#INPUT INTO IFJCODE
+.IFJcode19
+JUMP $$main
+
+LABEL $foo
+PUSHFRAME
+DEFVAR LF@%retval
+MOVE LF@%retval nil@nil
+DEFVAR LF@param1
+MOVE LF@param1 LF@%1
+DEFVAR LF@param2
+MOVE LF@param2 LF@%2
+ADD LF@param1 LF@param1 LF@param2
+WRITE LF@param1
+POPFRAME
+RETURN 
+
+LABEL $$main
+DEFVAR GF@y
+CREATEFRAME
+DEFVAR TF@%1
+MOVE TF@%1 int@7
+DEFVAR TF@%2
+MOVE TF@%2 int@13
+CALL $foo
