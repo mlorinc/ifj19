@@ -18,7 +18,7 @@
 #ifndef IFJ19_ERROR_H
 #define IFJ19_ERROR_H
 
-enum error_codes
+typedef enum
 {
     ERROR_OK = 0,       //code compiled without any error
     ERROR_LEX = 1,      //lexical error
@@ -29,7 +29,8 @@ enum error_codes
     ERROR_SEM_OTH = 6,  //semantic error -> other semantic errors
     ERROR_ZERO_DIV = 9, //dividing by zero
     ERROR_INTERNAL = 99 //compiler error (not affected by input) example: error during memory allocation
-};
+} error_codes;
+
 
 /**
  * Error handling function
