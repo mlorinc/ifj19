@@ -87,7 +87,7 @@ void generate_function_definition(ast_t ast, scope_t scope)
 
 size_t get_number_of_parameters(ast_t ast)
 {
-    ast_t parameters = array_nodes_get(ast, 0); //extract params from ast [0]
+    ast_t parameters = array_nodes_get(ast->nodes, 0); //extract params from ast [0]
     size_t pom = array_nodes_size(parameters->nodes); //get num of params
     return pom;
 }
