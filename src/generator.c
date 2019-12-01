@@ -1,3 +1,20 @@
+/**
+ * IFJ2019 @ VUT FIT Brno
+ * 09.11.2019
+ *
+ * Variant 2
+ * Team: 054
+ *
+ * Authors:
+ * Marian Lorinc (xlorin01)
+ * Lukas Javorsky (xjavor20)
+ * Patrik Ondriga (xondri08)
+ * Peter Vinarcik (xvinar00)
+ *
+ * File: generator.c
+ *
+ */
+
 #include "generator.h"
 #include "parser_ast.c"
 #include "array_nodes.h"
@@ -10,15 +27,12 @@ error_codes generate(ast_t ast, scope_t scope)
             return ERROR_OK;
 
         case RETURN:
-
             return ERROR_OK;
 
         case CONTINUE:
-
             return ERROR_OK;
 
         case BREAK:
-
             return ERROR_OK;
 
         case FUNCTION_DEFINITION:
@@ -26,37 +40,30 @@ error_codes generate(ast_t ast, scope_t scope)
             return ERROR_OK;
 
         case ASSIGN:
-
             return ERROR_OK;
 
         case WHILE:
-
             return ERROR_OK;
 
         case IF:
-
             return ERROR_OK;
-        case ELIF:
 
+        case ELIF:
             return ERROR_OK;
 
         case ELSE:
-
             return ERROR_OK;
 
         case NONE:
-
             return ERROR_OK;
 
         case EXPRESSION:
-
             return ERROR_OK;
 
         default:
             fprintf(stderr, "Forgot to implement %d\n", node->node_type);
             break;
     }
-
 
     return ERROR_OK;
 }
