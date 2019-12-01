@@ -26,32 +26,32 @@
 
 typedef enum precedent_element
 {
-    P1, // <, <=, >, >=, ==, !=
-    P2, // +, -
-    P3, // *, /, //
+    P1,  // <, <=, >, >=, ==, !=
+    P2,  // +, -
+    P3,  // *, /, //
     Plp, // (
     Prp, // )
-    Po, // constant, variable
+    Po,  // constant, variable
     Pend // end of expression
-}precedent_element;
+} precedent_element;
 
 char precedent_table[table_size][table_size] =
-{
-//    P1  P2  P3 Plp Prp  Po Pend
-    {'>','<','<','<','>','<','>'},  //P1
-    {'>','>','<','<','>','<','>'},  //P2
-    {'>','>','>','<','>','<','>'},  //P3
-    {'<','<','<','<','=','<',' '},  //Plp
-    {'>','>','>',' ','>',' ','>'},  //Prp
-    {'>','>','>',' ','>',' ','>'},  //Po
-    {'<','<','<','<',' ','<','#'}   //Pend
+    {
+        //    P1  P2  P3 Plp Prp  Po Pend
+        {'>', '<', '<', '<', '>', '<', '>'}, //P1
+        {'>', '>', '<', '<', '>', '<', '>'}, //P2
+        {'>', '>', '>', '<', '>', '<', '>'}, //P3
+        {'<', '<', '<', '<', '=', '<', ' '}, //Plp
+        {'>', '>', '>', ' ', '>', ' ', '>'}, //Prp
+        {'>', '>', '>', ' ', '>', ' ', '>'}, //Po
+        {'<', '<', '<', '<', ' ', '<', '#'}  //Pend
 };
 
 typedef struct table_value
-{  
+{
     precedent_element element;
-    tToken* token;
-}* p_table_value;
+    tToken *token;
+} * p_table_value;
 
 /**
  * Convert token to precedent element.
@@ -60,33 +60,33 @@ typedef struct table_value
  */
 precedent_element token_to_precedent_elem(tToken_type token)
 {
-    switch(token)
+    switch (token)
     {
-        case TINT:
-        case TFLOAT:
-        case TIDENTIFICATOR:
-        case TSTRING:
-            return Po;
-        case TLT:
-        case TGT:
-        case TLTE:
-        case TGTE:
-        case TEQ:
-        case TNE:
-            return P1;
-        case TADD:
-        case TSUB:
-            return P2;
-        case TMUL:
-        case TDIV:
-        case TFLOORDIV:
-            return P3;
-        case TLEFTPAR:
-            return Plp;
-        case TRIGHTPAR:
-            return Prp;
-        default:
-            return Pend;
+    case TINT:
+    case TFLOAT:
+    case TIDENTIFICATOR:
+    case TSTRING:
+        return Po;
+    case TLT:
+    case TGT:
+    case TLTE:
+    case TGTE:
+    case TEQ:
+    case TNE:
+        return P1;
+    case TADD:
+    case TSUB:
+        return P2;
+    case TMUL:
+    case TDIV:
+    case TFLOORDIV:
+        return P3;
+    case TLEFTPAR:
+        return Plp;
+    case TRIGHTPAR:
+        return Prp;
+    default:
+        return Pend;
     }
 }
 
@@ -99,11 +99,11 @@ precedent_element token_to_precedent_elem(tToken_type token)
 p_table_value create_table_value(tToken token, enum precedent_element element)
 {
     p_table_value new = malloc(sizeof(struct table_value));
-    if(new != NULL)
+    if (new != NULL)
     {
         new->element = element;
-        tToken* ptoken = malloc(sizeof(tToken)); 
-        if(ptoken != NULL)
+        tToken *ptoken = malloc(sizeof(tToken));
+        if (ptoken != NULL)
         {
             ptoken->type = token.type;
             ptoken->value = token.value;
@@ -151,11 +151,11 @@ void expression_stack_destroy(stack_t stack)
 void expression_stack_top_destoy(stack_t stack)
 {
     p_table_value top_of_stack = stack_pop(stack);
-    if(top_of_stack->element == Prp)
+    if (top_of_stack->element == Prp)
     {
         free(top_of_stack);
         top_of_stack = stack_top(stack);
-        if(top_of_stack->element == Plp)
+        if (top_of_stack->element == Plp)
         {
             stack_pop(stack);
             free(top_of_stack);
@@ -178,23 +178,23 @@ bool precedent_analyze(stack_t expression_stack, queue_t postfix, p_table_value 
 {
     p_table_value top_of_stack = stack_top(expression_stack);
     char operation = precedent_table[top_of_stack->element][new_value->element];
-    switch(operation)
+    switch (operation)
     {
-        case '<':
-        case '=':
-            stack_push(expression_stack, new_value);
-            return true;
-        case '>':
-            if(top_of_stack->element != Prp && top_of_stack->element != Plp)    //If on top of stack isn't ')' or '('
-            {
-                queue_push(postfix, top_of_stack->token);
-            }
-            expression_stack_top_destoy(expression_stack);
-            return precedent_analyze(expression_stack, postfix, new_value);
-        case ' ':
-            return false;
-        default:
-            return true;
+    case '<':
+    case '=':
+        stack_push(expression_stack, new_value);
+        return true;
+    case '>':
+        if (top_of_stack->element != Prp && top_of_stack->element != Plp) //If on top of stack isn't ')' or '('
+        {
+            queue_push(postfix, top_of_stack->token);
+        }
+        expression_stack_top_destoy(expression_stack);
+        return precedent_analyze(expression_stack, postfix, new_value);
+    case ' ':
+        return false;
+    default:
+        return true;
     }
 }
 
@@ -204,33 +204,36 @@ parser_result_t parse_expression(parser_t parser)
     queue_t postfix = queue_init();
     p_table_value new_table_value;
 
-    do{
-        parser_next(parser);
+    do
+    {
         new_table_value = create_table_value(parser->token, token_to_precedent_elem(parser->token.type));
 
-        if(!precedent_analyze(expression_stack, postfix, new_table_value))  // Bad expression.
+        if (parser->token.type == TRIGHTPAR && parser->previousToken.type == TLEFTPAR ||
+            !precedent_analyze(expression_stack, postfix, new_table_value)) // Bad expression.
         {
             expression_stack_destroy(expression_stack);
             queue_destroy(postfix);
-            return parser_error(ast_node_init(EXPRESSION, NULL), "Expression error.");
+            return parser_error(ast_node_init(EXPRESSION, NULL), "Expression error on line %u.\n", parser->previousToken.line);
         }
-    }while(new_table_value->element != Pend);
+
+        parser_next(parser);
+    } while (new_table_value->element != Pend);
 
     parser_return_back(parser, parser->token);
     expression_stack_destroy(expression_stack);
 
-    if(queue_empty(postfix))    //  Expression wasn't found.
+    if (queue_empty(postfix)) //  Expression wasn't found.
     {
         queue_destroy(postfix);
         return parser_result(NULL);
     }
-    
+
     precedent_element last_expresion_element = token_to_precedent_elem(parser->previousToken.type);
 
-    if(last_expresion_element != Prp && last_expresion_element != Po)  //  Bad end of expression.
+    if (last_expresion_element != Prp && last_expresion_element != Po) //  Bad end of expression.
     {
         queue_destroy(postfix);
-        return parser_error(ast_node_init(EXPRESSION, NULL), "Expression error.");
+        return parser_error(ast_node_init(EXPRESSION, NULL), "Expression error on line %u.\n", parser->previousToken.line);
     }
     else
     {
