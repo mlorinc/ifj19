@@ -1,0 +1,72 @@
+#def foo(a,b)
+#    c = a+b
+#    print(c)
+#    return
+#    
+#foo(5, 6.3)
+
+###For now, it only controls numbers, but tommorow i will 
+###implement also control for strings
+
+.IFJcode19
+JUMP $$main
+
+LABEL $foo
+PUSHFRAME
+DEFVAR LF@%retval
+MOVE LF@%retval nil@nil
+DEFVAR LF@param1
+MOVE LF@param1 LF@%1
+DEFVAR LF@param2
+MOVE LF@param2 LF@%2
+DEFVAR LF@c
+
+#semantic control start here 
+#here we check if numbers are float or int
+#explanation below
+DEFVAR LF@typeCheck1
+DEFVAR LF@valueCheck1
+TYPE LF@typeCheck1 LF@param1
+DEFVAR LF@typeCheck2
+DEFVAR LF@valueCheck2
+TYPE LF@typeCheck2 LF@param2
+
+#if we detect atleast one float jump to float detect
+#if we got first number float, we must check also second number
+#if we have to recast type of second number
+#same we have to do with inverse order
+JUMPIFEQ $FloatDetectedFirst LF@typeCheck1 string@float
+JUMPIFEQ $FloatDetectedSecond LF@typeCheck2 string@float
+
+#we got there so we know numbers are integers
+ADD LF@c LF@param1 LF@param2
+JUMP $AddedSucc
+
+LABEL $FloatDetectedFirst
+JUMPIFEQ $BothFloat LF@typeCheck2 string@float
+INT2FLOAT LF@valueCheck2 LF@param2
+ADD LF@c LF@param1 LF@valueCheck2
+JUMP $AddedSucc
+
+#we got there because first number wasnt float
+LABEL $FloatDetectedSecond
+INT2FLOAT LF@valueCheck1 LF@param1
+ADD LF@c LF@param2 LF@valueCheck1
+JUMP $AddedSucc
+
+LABEL $BothFloat
+ADD LF@c LF@param1 LF@param2
+JUMP $AddedSucc
+
+LABEL $AddedSucc
+WRITE LF@c
+POPFRAME
+RETURN
+
+LABEL $$main
+CREATEFRAME
+DEFVAR TF@%1
+MOVE TF@%1 int@5
+DEFVAR TF@%2
+MOVE TF@%2 float@0x1.933334p+2
+CALL $foo
