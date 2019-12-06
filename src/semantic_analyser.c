@@ -14,111 +14,23 @@ semantic_result_t semantic_result(ast_t ast, scope_t scope, enum error_codes sta
     return sem;
 }
 
-scope_t new_scope(scope_t parent, ast_t root)
-{
-    scope_t scope = malloc(sizeof(struct scope));
-    scope->root = root;
-    scope->local_table = hash_map_init();
-    scope->parent_scope = parent;
-
-    if (parent == NULL) {
-        scope->root_scope = scope;
-    }
-    else {
-        scope->root_scope = parent->root_scope;
-    }
-    return scope;
-}
-
-scope_t delete_scope(scope_t scope)
-{
-    hash_map_destroy(scope->local_table);
-    scope_t parent = scope->parent_scope;
-    free(scope);
-    return parent;
-}
-
-scope_t find_scope_with_defined_variable(scope_t scope, ptr_string_t key)
-{
-    scope_t current_scope = scope;
-
-    while (current_scope != NULL)
-    {
-        char *raw_key = ptr_string_c_string(key);
-
-        if (hash_map_has(current_scope->local_table, raw_key))
-        {
-            return current_scope;
-        }
-        else
-        {
-            current_scope = current_scope->parent_scope;
-        }
-        free(raw_key);
-    }
-
-    return NULL;
-}
-
-scope_t find_first_node_type_in_scope(scope_t scope, ast_node_type_t type)
-{
-    scope_t current_scope = scope;
-
-    while (current_scope != NULL)
-    {
-        ast_node_type_t node_type = current_scope->root->node_type;
-
-        if (type == node_type)
-        {
-            return current_scope;
-        }
-        else
-        {
-            current_scope = current_scope->parent_scope;
-        }
-    }
-
-    return NULL;
-}
-
-bool exists_variable_in_scope(scope_t scope, ptr_string_t key)
-{
-    return find_scope_with_defined_variable(scope, key) != NULL;
-}
-
-bool set_variable_in_scope(scope_t scope, ptr_string_t key, void *value)
-{
-    scope_t variable_scope;
-    scope_t func_scope = find_first_node_type_in_scope(scope, FUNCTION_DEFINITION);
-
-    // we are in global scope
-    if (func_scope == NULL) {
-        variable_scope = scope->root_scope;
-    }
-    else {
-        variable_scope = func_scope;
-    }
-
-    char *variable_key = ptr_string_c_string(key);
-    bool result = hash_map_put(variable_scope->local_table, variable_key, value);
-    free(variable_key);
-
-    return result;
-}
-
-bool set_function(scope_t scope, ptr_string_t key, void *value)
-{
-    return set_variable_in_scope(scope->root_scope, key, value);
-}
-
 semantic_result_t handle_fuction_definition(scope_t current_scope, ast_t node, deque_t tree_traversing_deque)
 {
+
     // todo: supports inner function, remove if it is not in ifj assignment
     // get function name
     ptr_string_t function_name = node->data;
 
+    // check it is in root scope
+    if (current_scope != current_scope->root_scope)
+    {
+        char *variable = ptr_string_c_string(function_name);
+        fprintf(stderr, "Function %s cannot be defined outside of main scope (line: %u)\n", variable, node->line);
+        free(variable);
+        return semantic_result(node, current_scope, ERROR_SYNTAX);
+    }
     // check if it already exists
-    if (exists_variable_in_scope(current_scope->root_scope, function_name))
+    else if (exists_variable_in_scope(current_scope->root_scope, function_name))
     {
         // function redefinition is not allowed
         char *variable = ptr_string_c_string(function_name);
@@ -165,7 +77,7 @@ semantic_result_t handle_fuction_definition(scope_t current_scope, ast_t node, d
             free(key);
         }
 
-        set_function(current_scope, function_name, node);
+        set_function_in_scope(current_scope, function_name, node);
 
         // send body of function to be checked semantically
         deque_push_back(tree_traversing_deque, body);
@@ -369,7 +281,7 @@ semantic_result_t handle_node(scope_t current_scope, ast_t node, deque_t tree_tr
         return semantic_result(node, current_scope, ERROR_OK);
 
     case EXPRESSION:
-        return semantic_result(node, current_scope, ERROR_INTERNAL);;
+        return semantic_result(node, current_scope, ERROR_INTERNAL);
 
     case CONSEQUENT:
         return handle_consequent(current_scope, node, tree_traversing_deque);
@@ -382,12 +294,13 @@ semantic_result_t handle_node(scope_t current_scope, ast_t node, deque_t tree_tr
 
 semantic_result_t semantic_analysis(ast_t root)
 {
-    if (root == NULL) {
+    if (root == NULL)
+    {
         return semantic_result(NULL, NULL, ERROR_OK);
     }
 
     scope_t current_scope = new_scope(NULL, root);
-    
+
     deque_t tree_traversing_deque = deque_init();
     deque_push_back(tree_traversing_deque, root);
 

@@ -3,6 +3,7 @@
 
 #include "parser_ast.h"
 #include "parser_result.h"
+#include "scope.h"
 #include "error.h"
 
 typedef struct scope

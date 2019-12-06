@@ -268,6 +268,8 @@ tToken get_token()
     token = indent_counter();
     last_token_type = token.type;
     token.value = NULL;
+    token.line = row;
+    token.pos = character_position;
     if(token.type != TNOTHING) //if indent wasn't the same as before
     {
         return token;
