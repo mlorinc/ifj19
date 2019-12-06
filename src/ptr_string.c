@@ -275,7 +275,7 @@ bool ptr_string_equals(ptr_string_t thiz, ptr_string_t that)
     return (thiz == that) || (ptr_string_length(thiz) == ptr_string_length(that) && memcmp(thiz->buffer, that->buffer, ptr_string_length(thiz)) == 0);
 }
 
-bool ptr_string_c_equals(ptr_string_t thiz, char *that)
+bool ptr_string_c_equals(ptr_string_t thiz, const char *that)
 {
     assert(thiz != NULL && that != NULL);
     return (thiz->buffer == that) || (ptr_string_length(thiz) == strlen(that) && memcmp(thiz->buffer, that, ptr_string_length(thiz)) == 0);

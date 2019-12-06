@@ -166,7 +166,7 @@ bool ptr_string_equals(ptr_string_t thiz, ptr_string_t that);
  * @param that string b
  * @return true if strings are equal
  */ 
-bool ptr_string_c_equals(ptr_string_t thiz, char *that);
+bool ptr_string_c_equals(ptr_string_t thiz, const char *that);
 
 /**
  * Delete last char in string.

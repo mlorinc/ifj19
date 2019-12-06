@@ -51,17 +51,17 @@ typedef enum {
 	TSUB, // -
 	TMUL, // *
 	TDIV, // /
-    TFLOORDIV,  // //
 	TLT, // <
 	TGT, // >
+    TFLOORDIV,  // //
 	TLTE, // <=
 	TGTE, // >=
 	TEQ, // ==
 	TNE, // !=
 
     // Special characters
-    TLEFTPAR, // )
-    TRIGHTPAR, // (
+    TLEFTPAR, // (
+    TRIGHTPAR, // )
     TSEMICOLON, // ;
     TCOLON, // :
     TCOMMA, // ,
