@@ -8,10 +8,12 @@ scope_t new_scope(scope_t parent, ast_t root)
     scope->local_table = hash_map_init();
     scope->parent_scope = parent;
 
-    if (parent == NULL) {
+    if (parent == NULL)
+    {
         scope->root_scope = scope;
     }
-    else {
+    else
+    {
         scope->root_scope = parent->root_scope;
     }
     return scope;
@@ -68,6 +70,11 @@ scope_t find_first_node_type_in_scope(scope_t scope, ast_node_type_t type)
     return NULL;
 }
 
+scope_t get_function_scope(scope_t scope)
+{
+    return find_first_node_type_in_scope(scope, FUNCTION_DEFINITION);
+}
+
 bool exists_variable_in_scope(scope_t scope, ptr_string_t key)
 {
     return find_scope_with_defined_variable(scope, key) != NULL;
@@ -79,10 +86,12 @@ bool set_variable_in_scope(scope_t scope, ptr_string_t key, void *value)
     scope_t func_scope = find_first_node_type_in_scope(scope, FUNCTION_DEFINITION);
 
     // we are in global scope
-    if (func_scope == NULL) {
+    if (func_scope == NULL)
+    {
         variable_scope = scope->root_scope;
     }
-    else {
+    else
+    {
         variable_scope = func_scope;
     }
 
