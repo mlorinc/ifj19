@@ -15,7 +15,7 @@
  *
  */
 
-#include "generator.h"
+#include "string_convertor.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
