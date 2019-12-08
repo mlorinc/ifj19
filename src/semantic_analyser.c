@@ -4,6 +4,8 @@
 #include "deque.h"
 #include "symtable.h"
 #include "ptr_string.h"
+#include "scaner.h"
+#include "stack.h"
 
 typedef struct scope
 {
@@ -270,6 +272,172 @@ scope_t handle_consequent(scope_t current_scope, ast_t node, deque_t tree_traver
     return current_scope;
 }
 
+typedef enum expressionItem
+{
+    string_e,
+    int_e,
+    float_e,
+    add_e,
+    sub_e,
+    mul_e,
+    div_e,
+    floordiv_e,
+    compare_e,
+    bool_e
+}* expreItem_p;
+
+expreItem_p convert_token_to_expreItem(tToken_type token)
+{
+    expreItem_p item = malloc(sizeof(enum expressionItem));
+    switch(token)
+    {
+        case TSTRING:
+            *item = string_e;
+            break;
+        case TINT:
+            *item = int_e;
+            break;
+        case TFLOAT:
+            *item = float_e;
+            break;
+        case TADD:
+            *item = add_e;
+            break;
+        case TSUB:
+            *item = sub_e;
+            break;
+        case TMUL:
+            *item = mul_e;
+            break;
+        case TDIV:
+            *item = div_e;
+            break;
+        case TFLOORDIV:
+            *item = floordiv_e;
+            break;
+        default:
+            *item = compare_e;
+    }
+    return item;
+}
+
+int do_operation(stack_t stack, enum expressionItem operation)
+{
+    expreItem_p first = stack_pop(stack);
+    expreItem_p second = stack_pop(stack);
+    switch (operation)
+    {
+    case add_e:
+        if(*first == string_e && *second == string_e)
+        {
+            free(first);
+            stack_push(stack, second);
+            return 0;
+        }
+    case sub_e:
+    case mul_e:
+        if(*first == int_e && *second == int_e)
+        {
+            free(first);
+            stack_push(stack, second);
+            return 0;
+        }
+        if(*first == int_e && *second == float_e ||
+            *first == float_e && *second == int_e ||
+            *first == float_e && *second == float_e)
+        {
+            free(first);
+            second = float_e;
+            stack_push(stack, second);
+            return 0;
+        }
+        break;
+    case div_e:
+        if(*first == int_e || *first == float_e &&
+            *second == int_e || *second == float_e)
+        {
+            free(first);
+            second = float_e;
+            stack_push(stack, second);
+            return 0;
+        }
+        break;
+    case floordiv_e:
+        if(*first == int_e && *second == int_e)
+        {
+            free(first);
+            stack_push(stack, second);
+            return 0;
+        }
+        break;
+    case compare_e:
+        if(*first != bool_e && *second != bool_e)
+        {
+            free(first);
+            second = bool_e;
+            stack_push(stack, second);
+            return 0;
+        }
+        break;
+    }
+    free(first);
+    free(second);
+    return 1;
+}
+
+scope_t handle_expression(scope_t current_scope, queue_t postfix)
+{
+    tToken* token;
+    queue_t checkedPostfix = queue_init();
+    stack_t semanticStack = stack_init();
+    expreItem_p item = NULL;
+
+    while (!queue_empty(postfix))
+    {
+        token = queue_pop(postfix);
+        queue_push(checkedPostfix, token);
+        if(token->type == TIDENTIFICATOR)
+        {
+            if (!exists_variable_in_scope(current_scope, token->value))
+            {
+                print_undefined_variable_error(token->value);
+                return current_scope;
+            }
+            //TODO convert identificator
+        }
+        else
+        {
+            item = convert_token_to_expreItem(token->type);
+            if(*item == string_e || *item == int_e || *item == float_e)
+            {
+                stack_push(semanticStack, item);
+            }
+            else
+            {
+                if(do_operation(semanticStack, *item) != 0)
+                {
+                    free(item);
+                    stack_destroy(semanticStack);
+                    queue_destroy(checkedPostfix);
+                    fprintf(stderr, "Syntactic error in expression.");
+                    return current_scope;
+                }
+            }
+        }
+    }
+    if(item != NULL)
+    {
+        free(item);
+    }
+    stack_destroy(semanticStack);
+    while (!queue_empty(checkedPostfix))
+    {
+        queue_push(postfix, queue_pop(checkedPostfix));
+    }
+    queue_destroy(checkedPostfix);
+    return current_scope;
+}
+
 /**
  * Returns error count so far
  */
@@ -312,7 +480,7 @@ scope_t handle_node(scope_t current_scope, ast_t node, deque_t tree_traversing_d
         return current_scope;
 
     case EXPRESSION:
-        break;
+        return handle_expression(current_scope, node->data);
 
     case CONSEQUENT:
         return handle_consequent(current_scope, node, tree_traversing_deque);
