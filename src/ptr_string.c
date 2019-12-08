@@ -202,7 +202,7 @@ ptr_string_t ptr_string_substring(ptr_string_t const str, const size_t start, co
     if (str == NULL || str->buffer == NULL)
         return NULL;
     assert(end > start);
-    assert(str->length > start && str->length <= end);
+    assert(str->length > start && str->length >= end);
 
     size_t length = end - start;
     ptr_string_t newStr = ptr_string_new_with_length(length);
@@ -275,7 +275,7 @@ bool ptr_string_equals(ptr_string_t thiz, ptr_string_t that)
     return (thiz == that) || (ptr_string_length(thiz) == ptr_string_length(that) && memcmp(thiz->buffer, that->buffer, ptr_string_length(thiz)) == 0);
 }
 
-bool ptr_string_c_equals(ptr_string_t thiz, char *that)
+bool ptr_string_c_equals(ptr_string_t thiz, const char *that)
 {
     assert(thiz != NULL && that != NULL);
     return (thiz->buffer == that) || (ptr_string_length(thiz) == strlen(that) && memcmp(thiz->buffer, that, ptr_string_length(thiz)) == 0);

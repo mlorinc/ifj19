@@ -1,0 +1,46 @@
+.IFJcode19
+JUMP main
+
+LABEL foo_while
+PUSHFRAME
+DEFVAR LF@%retval
+MOVE LF@%retval nil@nil
+DEFVAR LF@param1
+MOVE LF@param1 LF@%1
+DEFVAR LF@param2
+MOVE LF@param2 LF@%2
+LABEL $while$not$equal
+JUMPIFEQ $while$equal LF@param1 LF@param2
+WRITE LF@param1
+ADD LF@param1 LF@param1 int@1
+JUMP $while$not$equal
+LABEL $while$equal
+POPFRAME
+RETURN
+
+LABEL main
+DEFVAR GF@a
+MOVE GF@a int@0
+DEFVAR GF@b
+MOVE GF@b int@7
+CREATEFRAME
+DEFVAR TF@%1
+MOVE TF@%1 GF@a
+DEFVAR TF@%2
+MOVE TF@%2 GF@b
+CALL foo_while
+
+
+
+
+
+#def foo_while(a,b):
+#    while a < b
+#        a = a + 1
+#        print(a)
+#    return
+#    
+#a = 0
+#b = 7
+#foo_while(a,b)
+

@@ -8,15 +8,19 @@ size_t queue_size(queue_t queue) {
     return deque_size(queue);
 }
 
-int queue_destroy(queue_t queue) {
+bool queue_empty(queue_t queue) {
+    return queue_size(queue) == 0;
+}
+
+bool queue_destroy(queue_t queue) {
     return deque_destroy(queue);
 }
 
-int queue_push(queue_t queue, void *element) {
+bool queue_push(queue_t queue, void *element) {
     return deque_push_back(queue, element);
 }
 
-int queue_pop(queue_t queue) {
+void *queue_pop(queue_t queue) {
     return deque_pop_front(queue);
 }
 
