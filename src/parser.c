@@ -13,6 +13,7 @@
 typedef parser_result_t (*parser_method_t)(parser_t parser);
 
 parser_result_t suite(parser_t parser);
+parser_result_t function_call(parser_t parser);
 
 parser_t parser_init()
 {
@@ -164,8 +165,28 @@ parser_result_t assign_statemnt(parser_t parser)
             // check if we found expression
             if (expr.ast == NULL)
             {
-                // thats bad, we must return error
-                return parser_error(NULL, "Invalid assignment, missing expression on right hand side (line %u)\n", assign_line);
+                // lets try function call
+                parser_result_t func_call = function_call(parser);
+
+                if (func_call.error)
+                {
+                    return func_call;
+                }
+                else if (func_call.ast == NULL)
+                {
+                    return parser_error(NULL, "Invalid assignment, missing expression or function call on right hand side (line %u)\n", assign_line);
+                }
+                else
+                {
+                    // we are ok, lets create tree
+                    ast_t assign = ast_node_init(ASSIGN, assign_line, assign_pos, NULL);
+
+                    // attach id to left node
+                    ast_add_node(assign, ast_node_init(ID, id.line, id.pos, id.value));
+                    // attach function call to right node
+                    ast_add_node(assign, func_call.ast);
+                    return parser_result(assign);
+                }
             }
             else
             {
@@ -212,6 +233,13 @@ parser_result_t small_statement(parser_t parser)
     if (expr.ast != NULL || expr.error)
     {
         return expr;
+    }
+
+    parser_result_t func_call = function_call(parser);
+
+    if (func_call.ast != NULL || func_call.error)
+    {
+        return func_call;
     }
 
     return parser_result(NULL);
@@ -456,7 +484,39 @@ parser_result_t function_definition_parameter(parser_t parser)
     }
 }
 
-parser_result_t function_definition_paramaters(parser_t parser)
+parser_result_t function_call_parameter(parser_t parser)
+{
+    if (accept(parser, TIDENTIFICATOR) || accept(parser, TSTRING) || accept(parser, TINT) || accept(parser, TFLOAT))
+    {
+        ast_node_type_t argument_type;
+
+        switch (parser->previousToken.type)
+        {
+        case TIDENTIFICATOR:
+            argument_type = ID;
+            break;
+        case TSTRING:
+            argument_type = STRING_LITERAL;
+            break;
+        case TINT:
+            argument_type = INT_LITERAL;
+            break;
+        case TFLOAT:
+            argument_type = FLOAT_LITERAL;
+            break;
+        default:
+            return parser_error(NULL, "INTERNAL ERROR\n");
+        }
+
+        return parser_result(ast_node_init(argument_type, parser->previousToken.line, parser->previousToken.pos, parser->previousToken.value));
+    }
+    else
+    {
+        return parser_result(NULL);
+    }
+}
+
+parser_result_t function_paramaters(parser_t parser, parser_method_t get_parameter)
 {
     // function parameter list must begin with (
     if (!accept(parser, TLEFTPAR))
@@ -473,7 +533,7 @@ parser_result_t function_definition_paramaters(parser_t parser)
     {
         if (accept(parser, TCOMMA))
         {
-            param = function_definition_parameter(parser);
+            param = get_parameter(parser);
 
             if (param.ast == NULL)
             {
@@ -527,7 +587,7 @@ parser_result_t function_def(parser_t parser)
             if (accept_keyword(parser, ":"))
             {
                 // get parameters of function
-                parser_result_t parameters = function_definition_paramaters(parser);
+                parser_result_t parameters = function_paramaters(parser, function_definition_parameter);
 
                 // check errors
                 if (parameters.error)
@@ -567,6 +627,29 @@ parser_result_t function_def(parser_t parser)
     else
     {
         // not function definition
+        return parser_result(NULL);
+    }
+}
+
+parser_result_t function_call(parser_t parser)
+{
+    if (accept(parser, TIDENTIFICATOR))
+    {
+        tToken id = parser->previousToken;
+
+        parser_result_t params = function_paramaters(parser, function_call_parameter);
+
+        if (params.error)
+        {
+            return params;
+        }
+
+        ast_t func_call = ast_node_init(FUNCTION_CALL, params.ast->line, params.ast->pos, id.value);
+        ast_add_node(func_call, params.ast);
+        return parser_result(func_call);
+    }
+    else
+    {
         return parser_result(NULL);
     }
 }
