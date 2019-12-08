@@ -150,6 +150,25 @@ parser_result_t assign_statemnt(parser_t parser)
         {
             unsigned assign_line = parser->previousToken.line;
             unsigned assign_pos = parser->previousToken.pos;
+            // we are ok, lets create tree
+            ast_t assign = ast_node_init(ASSIGN, assign_line, assign_pos, NULL);
+
+            // attach id to left node
+            ast_add_node(assign, ast_node_init(ID, id.line, id.pos, id.value));
+
+            // try to get function call
+            parser_result_t fnc_call = function_call(parser);
+
+            if (fnc_call.error)
+            {
+                return fnc_call;
+            }
+
+            if (fnc_call.ast != NULL)
+            {
+                ast_add_node(assign, fnc_call.ast);
+                return parser_result(assign);
+            }
 
             // try to get expression
             parser_result_t expr = parse_expression(parser);
@@ -162,43 +181,13 @@ parser_result_t assign_statemnt(parser_t parser)
                 return expr;
             }
 
-            // check if we found expression
-            if (expr.ast == NULL)
+            if (expr.ast != NULL)
             {
-                // lets try function call
-                parser_result_t func_call = function_call(parser);
-
-                if (func_call.error)
-                {
-                    return func_call;
-                }
-                else if (func_call.ast == NULL)
-                {
-                    return parser_error(NULL, "Invalid assignment, missing expression or function call on right hand side (line %u)\n", assign_line);
-                }
-                else
-                {
-                    // we are ok, lets create tree
-                    ast_t assign = ast_node_init(ASSIGN, assign_line, assign_pos, NULL);
-
-                    // attach id to left node
-                    ast_add_node(assign, ast_node_init(ID, id.line, id.pos, id.value));
-                    // attach function call to right node
-                    ast_add_node(assign, func_call.ast);
-                    return parser_result(assign);
-                }
-            }
-            else
-            {
-                // we are ok, lets create tree
-                ast_t assign = ast_node_init(ASSIGN, assign_line, assign_pos, NULL);
-
-                // attach id to left node
-                ast_add_node(assign, ast_node_init(ID, id.line, id.pos, id.value));
-                // attach expression to right node
                 ast_add_node(assign, expr.ast);
                 return parser_result(assign);
             }
+
+            return parser_error(NULL, "Invalid assignment, missing expression or function call on right hand side (line %u)\n", assign_line);
         }
         else
         {
@@ -281,8 +270,8 @@ parser_result_t if_and_elif(parser_t parser, char *keyword)
 
     if (accept_keyword(parser, keyword))
     {
-        parser_result_t expr = parse_expression(parser);
         tToken if_token = parser->previousToken;
+        parser_result_t expr = parse_expression(parser);
 
         if (expr.error)
         {
@@ -636,6 +625,13 @@ parser_result_t function_call(parser_t parser)
     if (accept(parser, TIDENTIFICATOR))
     {
         tToken id = parser->previousToken;
+        // check if this is function call
+        if (parser->token.type != TLEFTPAR)
+        {
+            // not function call
+            parser_return_back(parser, id);
+            return parser_result(NULL);
+        }
 
         parser_result_t params = function_paramaters(parser, function_call_parameter);
 
