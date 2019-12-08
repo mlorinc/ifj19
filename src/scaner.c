@@ -172,6 +172,8 @@ tToken token_fill(tToken *token_ptr, ptr_string_t string, char c, tToken_type to
         token_ptr->value = string;
     }
     last_token_type = token_ptr->type = token_type;
+    token_ptr->line = row;
+    token_ptr->pos = character_position;
     return *token_ptr;
 }
 
@@ -266,6 +268,8 @@ tToken get_token()
     token = indent_counter();
     last_token_type = token.type;
     token.value = NULL;
+    token.line = row;
+    token.pos = character_position;
     if(token.type != TNOTHING) //if indent wasn't the same as before
     {
         return token;
@@ -285,7 +289,7 @@ tToken get_token()
             /*************************** Start ********************************/   
             case sStart:
                 start_state((char) c, &state, string, &token);
-                if (token.value != NULL)
+                if (token.value != NULL || token.type == TLEXERR || token.type == TERR)
                     return token;
                 break;
 

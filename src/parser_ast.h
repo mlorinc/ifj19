@@ -44,6 +44,8 @@ struct ast
     struct array_nodes *nodes;
     ast_node_type_t node_type;
     void *data;
+    unsigned line;
+    unsigned pos;
 };
 
 
@@ -51,7 +53,7 @@ typedef struct ast *ast_t;
 
 ast_t ast_node_init_empty();
 
-ast_t ast_node_init(ast_node_type_t type, void *data);
+ast_t ast_node_init(ast_node_type_t type, unsigned line, unsigned pos, void *data);
 
 bool ast_delete(ast_t root);
 
