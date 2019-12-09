@@ -57,4 +57,46 @@ void generate_function_call_assignment(scope_t current_scope, const char *id, as
  */ 
 void generate_expression_assignment(scope_t current_scope, const char *id, ast_t expression);
 
+/**
+ * Generates while label
+ * WHILE$line
+ */ 
+void generate_while_label(unsigned line);
+
+/**
+ * Generate while condition
+ */ 
+void generate_while_condition(scope_t scope, queue_t expression);
+
+/**
+ * Generate WHILEELSE$line label
+ */ 
+void generate_while_else_label(unsigned line);
+
+/**
+ * Generate jump to else structure if condition was false
+ */ 
+void generate_while_jump_to_else_if_false(unsigned line);
+
+/**
+ * Jump out of while if condition is false
+ */ 
+void generate_while_jump_to_endwhile_if_false(unsigned line);
+
+/**
+ * Generate jump to WHILE$line
+ */ 
+void generate_while_jump(unsigned line);
+
+/**
+ * Generate jump to ENDWHILE$line
+ */ 
+void generate_endwhile_jump(unsigned line);
+
+/**
+ * Generates end while label
+ * ENDWHILE$line
+ */ 
+void generate_endwhile(unsigned line);
+
 #endif
