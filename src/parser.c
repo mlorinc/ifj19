@@ -13,6 +13,7 @@
 typedef parser_result_t (*parser_method_t)(parser_t parser);
 
 parser_result_t suite(parser_t parser);
+parser_result_t function_call(parser_t parser);
 
 parser_t parser_init()
 {
@@ -70,6 +71,11 @@ bool accept(parser_t parser, tToken_type token_type)
 
 bool accept_keyword(parser_t parser, const char *keyword)
 {
+    if (parser->previousToken.value == NULL)
+    {
+        return false;
+    }
+
     if (parser->token.type == TKEYWORD && ptr_string_c_equals(parser->previousToken.value, keyword))
     {
         parser_next(parser);
@@ -92,16 +98,18 @@ parser_result_t flow_statement(parser_t parser)
 {
     if (accept_keyword(parser, "break"))
     {
-        return parser_result(ast_node_init(BREAK, parser->previousToken.value));
+        return parser_result(ast_node_init(BREAK, parser->previousToken.line, parser->previousToken.pos, parser->previousToken.value));
     }
     else if (accept_keyword(parser, "continue"))
     {
-        return parser_result(ast_node_init(CONTINUE, parser->previousToken.value));
+        return parser_result(ast_node_init(CONTINUE, parser->previousToken.line, parser->previousToken.pos, parser->previousToken.value));
     }
     else if (accept_keyword(parser, "return"))
     {
+        unsigned line = parser->previousToken.line;
+        unsigned pos = parser->previousToken.pos;
         // create return node
-        ast_t ret = ast_node_init(RETURN, parser->previousToken.value);
+        ast_t ret = ast_node_init(RETURN, line, pos, parser->previousToken.value);
 
         // try to get expression
         parser_result_t expr = parse_expression(parser);
@@ -121,7 +129,7 @@ parser_result_t flow_statement(parser_t parser)
         else
         {
             // expresion not found, add None type
-            ast_add_node(ret, ast_node_init(NONE, NULL));
+            ast_add_node(ret, ast_node_init(NONE, line, pos, NULL));
         }
 
         return parser_result(ret);
@@ -140,6 +148,28 @@ parser_result_t assign_statemnt(parser_t parser)
         tToken id = parser->previousToken;
         if (accept(parser, TASSIGN))
         {
+            unsigned assign_line = parser->previousToken.line;
+            unsigned assign_pos = parser->previousToken.pos;
+            // we are ok, lets create tree
+            ast_t assign = ast_node_init(ASSIGN, assign_line, assign_pos, NULL);
+
+            // attach id to left node
+            ast_add_node(assign, ast_node_init(ID, id.line, id.pos, id.value));
+
+            // try to get function call
+            parser_result_t fnc_call = function_call(parser);
+
+            if (fnc_call.error)
+            {
+                return fnc_call;
+            }
+
+            if (fnc_call.ast != NULL)
+            {
+                ast_add_node(assign, fnc_call.ast);
+                return parser_result(assign);
+            }
+
             // try to get expression
             parser_result_t expr = parse_expression(parser);
 
@@ -151,23 +181,13 @@ parser_result_t assign_statemnt(parser_t parser)
                 return expr;
             }
 
-            // check if we found expression
-            if (expr.ast == NULL)
+            if (expr.ast != NULL)
             {
-                // thats bad, we must return error
-                return parser_error(NULL, "Invalid assignment, missing expression on right hand side\n");
-            }
-            else
-            {
-                // we are ok, lets create tree
-                ast_t assign = ast_node_init(ASSIGN, NULL);
-
-                // attach id to left node
-                ast_add_node(assign, ast_node_init(ID, id.value));
-                // attach expression to right node
-                ast_add_node(assign, ast_node_init(EXPRESSION, expr.ast));
+                ast_add_node(assign, expr.ast);
                 return parser_result(assign);
             }
+
+            return parser_error(NULL, "Invalid assignment, missing expression or function call on right hand side (line %u)\n", assign_line);
         }
         else
         {
@@ -187,12 +207,31 @@ parser_result_t small_statement(parser_t parser)
 {
     if (accept_keyword(parser, "pass"))
     {
-        return parser_result(ast_node_init(PASS, parser->previousToken.value));
+        return parser_result(ast_node_init(PASS, parser->previousToken.line, parser->previousToken.pos, parser->previousToken.value));
     }
-    else
+
+    parser_result_t flow_stmt = flow_statement(parser);
+
+    if (flow_stmt.ast != NULL || flow_stmt.error)
     {
-        return flow_statement(parser);
+        return flow_stmt;
     }
+
+    parser_result_t expr = parse_expression(parser);
+
+    if (expr.ast != NULL || expr.error)
+    {
+        return expr;
+    }
+
+    parser_result_t func_call = function_call(parser);
+
+    if (func_call.ast != NULL || func_call.error)
+    {
+        return func_call;
+    }
+
+    return parser_result(NULL);
 }
 
 parser_result_t simple_statement(parser_t parser)
@@ -217,7 +256,7 @@ parser_result_t simple_statement(parser_t parser)
         {
             // it does not end with endline which is syntax error
             // data holds literal of flow statement or pass
-            return parser_error(small_stmt.ast, "Missing newline after symbol %s\n", small_stmt.ast->data);
+            return parser_error(small_stmt.ast, "Missing newline on line %u\n", small_stmt.ast->line);
         }
     }
 
@@ -231,6 +270,7 @@ parser_result_t if_and_elif(parser_t parser, char *keyword)
 
     if (accept_keyword(parser, keyword))
     {
+        tToken if_token = parser->previousToken;
         parser_result_t expr = parse_expression(parser);
 
         if (expr.error)
@@ -241,7 +281,7 @@ parser_result_t if_and_elif(parser_t parser, char *keyword)
 
         if (expr.ast == NULL)
         {
-            return parser_error(NULL, "%s statement is missing condition\n", keyword);
+            return parser_error(NULL, "%s statement is missing condition (line %u)\n", keyword, if_token.line);
         }
 
         if (accept(parser, TCOLON))
@@ -258,11 +298,11 @@ parser_result_t if_and_elif(parser_t parser, char *keyword)
 
             if (body.ast == NULL)
             {
-                return parser_error(NULL, "%s statement is missing body\n", keyword);
+                return parser_error(NULL, "%s statement is missing body (line %u)\n", keyword, if_token.line);
             }
 
             bool isIf = strcmp(keyword, "if") == 0;
-            ast_t if_stmt = ast_node_init(isIf ? IF : ELIF, NULL);
+            ast_t if_stmt = ast_node_init(isIf ? IF : ELIF, if_token.line, if_token.pos, NULL);
 
             // lets connect nodes to if
             ast_add_node(if_stmt, expr.ast);
@@ -272,7 +312,7 @@ parser_result_t if_and_elif(parser_t parser, char *keyword)
         }
         else
         {
-            return parser_error(NULL, "%s statement is missing colon\n", keyword);
+            return parser_error(NULL, "%s statement is missing colon (line %u)\n", keyword, if_token.line);
         }
     }
     else
@@ -310,6 +350,7 @@ parser_result_t if_statement(parser_t parser)
     // lets check else
     if (accept_keyword(parser, "else"))
     {
+        tToken else_token = parser->previousToken;
         if (accept(parser, TCOLON))
         {
             // try to get body of else
@@ -323,10 +364,10 @@ parser_result_t if_statement(parser_t parser)
 
             if (body.ast == NULL)
             {
-                return parser_error(NULL, "else statement is missing body\n");
+                return parser_error(NULL, "else statement is missing body (line %u)\n", else_token.line);
             }
 
-            ast_t else_stmt = ast_node_init(ELSE, NULL);
+            ast_t else_stmt = ast_node_init(ELSE, else_token.line, else_token.pos, NULL);
 
             // lets connect body to else
             ast_add_node(else_stmt, body.ast);
@@ -335,7 +376,7 @@ parser_result_t if_statement(parser_t parser)
         }
         else
         {
-            return parser_error(if_stmt.ast, "Missing color after else condition");
+            return parser_error(if_stmt.ast, "Missing color after else condition (line %u)\n", else_token.line);
         }
     }
     else
@@ -348,7 +389,7 @@ parser_result_t while_statement(parser_t parser)
 {
     if (accept_keyword(parser, "while"))
     {
-        ast_t while_stmt = ast_node_init(WHILE, NULL);
+        ast_t while_stmt = ast_node_init(WHILE, parser->previousToken.line, parser->previousToken.pos, NULL);
         parser_result_t comp = parse_expression(parser);
 
         // check condition for error
@@ -360,7 +401,7 @@ parser_result_t while_statement(parser_t parser)
 
         if (comp.ast == NULL)
         {
-            return parser_error(while_stmt, "While statement is missing condition\n");
+            return parser_error(while_stmt, "while statement is missing condition (line %u)\n", while_stmt->line);
         }
         // end check condition for error
 
@@ -377,7 +418,7 @@ parser_result_t while_statement(parser_t parser)
 
         if (suites.ast == NULL)
         {
-            return parser_error(while_stmt, "While statement is missing body\n");
+            return parser_error(while_stmt, "while statement is missing body (line %u)\n", while_stmt->line);
         }
         // end check suite for error
 
@@ -395,7 +436,7 @@ parser_result_t while_statement(parser_t parser)
 
                 if (suites.ast == NULL)
                 {
-                    return parser_error(while_stmt, "Else after While statement is missing body\n");
+                    return parser_error(while_stmt, "else after while statement is missing body (line %u)\n", while_stmt->line);
                 }
 
                 // add alternate node
@@ -405,7 +446,7 @@ parser_result_t while_statement(parser_t parser)
             }
             else
             {
-                return parser_error(while_stmt, "Else after While statement is missing colon\n");
+                return parser_error(while_stmt, "else after while statement is missing colon (line %u)\n", while_stmt->line);
             }
         }
         else
@@ -424,7 +465,7 @@ parser_result_t function_definition_parameter(parser_t parser)
 {
     if (accept(parser, TIDENTIFICATOR))
     {
-        return parser_result(ast_node_init(ID, parser->previousToken.value));
+        return parser_result(ast_node_init(ID, parser->previousToken.line, parser->previousToken.pos, parser->previousToken.value));
     }
     else
     {
@@ -432,16 +473,48 @@ parser_result_t function_definition_parameter(parser_t parser)
     }
 }
 
-parser_result_t function_definition_paramaters(parser_t parser)
+parser_result_t function_call_parameter(parser_t parser)
+{
+    if (accept(parser, TIDENTIFICATOR) || accept(parser, TSTRING) || accept(parser, TINT) || accept(parser, TFLOAT))
+    {
+        ast_node_type_t argument_type;
+
+        switch (parser->previousToken.type)
+        {
+        case TIDENTIFICATOR:
+            argument_type = ID;
+            break;
+        case TSTRING:
+            argument_type = STRING_LITERAL;
+            break;
+        case TINT:
+            argument_type = INT_LITERAL;
+            break;
+        case TFLOAT:
+            argument_type = FLOAT_LITERAL;
+            break;
+        default:
+            return parser_error(NULL, "INTERNAL ERROR\n");
+        }
+
+        return parser_result(ast_node_init(argument_type, parser->previousToken.line, parser->previousToken.pos, parser->previousToken.value));
+    }
+    else
+    {
+        return parser_result(NULL);
+    }
+}
+
+parser_result_t function_paramaters(parser_t parser, parser_method_t get_parameter)
 {
     // function parameter list must begin with (
     if (!accept(parser, TLEFTPAR))
     {
-        return parser_error(NULL, "Expecting left parenthesis after function name\n");
+        return parser_error(NULL, "expecting left parenthesis after function name (line %u)\n", parser->previousToken.line);
     }
 
     parser_result_t param = function_definition_parameter(parser);
-    ast_t parameters = ast_node_init(FUNCTION_PARAMETERS, NULL);
+    ast_t parameters = ast_node_init(FUNCTION_PARAMETERS, 0, 0, NULL);
 
     ast_add_node(parameters, param.ast);
 
@@ -449,11 +522,11 @@ parser_result_t function_definition_paramaters(parser_t parser)
     {
         if (accept(parser, TCOMMA))
         {
-            param = function_definition_parameter(parser);
+            param = get_parameter(parser);
 
             if (param.ast == NULL)
             {
-                return parser_error(parameters, "Invalid trailing comma");
+                return parser_error(parameters, "invalid trailing comma (line %u)\n", parser->previousToken.line);
             }
             else
             {
@@ -469,7 +542,7 @@ parser_result_t function_definition_paramaters(parser_t parser)
     // function parameter list must end with )
     if (!accept(parser, TRIGHTPAR))
     {
-        return parser_error(parameters, "Expecting right parentthesis after function parameters\n");
+        return parser_error(parameters, "expecting right parentthesis after function parameters (line %u)\n", parser->previousToken.line);
     }
 
     return parser_result(parameters);
@@ -498,12 +571,12 @@ parser_result_t function_def(parser_t parser)
         if (accept(parser, TIDENTIFICATOR))
         {
             // initialize function definition node with name of function
-            ast_t fn_def = ast_node_init(FUNCTION_DEFINITION, parser->previousToken.value);
+            ast_t fn_def = ast_node_init(FUNCTION_DEFINITION, parser->previousToken.line, parser->previousToken.pos, parser->previousToken.value);
 
             if (accept_keyword(parser, ":"))
             {
                 // get parameters of function
-                parser_result_t parameters = function_definition_paramaters(parser);
+                parser_result_t parameters = function_paramaters(parser, function_definition_parameter);
 
                 // check errors
                 if (parameters.error)
@@ -523,7 +596,7 @@ parser_result_t function_def(parser_t parser)
                 }
                 else if (function_body_suites.ast == NULL)
                 {
-                    return parser_error(fn_def, "Expecting function body after definition\n");
+                    return parser_error(fn_def, "expecting function body after definition (line %u)\n", fn_def->line);
                 }
                 else
                 {
@@ -532,17 +605,47 @@ parser_result_t function_def(parser_t parser)
             }
             else
             {
-                return parser_error(fn_def, "Expecting colon after argument list\n");
+                return parser_error(fn_def, "expecting colon after argument list (line %u)\n", fn_def->line);
             }
         }
         else
         {
-            return parser_error(NULL, "Expecting function name after def\n");
+            return parser_error(NULL, "expecting function name after def (line %u)\n", parser->previousToken.line);
         }
     }
     else
     {
         // not function definition
+        return parser_result(NULL);
+    }
+}
+
+parser_result_t function_call(parser_t parser)
+{
+    if (accept(parser, TIDENTIFICATOR))
+    {
+        tToken id = parser->previousToken;
+        // check if this is function call
+        if (parser->token.type != TLEFTPAR)
+        {
+            // not function call
+            parser_return_back(parser, id);
+            return parser_result(NULL);
+        }
+
+        parser_result_t params = function_paramaters(parser, function_call_parameter);
+
+        if (params.error)
+        {
+            return params;
+        }
+
+        ast_t func_call = ast_node_init(FUNCTION_CALL, params.ast->line, params.ast->pos, id.value);
+        ast_add_node(func_call, params.ast);
+        return parser_result(func_call);
+    }
+    else
+    {
         return parser_result(NULL);
     }
 }
@@ -604,7 +707,7 @@ parser_result_t suite(parser_t parser)
         tToken eol = parser->previousToken;
         if (accept(parser, TINDENT))
         {
-            ast_t consequent = ast_node_init(CONSEQUENT, NULL);
+            ast_t consequent = ast_node_init(CONSEQUENT, 0, 0, NULL);
 
             for (parser_result_t stmt = statement(parser); stmt.ast != NULL || stmt.error != NULL; stmt = statement(parser))
             {
@@ -615,7 +718,7 @@ parser_result_t suite(parser_t parser)
             // empty suite, thats error
             if (array_nodes_empty(consequent->nodes))
             {
-                return parser_error(consequent, "Body requires at least one statement\n");
+                return parser_error(consequent, "body requires at least one statement (line %u)\n", eol.line + 1);
             }
 
             if (accept(parser, TDEDENT))
@@ -625,7 +728,7 @@ parser_result_t suite(parser_t parser)
             else
             {
                 // it was not followed with dedent, which is error
-                return parser_error(consequent, "DEDENT syntax error\n");
+                return parser_error(consequent, "DEDENT syntax error (line %u)\n", eol.line + 1);
             }
         }
         else
@@ -648,7 +751,8 @@ parser_result_t parse()
     parser_t parser = parser_init();
     parser_next(parser);
 
-    ast_t program = ast_node_init(CONSEQUENT, NULL);
+    ast_t program = ast_node_init(CONSEQUENT, 0, 0, NULL);
+
     bool building_tree = true;
     enum error_codes status = ERROR_OK;
 
@@ -673,7 +777,7 @@ parser_result_t parse()
         else if (stmt.error)
         {
             char *err = ptr_string_c_string(stmt.error);
-            fprintf(stderr, "[PARSER]: %s", err);
+            fprintf(stderr, "[PARSER]: %s\n", err);
 
             free(err);
             parser_error_dispose(stmt);
@@ -681,6 +785,11 @@ parser_result_t parse()
             if (program != NULL)
             {
                 ast_delete(program);
+            }
+
+            if (status == ERROR_OK)
+            {
+                status = ERROR_SYNTAX;
             }
 
             building_tree = false;

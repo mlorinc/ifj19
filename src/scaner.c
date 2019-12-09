@@ -136,7 +136,7 @@ tToken indent_counter()
             }
             else
                 token.type = TDEDENT;
-            for(; counter != 0; counter--)  //this is for case, there will be more detent
+            for(; counter != 0; counter--)  //this is for case, there will be more dedent
                 ungetc(' ', stdin);
         }
     }
@@ -153,7 +153,7 @@ tToken indent_counter()
  */
 tToken token_fill(tToken *token_ptr, ptr_string_t string, char c, tToken_type token_type)
 {
-    if(token_type != TIDENTIFICATOR && token_type != TKEYWORD && (token_type < TFLOORDIV && token_type > TNE))
+    if(token_type != TIDENTIFICATOR && token_type != TKEYWORD && token_type != TBLOCKCOMMENTORLITERAL && (token_type < TFLOORDIV || token_type > TNE))
     {
         ptr_string_delete_last(string);
     }
@@ -172,6 +172,8 @@ tToken token_fill(tToken *token_ptr, ptr_string_t string, char c, tToken_type to
         token_ptr->value = string;
     }
     last_token_type = token_ptr->type = token_type;
+    token_ptr->line = row;
+    token_ptr->pos = character_position;
     return *token_ptr;
 }
 
@@ -254,6 +256,7 @@ void start_state(char c, tState* state, ptr_string_t string, tToken *token)
     {
         error_print("Undefined char on stdin", row, character_position);
         token_fill(token, string, (int) -1, TLEXERR);
+        string = ptr_string_new();
     }
 }
 
@@ -266,6 +269,8 @@ tToken get_token()
     token = indent_counter();
     last_token_type = token.type;
     token.value = NULL;
+    token.line = row;
+    token.pos = character_position;
     if(token.type != TNOTHING) //if indent wasn't the same as before
     {
         return token;
@@ -285,7 +290,7 @@ tToken get_token()
             /*************************** Start ********************************/   
             case sStart:
                 start_state((char) c, &state, string, &token);
-                if (token.value != NULL)
+                if (token.value != NULL || token.type == TLEXERR || token.type == TERR)
                     return token;
                 break;
 
@@ -298,13 +303,13 @@ tToken get_token()
             case sInteger0:
                 if (c == '.')
                     state = sFloat;
-                else if (c == ' ')      // Just zero
-                    return token_fill(&token, string, c, TINT);
-                else
+                else if (c >= '0' && c <= '9')  // Oct number is not valid
                 {
                     error_print("Digit '0' must be followed by '.' or left alone", row, character_position);
                     return token_fill(&token, string, c, TLEXERR);
                 }
+                else    // Just zero
+                    return token_fill(&token, string, c, TINT);
                 break;
             case sInteger:
                 if (c >= '0' && c <= '9')
@@ -381,7 +386,7 @@ tToken get_token()
                 }
                 if (c == '"')   // It means now you have first '"'
                     state = sBlockCommentEnd1;
-                else if (c == '\0')     // If EOF, it's syntax error (Ending of the comment is missing)
+                else if (c == EOF)     // If EOF, it's syntax error (Ending of the comment is missing)
                 {
                     error_print("Block comment is not valid", row, character_position);
                     return token_fill(&token, string, c, TLEXERR);
@@ -391,26 +396,36 @@ tToken get_token()
                     state = sBlockComment;
                 break;
             case sBlockCommentEnd1:
+                if (c == '\n')  // We have moved by one line
+                {
+                    row++;
+                    character_position = 0; // New line so possition is 0
+                }
                 if (c == '"')   // It means now you have second '""'
                     state = sBlockCommentEnd2;
-                else
+                else if (c == EOF)     // If EOF, it's lex error (Ending of the comment is missing)
                 {
                     error_print("Block comment is not valid", row, character_position);
                     return token_fill(&token, string, c, TLEXERR);
                 }
+                else
+                    state = sBlockComment;
                 break;
             case sBlockCommentEnd2:
-                if (c == '"')   // It means now you have third '"""' and the comment has ended
+                if (c == '\n')  // We have moved by one line
                 {
-                    ptr_string_delete(string);  // Ignore the block comment
-                    string = ptr_string_new();  // Need to be here, because of /n state segfault
-                    state = sStart;
+                    row++;
+                    character_position = 0; // New line so possition is 0
                 }
-                else
+                if (c == '"')   // It means now you have third '"""' and the comment has ended
+                    return token_fill(&token, string, (int) -1, TBLOCKCOMMENTORLITERAL);
+                else if (c == EOF)     // If EOF, it's syntax error (Ending of the comment is missing)
                 {
                     error_print("Block comment is not valid", row, character_position);
                     return token_fill(&token, string, c, TLEXERR);
                 }
+                else
+                    state = sBlockComment;
                 break;    
             
             /************************* Identificator/Keyword *****************************/
@@ -470,6 +485,11 @@ tToken get_token()
                     state = sStringEscape;
                 else if (c == 39) // End of the string
                     return token_fill(&token, string, (int) -1, TSTRING);   // -1 because we don't want to unget that char (')
+                else
+                {
+                    error_print("The string literal is not complete", row, character_position);
+                    return token_fill(&token, string, c, TLEXERR);
+                }
                 break;
             case sStringEscape:
                 if (c == '"' || c == '\\' || c == '\'' || c == 'n' || c == 't') // Valid escape sequence

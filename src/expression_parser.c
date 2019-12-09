@@ -208,12 +208,12 @@ parser_result_t parse_expression(parser_t parser)
     {
         new_table_value = create_table_value(parser->token, token_to_precedent_elem(parser->token.type));
 
-        if (parser->token.type == TRIGHTPAR && parser->previousToken.type == TLEFTPAR ||
+        if ((parser->token.type == TRIGHTPAR && parser->previousToken.type == TLEFTPAR) ||
             !precedent_analyze(expression_stack, postfix, new_table_value)) // Bad expression.
         {
             expression_stack_destroy(expression_stack);
             queue_destroy(postfix);
-            return parser_error(ast_node_init(EXPRESSION, NULL), "Expression error on line %u.\n", parser->previousToken.line);
+            return parser_error(NULL, "Expression error on line %u.\n", parser->previousToken.line);
         }
 
         parser_next(parser);
@@ -233,10 +233,10 @@ parser_result_t parse_expression(parser_t parser)
     if (last_expresion_element != Prp && last_expresion_element != Po) //  Bad end of expression.
     {
         queue_destroy(postfix);
-        return parser_error(ast_node_init(EXPRESSION, NULL), "Expression error on line %u.\n", parser->previousToken.line);
+        return parser_error(NULL, "Expression error on line %u.\n", parser->previousToken.line);
     }
     else
     {
-        return parser_result(ast_node_init(EXPRESSION, postfix));
+        return parser_result(ast_node_init(EXPRESSION, parser->previousToken.line, parser->previousToken.pos, postfix));
     }
 }

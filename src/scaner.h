@@ -46,6 +46,9 @@ typedef enum {
     // Identificator
     TIDENTIFICATOR,
 
+    // Block comment or literal
+    TBLOCKCOMMENTORLITERAL,
+
     // Operators
 	TADD, // +
 	TSUB, // -
@@ -129,7 +132,8 @@ typedef struct {
 
     ptr_string_t value;   // Content of the token
     tToken_type type;
-
+    unsigned line;
+    unsigned pos;
 } tToken;
 
 /**
