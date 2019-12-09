@@ -154,9 +154,9 @@ semantic_result_t handle_while(scope_t current_scope, ast_t node, deque_t tree_t
 
 semantic_result_t handle_if(scope_t current_scope, ast_t node, deque_t tree_traversing_deque)
 {
-    // extract condition from while
+    // extract condition from if
     ast_t condition = array_nodes_get(node->nodes, 0);
-    // extract body from while
+    // extract body from if
     ast_t body = array_nodes_get(node->nodes, 1);
     // extract else clause which is optional
     ast_t alternate_clause = array_nodes_try_get(node->nodes, 2);
