@@ -129,11 +129,11 @@ generator_result_t generator_handle_return(scope_t current_scope, ast_t node)
 generator_result_t generator_handle_function_definition(scope_t current_scope, ast_t node, stack_t tree_traversal)
 {
     scope_t function_scope = new_scope(current_scope, node);
-
     char *id = ptr_string_c_string(node->data);
+
     ast_t parameters = array_nodes_get(node->nodes, 0);
     ast_t body = array_nodes_get(node->nodes, 1);
-
+    
     generate_function_header(id, parameters->nodes);
     free(id);
 
