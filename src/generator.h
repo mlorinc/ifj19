@@ -30,7 +30,7 @@ void generate_function_definition(ast_t ast, scope_t scope);
 
 size_t get_number_of_parameters(ast_t ast);
 
-void generate_label(ast_t ast);
+void generate_label(ast_t ast, unsigned line);
 
 void generate_defvar_of_params(ast_t ast, size_t numberOfParams);
 
@@ -38,6 +38,6 @@ void generate_define_frame_and_retvalue();
 
 ast_t get_values_of_params(ast_t ast);
 
-void generate_end_of_function(ast_t ast, char* type);
+void generate_end_of_function(ast_t ast);
 
 #endif //IFJ19_GENERATOR_H
