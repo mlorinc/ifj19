@@ -47,4 +47,14 @@ void generate_function_footer();
  */ 
 void generate_function_call(scope_t current_scope, ast_t node);
 
+/**
+ * Generates code which stores return value of function to id
+ */ 
+void generate_function_call_assignment(scope_t current_scope, const char *id, ast_t func_call);
+
+/**
+ * Generates code which stores expression value to id
+ */ 
+void generate_expression_assignment(scope_t current_scope, const char *id, ast_t expression);
+
 #endif
