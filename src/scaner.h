@@ -46,6 +46,9 @@ typedef enum {
     // Identificator
     TIDENTIFICATOR,
 
+    // Block comment or literal
+    TBLOCKCOMMENTORLITERAL,
+
     // Operators
 	TADD, // +
 	TSUB, // -
