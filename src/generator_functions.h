@@ -9,7 +9,7 @@
  * @param label_name name of label "if" | "elif" | "else" | "ENDIF (if else is missing)"
  * @param line line of if or elif
  */ 
-void generate_condition(queue_t expression, char *label_name, unsigned line);
+void generate_condition(scope_t scope, queue_t expression, char *label_name, unsigned line);
 
 /**
  * Generates ENDIF label for if elif else sequence
@@ -28,7 +28,7 @@ void generate_endif_jump(unsigned line);
 /**
  * Generates return. If expression is NULL, it means it returns None
  */ 
-void generate_return(queue_t expression);
+void generate_return(scope_t scope, queue_t expression);
 
 /**
  * Generates header of function. params is never NULL.
