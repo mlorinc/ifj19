@@ -120,7 +120,7 @@ semantic_result_t handle_assign(scope_t current_scope, ast_t node, deque_t tree_
         }
         else
         {
-            hash_map_put(scope->local_table, key, id);
+            hash_map_put(scope->local_table, key, expression);
         }
     }
 
@@ -253,11 +253,11 @@ typedef enum expressionItem
     floordiv_e,
     compare_e,
     bool_e
-}* expreItem_p;
+}* expression_item_t;
 
-expreItem_p convert_token_to_expreItem(tToken_type token)
+expression_item_t convert_token_to_expreItem(tToken_type token)
 {
-    expreItem_p item = malloc(sizeof(enum expressionItem));
+    expression_item_t item = malloc(sizeof(enum expressionItem));
     switch(token)
     {
         case TSTRING:
@@ -292,8 +292,8 @@ expreItem_p convert_token_to_expreItem(tToken_type token)
 
 int do_operation(stack_t stack, enum expressionItem operation)
 {
-    expreItem_p first = stack_pop(stack);
-    expreItem_p second = stack_pop(stack);
+    expression_item_t first = stack_pop(stack);
+    expression_item_t second = stack_pop(stack);
     switch (operation)
     {
     case add_e:
@@ -354,12 +354,12 @@ int do_operation(stack_t stack, enum expressionItem operation)
     return 1;
 }
 
-expreItem_p expression_check(queue_t postfix, enum error_codes* code, scope_t current_scope)
+expression_item_t expression_check(queue_t postfix, enum error_codes* code, scope_t current_scope)
 {
     queue_t checkedPostfix = queue_init();
     stack_t semanticStack = stack_init();
     tToken* token;
-    expreItem_p item = NULL;
+    expression_item_t item = NULL;
 
     while (!queue_empty(postfix))
     {
@@ -413,7 +413,7 @@ expreItem_p expression_check(queue_t postfix, enum error_codes* code, scope_t cu
 semantic_result_t handle_expression(scope_t current_scope, ast_t ast)
 {
     enum error_codes error_code = ERROR_OK;
-    expreItem_p item = expression_check(ast->data, &error_code, current_scope);
+    expression_item_t item = expression_check(ast->data, &error_code, current_scope);
     if(item != NULL)
     {
         free(item);
