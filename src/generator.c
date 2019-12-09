@@ -92,9 +92,9 @@ size_t get_number_of_parameters(ast_t ast)
     return pom;
 }
 
-void generate_label(ast_t ast)
+void generate_label(ast_t ast, unsigned line)
 {
-    printf("LABEL $%s\n", ast->data);
+    printf("LABEL $%s%u\n", ast->data, line);
 }
 
 void generate_defvar_of_params(ast_t ast, size_t numberOfParams)
@@ -126,7 +126,7 @@ ast_t get_values_of_params(ast_t ast)
     return param_names;
 }
 
-void generate_end_of_function(ast_t ast, char* type)
+void generate_end_of_function(ast_t ast)
 {
     printf("MOVE LF@%retval LF@returnValue\n") //IN instruction returnValue
     printf("POPFRAME\n");                      //must be always saved return value
