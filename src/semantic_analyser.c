@@ -106,7 +106,7 @@ semantic_result_t handle_assign(scope_t current_scope, ast_t node, deque_t tree_
     // if id is not defined, define it in current scope
     if (scope == NULL)
     {
-        set_variable_in_scope(current_scope, id->data, id);
+        set_variable_in_scope(current_scope, id->data, expression);
     }
     else
     {
@@ -354,11 +354,11 @@ int do_operation(stack_t stack, enum expressionItem operation)
     return 1;
 }
 
-scope_t handle_expression(scope_t current_scope, queue_t postfix)
+expreItem_p expression_check(queue_t postfix, enum error_codes* code, scope_t current_scope)
 {
-    tToken* token;
     queue_t checkedPostfix = queue_init();
     stack_t semanticStack = stack_init();
+    tToken* token;
     expreItem_p item = NULL;
 
     while (!queue_empty(postfix))
@@ -370,9 +370,15 @@ scope_t handle_expression(scope_t current_scope, queue_t postfix)
             if (!exists_variable_in_scope(current_scope, token->value))
             {
                 print_undefined_variable_error(token->value);
-                return current_scope;
+                *code = ERROR_SEM;
+                break;
             }
-            //TODO convert identificator
+            scope_t identifi_scope = find_scope_with_defined_variable(current_scope, token->value);
+            stack_push(semanticStack, expression_check(hash_map_get(identifi_scope->local_table, token->value), code, identifi_scope));
+            if(*code != ERROR_OK)
+            {
+                break;
+            }
         }
         else
         {
@@ -389,14 +395,11 @@ scope_t handle_expression(scope_t current_scope, queue_t postfix)
                     stack_destroy(semanticStack);
                     queue_destroy(checkedPostfix);
                     fprintf(stderr, "Syntactic error in expression.");
-                    return current_scope;
+                    *code = ERROR_SEM_RUN;
+                    break;
                 }
             }
         }
-    }
-    if(item != NULL)
-    {
-        free(item);
     }
     stack_destroy(semanticStack);
     while (!queue_empty(checkedPostfix))
@@ -404,7 +407,18 @@ scope_t handle_expression(scope_t current_scope, queue_t postfix)
         queue_push(postfix, queue_pop(checkedPostfix));
     }
     queue_destroy(checkedPostfix);
-    return current_scope;
+    return item;
+}
+
+semantic_result_t handle_expression(scope_t current_scope, ast_t ast)
+{
+    enum error_codes error_code = ERROR_OK;
+    expreItem_p item = expression_check(ast->data, &error_code, current_scope);
+    if(item != NULL)
+    {
+        free(item);
+    }
+    return semantic_result(ast, current_scope, error_code);
 }
 
 /**
@@ -449,7 +463,7 @@ semantic_result_t handle_node(scope_t current_scope, ast_t node, deque_t tree_tr
         return semantic_result(node, current_scope, ERROR_OK);
 
     case EXPRESSION:
-        return semantic_result(node, current_scope, ERROR_INTERNAL);
+        return handle_expression(current_scope, node);
 
     case CONSEQUENT:
         return handle_consequent(current_scope, node, tree_traversing_deque);
