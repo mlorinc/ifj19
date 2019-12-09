@@ -139,13 +139,12 @@ semantic_result_t handle_while(scope_t current_scope, ast_t node, deque_t tree_t
     // extract else clause which is optional
     ast_t else_clause = array_nodes_try_get(node->nodes, 2);
 
-    deque_push_back(tree_traversing_deque, ast_node_init(LEAVE_SCOPE, 0, 0, NULL));
-
     if (else_clause != NULL)
     {
         deque_push_back(tree_traversing_deque, else_clause);
     }
 
+    deque_push_back(tree_traversing_deque, ast_node_init(LEAVE_SCOPE, 0, 0, NULL));
     deque_push_back(tree_traversing_deque, body);
     deque_push_back(tree_traversing_deque, condition);
 
@@ -154,9 +153,9 @@ semantic_result_t handle_while(scope_t current_scope, ast_t node, deque_t tree_t
 
 semantic_result_t handle_if(scope_t current_scope, ast_t node, deque_t tree_traversing_deque)
 {
-    // extract condition from while
+    // extract condition from if
     ast_t condition = array_nodes_get(node->nodes, 0);
-    // extract body from while
+    // extract body from if
     ast_t body = array_nodes_get(node->nodes, 1);
     // extract else clause which is optional
     ast_t alternate_clause = array_nodes_try_get(node->nodes, 2);
@@ -274,6 +273,7 @@ semantic_result_t handle_node(scope_t current_scope, ast_t node, deque_t tree_tr
     case ELIF:
         return handle_if(current_scope, node, tree_traversing_deque);
 
+    case WHILE_ELSE:
     case ELSE:
         return handle_else(current_scope, node, tree_traversing_deque);
 
