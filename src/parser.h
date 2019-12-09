@@ -5,6 +5,7 @@
 #include "queue.h"
 #include "ptr_string.h"
 #include "parser_ast.h"
+#include "parser_result.h"
 
 typedef struct parser
 {
