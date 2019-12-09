@@ -139,13 +139,12 @@ semantic_result_t handle_while(scope_t current_scope, ast_t node, deque_t tree_t
     // extract else clause which is optional
     ast_t else_clause = array_nodes_try_get(node->nodes, 2);
 
-    deque_push_back(tree_traversing_deque, ast_node_init(LEAVE_SCOPE, 0, 0, NULL));
-
     if (else_clause != NULL)
     {
         deque_push_back(tree_traversing_deque, else_clause);
     }
 
+    deque_push_back(tree_traversing_deque, ast_node_init(LEAVE_SCOPE, 0, 0, NULL));
     deque_push_back(tree_traversing_deque, body);
     deque_push_back(tree_traversing_deque, condition);
 
