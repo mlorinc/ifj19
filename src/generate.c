@@ -74,7 +74,7 @@ void handle_conditions(scope_t scope, ast_t node)
         {
             // thats else
             generate_condition(scope, NULL, get_label_name(current_node->node_type), current_node->line);
-            has_else = false;
+            has_else = true;
         }
 
         current_node = alternate_clause;
