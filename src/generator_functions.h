@@ -30,4 +30,21 @@ void generate_endif_jump(unsigned line);
  */ 
 void generate_return(queue_t expression);
 
+/**
+ * Generates header of function. params is never NULL.
+ */ 
+void generate_function_header(char *fun_name, array_nodes_t params);
+
+/**
+ * Generates code before function returns
+ */ 
+void generate_function_footer();
+
+/**
+ * Generated code which calls function
+ * @param node function call node
+ * @param current_scope scope, where call is performed. Use it do deduce if it should use local or global variable
+ */ 
+void generate_function_call(scope_t current_scope, ast_t node);
+
 #endif
