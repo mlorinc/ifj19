@@ -274,6 +274,7 @@ semantic_result_t handle_node(scope_t current_scope, ast_t node, deque_t tree_tr
     case ELIF:
         return handle_if(current_scope, node, tree_traversing_deque);
 
+    case WHILE_ELSE:
     case ELSE:
         return handle_else(current_scope, node, tree_traversing_deque);
 
