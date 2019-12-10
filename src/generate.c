@@ -2,6 +2,7 @@
 #include "generator_functions.h"
 #include "stack.h"
 #include "scope.h"
+#include <assert.h>
 #include <stdio.h>
 #include <stdbool.h>
 
@@ -54,6 +55,8 @@ char *get_label_name(ast_node_type_t type)
         fprintf(stderr, "Unsupported type conversion on line %d", __LINE__);
         break;
     }
+
+    return NULL;
 }
 
 void handle_conditions(scope_t scope, ast_t node)
@@ -131,7 +134,7 @@ generator_result_t handle_function_definition(scope_t current_scope, ast_t node,
     ast_t parameters = array_nodes_get(node->nodes, 0);
     ast_t body = array_nodes_get(node->nodes, 1);
 
-    generate_function_header(id, parameters);
+    generate_function_header(id, parameters->nodes);
     free(id);
 
     // leave scope
@@ -209,16 +212,16 @@ generator_result_t handle_while_else(scope_t current_scope, ast_t node, stack_t 
 
     // Get LEAVE_WHILE line
     generate_while_else_label(current_scope->root->line);
-    return generator_result(current_scope, ERROR_OK);
+    return generator_result(scope, ERROR_OK);
 }
 
-generator_result_t handle_continue(scope_t current_scope, ast_t node, stack_t tree_traversal) {
+generator_result_t handle_continue(scope_t current_scope) {
     scope_t while_scope = find_first_node_type_in_scope(current_scope, WHILE);
     generate_while_jump(while_scope->root->line);
     return generator_result(current_scope, ERROR_OK);
 }
 
-generator_result_t handle_break(scope_t current_scope, ast_t node, stack_t tree_traversal) {
+generator_result_t handle_break(scope_t current_scope) {
     scope_t while_scope = find_first_node_type_in_scope(current_scope, WHILE);
     generate_endwhile_jump(while_scope->root->line);
     return generator_result(current_scope, ERROR_OK);
@@ -269,10 +272,10 @@ generator_result_t handle_node(scope_t current_scope, ast_t node, stack_t tree_t
     case RETURN:
         return handle_return(current_scope, node);
     case CONTINUE:
-        return handle_continue(current_scope, node, tree_traversal);
+        return handle_continue(current_scope);
 
     case BREAK:
-        return handle_break(current_scope, node, tree_traversal);
+        return handle_break(current_scope);
 
     case FUNCTION_DEFINITION:
         return handle_function_definition(current_scope, node, tree_traversal);
@@ -304,8 +307,6 @@ generator_result_t handle_node(scope_t current_scope, ast_t node, stack_t tree_t
 
 enum error_codes generate(ast_t ast)
 {
-    enum error_codes status = ERROR_OK;
-
     stack_t tree_traversal = stack_init();
     stack_push(tree_traversal, ast);
 
@@ -325,4 +326,6 @@ enum error_codes generate(ast_t ast)
 
     stack_destroy(tree_traversal);
     ast_delete(ast);
+
+    return ERROR_OK;
 }
