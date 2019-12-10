@@ -281,7 +281,7 @@ semantic_result_t handle_node(scope_t current_scope, ast_t node, deque_t tree_tr
         return semantic_result(node, current_scope, ERROR_OK);
 
     case EXPRESSION:
-        return semantic_result(node, current_scope, ERROR_INTERNAL);
+        return semantic_result(node, current_scope, ERROR_OK);
 
     case CONSEQUENT:
         return handle_consequent(current_scope, node, tree_traversing_deque);

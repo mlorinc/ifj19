@@ -233,7 +233,7 @@ void generate_function_footer()
 bool is_local_frame(scope_t scope, ptr_string_t id)
 {
     scope_t return_scope = find_scope_with_defined_variable(scope, id);
-    return return_scope->root->node_type == FUNCTION_DEFINITION ? true : false;
+    return return_scope != NULL;
 }
 
 /**
