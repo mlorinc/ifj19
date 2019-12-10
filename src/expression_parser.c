@@ -231,7 +231,7 @@ parser_result_t parse_expression(parser_t parser)
 
     precedent_element last_expresion_element = token_to_precedent_elem(parser->previousToken.type);
 
-    if (last_expresion_element != Prp && last_expresion_element != Po) //  Bad end of expression.
+    if (last_expresion_element != Prp && last_expresion_element != Po && last_expresion_element != Pend) //  Bad end of expression.
     {
         queue_destroy(postfix);
         return parser_error(NULL, "Expression error on line %u.\n", parser->previousToken.line);

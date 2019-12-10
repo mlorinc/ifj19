@@ -28,6 +28,7 @@ ast_t ast_node_init(ast_node_type_t type, unsigned line, unsigned pos, void *dat
 }
 
 bool ast_delete(ast_t root) {
+    return true;
     if (root == NULL)
 	{
 		return true;
