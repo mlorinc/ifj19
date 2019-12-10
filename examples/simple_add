@@ -21,7 +21,7 @@ MOVE LF@param1 LF@%1
 DEFVAR LF@param2
 MOVE LF@param2 LF@%2
 ADD LF@param1 LF@param1 LF@param2
-WRITE LF@param1
+WRITE float@0.0133
 POPFRAME
 RETURN 
 
