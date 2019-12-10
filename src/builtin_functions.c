@@ -44,5 +44,15 @@ void builtin_function()
         "POPFRAME\n"
         "RETURN\n\n"
         );
+    printf(
+        "LABEL len\n"
+        "PUSHFRAME\n"
+        "DEFVAR LF@%retval\n"
+        "DEFVAR LF@param1\n"
+        "MOVE LF@param1 LF@%1\n"
+        "STRLEN LF@%retval LF@param1\n"
+        "POPFRAME\n"
+        "RETURN\n\n"
+        );
 }
 
