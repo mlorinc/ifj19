@@ -62,31 +62,32 @@ precedent_element token_to_precedent_elem(tToken_type token)
 {
     switch (token)
     {
-    case TINT:
-    case TFLOAT:
-    case TIDENTIFICATOR:
-    case TSTRING:
-        return Po;
-    case TLT:
-    case TGT:
-    case TLTE:
-    case TGTE:
-    case TEQ:
-    case TNE:
-        return P1;
-    case TADD:
-    case TSUB:
-        return P2;
-    case TMUL:
-    case TDIV:
-    case TFLOORDIV:
-        return P3;
-    case TLEFTPAR:
-        return Plp;
-    case TRIGHTPAR:
-        return Prp;
-    default:
-        return Pend;
+        case TINT:
+        case TFLOAT:
+        case TIDENTIFICATOR:
+        case TSTRING:
+        case TBLOCKCOMMENTORLITERAL:
+            return Po;
+        case TLT:
+        case TGT:
+        case TLTE:
+        case TGTE:
+        case TEQ:
+        case TNE:
+            return P1;
+        case TADD:
+        case TSUB:
+            return P2;
+        case TMUL:
+        case TDIV:
+        case TFLOORDIV:
+            return P3;
+        case TLEFTPAR:
+            return Plp;
+        case TRIGHTPAR:
+            return Prp;
+        default:
+            return Pend;
     }
 }
 
