@@ -1,6 +1,6 @@
 /**
  * IFJ2019 @ VUT FIT Brno
- * 09.11.2019
+ * 10.12.2019
  *
  * Variant 2
  * Team: 054
@@ -11,13 +11,13 @@
  * Patrik Ondriga (xondri08)
  * Peter Vinarcik (xvinar00)
  *
- * File: scaner.h
+ * File: builtin_functions.h
  *
  */
 
 #ifndef IFJ19_BUILTIN_H
 #define IFJ19_BUILTIN_H
 
-
+void builtin_function();
 
 #endif //IFJ19_SCANER_H
