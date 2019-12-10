@@ -5,7 +5,6 @@
 #include "symtable.h"
 #include "ptr_string.h"
 #include "scaner.h"
-#include "stack.h"
 
 semantic_result_t semantic_result(ast_t ast, scope_t scope, enum error_codes status)
 {
@@ -106,7 +105,7 @@ semantic_result_t handle_assign(scope_t current_scope, ast_t node, deque_t tree_
     // if id is not defined, define it in current scope
     if (scope == NULL)
     {
-        set_variable_in_scope(current_scope, id->data, expression);
+        set_variable_in_scope(current_scope, id->data, id);
     }
     else
     {
@@ -120,7 +119,7 @@ semantic_result_t handle_assign(scope_t current_scope, ast_t node, deque_t tree_
         }
         else
         {
-            hash_map_put(scope->local_table, key, expression);
+            hash_map_put(scope->local_table, key, id);
         }
     }
 
@@ -241,184 +240,27 @@ semantic_result_t handle_consequent(scope_t current_scope, ast_t node, deque_t t
     return semantic_result(node, current_scope, ERROR_OK);
 }
 
-typedef enum expressionItem
-{
-    string_e,
-    int_e,
-    float_e,
-    add_e,
-    sub_e,
-    mul_e,
-    div_e,
-    floordiv_e,
-    compare_e,
-    bool_e
-}* expression_item_t;
-
-expression_item_t convert_token_to_expreItem(tToken_type token)
-{
-    expression_item_t item = malloc(sizeof(enum expressionItem));
-    switch(token)
-    {
-        case TSTRING:
-            *item = string_e;
-            break;
-        case TINT:
-            *item = int_e;
-            break;
-        case TFLOAT:
-            *item = float_e;
-            break;
-        case TADD:
-            *item = add_e;
-            break;
-        case TSUB:
-            *item = sub_e;
-            break;
-        case TMUL:
-            *item = mul_e;
-            break;
-        case TDIV:
-            *item = div_e;
-            break;
-        case TFLOORDIV:
-            *item = floordiv_e;
-            break;
-        default:
-            *item = compare_e;
-    }
-    return item;
-}
-
-int do_operation(stack_t stack, enum expressionItem operation)
-{
-    expression_item_t first = stack_pop(stack);
-    expression_item_t second = stack_pop(stack);
-    switch (operation)
-    {
-    case add_e:
-        if(*first == string_e && *second == string_e)
-        {
-            free(first);
-            stack_push(stack, second);
-            return 0;
-        }
-    case sub_e:
-    case mul_e:
-        if(*first == int_e && *second == int_e)
-        {
-            free(first);
-            stack_push(stack, second);
-            return 0;
-        }
-        if(*first == int_e && *second == float_e ||
-            *first == float_e && *second == int_e ||
-            *first == float_e && *second == float_e)
-        {
-            free(first);
-            second = float_e;
-            stack_push(stack, second);
-            return 0;
-        }
-        break;
-    case div_e:
-        if(*first == int_e || *first == float_e &&
-            *second == int_e || *second == float_e)
-        {
-            free(first);
-            second = float_e;
-            stack_push(stack, second);
-            return 0;
-        }
-        break;
-    case floordiv_e:
-        if(*first == int_e && *second == int_e)
-        {
-            free(first);
-            stack_push(stack, second);
-            return 0;
-        }
-        break;
-    case compare_e:
-        if(*first != bool_e && *second != bool_e)
-        {
-            free(first);
-            second = bool_e;
-            stack_push(stack, second);
-            return 0;
-        }
-        break;
-    }
-    free(first);
-    free(second);
-    return 1;
-}
-
-expression_item_t expression_check(queue_t postfix, enum error_codes* code, scope_t current_scope)
+semantic_result_t handle_expression(scope_t current_scope, ast_t ast)
 {
     queue_t checkedPostfix = queue_init();
-    stack_t semanticStack = stack_init();
     tToken* token;
-    expression_item_t item = NULL;
 
-    while (!queue_empty(postfix))
+    while (!queue_empty(ast->data))
     {
-        token = queue_pop(postfix);
+        token = queue_pop(ast->data);
         queue_push(checkedPostfix, token);
         if(token->type == TIDENTIFICATOR)
         {
             if (!exists_variable_in_scope(current_scope, token->value))
             {
                 print_undefined_variable_error(token->value);
-                *code = ERROR_SEM;
-                break;
-            }
-            scope_t identifi_scope = find_scope_with_defined_variable(current_scope, token->value);
-            stack_push(semanticStack, expression_check(hash_map_get(identifi_scope->local_table, token->value), code, identifi_scope));
-            if(*code != ERROR_OK)
-            {
-                break;
-            }
-        }
-        else
-        {
-            item = convert_token_to_expreItem(token->type);
-            if(*item == string_e || *item == int_e || *item == float_e)
-            {
-                stack_push(semanticStack, item);
-            }
-            else
-            {
-                if(do_operation(semanticStack, *item) != 0)
-                {
-                    free(item);
-                    stack_destroy(semanticStack);
-                    queue_destroy(checkedPostfix);
-                    fprintf(stderr, "Syntactic error in expression.");
-                    *code = ERROR_SEM_RUN;
-                    break;
-                }
+                return semantic_result(ast, current_scope, ERROR_SEM);
             }
         }
     }
-    stack_destroy(semanticStack);
-    while (!queue_empty(checkedPostfix))
-    {
-        queue_push(postfix, queue_pop(checkedPostfix));
-    }
-    queue_destroy(checkedPostfix);
-    return item;
-}
-
-semantic_result_t handle_expression(scope_t current_scope, ast_t ast)
-{
-    enum error_codes error_code = ERROR_OK;
-    expression_item_t item = expression_check(ast->data, &error_code, current_scope);
-    if(item != NULL)
-    {
-        free(item);
-    }
-    return semantic_result(ast, current_scope, error_code);
+    queue_destroy(ast->data);
+    ast->data = checkedPostfix;
+    return semantic_result(ast, current_scope, ERROR_OK);
 }
 
 /**
