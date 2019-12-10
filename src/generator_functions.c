@@ -12,37 +12,81 @@
 void generate_condition(scope_t scope, queue_t expression, char *label_name, unsigned line)
 {
     if (get_function_scope(scope) == NULL) { //we are in GLOBAL FRAME
+
         if (!strcmp(expression->last, '>')) {
-            printf("GT cond%u GF@%s GF@%s\n", line, (char *) expression->first, (char *) expression->first->next);
-            printf("JUMPIFEQ %s%u bool@true bool@cond%u\n", label_name, line, line);
+            printf("DEFVAR LF@cond%u\n", line);
+            printf("GT GF@cond%u GF@%s GF@%s\n", line, (char *) expression->first, (char *) expression->first->next);
+            printf("JUMPIFEQ %s%u bool@true GF@cond%u\n", label_name, line, line);
         }
+
         else if (!strcmp(expression->last, '<')) {
-            printf("LT cond%u GF@%s GF@%s\n", line, (char *) expression->first, (char *) expression->first->next);
-            printf("JUMPIFEQ %s%u bool@true bool@cond%u\n", label_name, line, line);
+            printf("DEFVAR LF@cond%u\n", line);
+            printf("LT GF@cond%u GF@%s GF@%s\n", line, (char *) expression->first, (char *) expression->first->next);
+            printf("JUMPIFEQ %s%u bool@true GF@cond%u\n", label_name, line, line);
         }
-        else if (!strcmp(expression->last, '==')) {
+
+        else if (!strcmp(expression->last, "==")) {
             printf("JUMPIFEQ %s%u GF@%s GF@%s\n", label_name, line, (char *) expression->first, (char *) expression->first->next);
         }
 
-        //TODO <= >=
+        else if(!strcmp(expression->last, ">=")){
+            printf("DEFVAR GF@condgt%u\n", line);
+            printf("DEFVAR GF@condeq%u\n", line);
+            printf("GT GF@condgt%u GF@%s GF@%s\n", line, (char *) expression->first, (char *) expression->first->next);
+            printf("EQ GF@condeq%u GF@%s GF@%s\n", line, (char *) expression->first, (char *) expression->first->next);
+            printf("DEFVAR GF@iseq%u\n", line);
+            printf("OR GF@iseq%u GF@condeq%u GF@condgt%u\n", line, line, line);
+            printf("JUMPIFEQ %s%u bool@true GF@iseq%u\n", label_name, line, line);
+        }
+
+        else if(!strcmp(expression->last, "<=")){
+            printf("DEFVAR GF@condlt%u\n", line);
+            printf("DEFVAR GF@condeq%u\n", line);
+            printf("LT GF@condlt%u GF@%s GF@%s\n", line, (char *) expression->first, (char *) expression->first->next);
+            printf("EQ GF@condeq%u GF@%s GF@%s\n", line, (char *) expression->first, (char *) expression->first->next);
+            printf("DEFVAR GF@iseq%u\n", line);
+            printf("OR GF@iseq%u GF@condeq%u GF@condlt%u\n", line, line, line);
+            printf("JUMPIFEQ %s%u bool@true GF@iseq%u\n", label_name, line, line);
+        }
     }
 
     else { //we are in LOCAL FRAME
+
         if (!strcmp(expression->last, '>')) {
-            printf("GT cond%u LF@%s LF@%s\n", line, (char *) expression->first, (char *) expression->first->next);
-            printf("JUMPIFEQ %s%u bool@true bool@cond%u\n", label_name, line, line);
+            printf("DEFVAR LF@cond%u\n", line);
+            printf("GT LF@cond%u LF@%s LF@%s\n", line, (char *) expression->first, (char *) expression->first->next);
+            printf("JUMPIFEQ %s%u bool@true LF@cond%u\n", label_name, line, line);
         }
+
         else if (!strcmp(expression->last, '<')) {
-            printf("LT cond%u LF@%s LF@%s\n", line, (char *) expression->first, (char *) expression->first->next);
-            printf("JUMPIFEQ %s%u bool@true bool@cond%u\n", label_name, line, line);
+            printf("LT LF@cond%u LF@%s LF@%s\n", line, (char *) expression->first, (char *) expression->first->next);
+            printf("JUMPIFEQ %s%u bool@true LF@cond%u\n", label_name, line, line);
         }
-        else if (!strcmp(expression->last, '==')) {
+
+        else if (!strcmp(expression->last, "==")) {
             printf("JUMPIFEQ %s%u LF@%s LF@%s\n", label_name, line, (char *) expression->first, (char *) expression->first->next);
         }
 
-        //TODO <= >=
-    }
+        else if(!strcmp(expression->last, ">=")){
+            printf("DEFVAR LF@condgt%u\n", line);
+            printf("DEFVAR LF@condeq%u\n", line);
+            printf("GT LF@condgt%u LF@%s LF@%s\n", line, (char *) expression->first, (char *) expression->first->next);
+            printf("EQ LF@condeq%u LF@%s LF@%s\n", line, (char *) expression->first, (char *) expression->first->next);
+            printf("DEFVAR LF@iseq%u\n", line);
+            printf("OR LF@iseq%u LF@condeq%u LF@condgt%u\n", line, line, line);
+            printf("JUMPIFEQ %s%u bool@true LF@iseq%u\n", label_name, line, line);
+        }
 
+        else if(!strcmp(expression->last, "<=")){
+            printf("DEFVAR LF@condlt%u\n", line);
+            printf("DEFVAR LF@condeq%u\n", line);
+            printf("LT LF@condlt%u LF@%s LF@%s\n", line, (char *) expression->first, (char *) expression->first->next);
+            printf("EQ LF@condeq%u LF@%s LF@%s\n", line, (char *) expression->first, (char *) expression->first->next);
+            printf("DEFVAR LF@iseq%u\n", line);
+            printf("OR LF@iseq%u LF@condeq%u LF@condlt%u\n", line, line, line);
+            printf("JUMPIFEQ %s%u bool@true LF@iseq%u\n", label_name, line, line);
+        }
+    }
 }
 
 /**
@@ -70,6 +114,7 @@ void generate_endif_jump(unsigned line)
  */
 void generate_return(scope_t scope, queue_t expression)
 {
+
     printf("MOVE LF@%retval LF@returnValue\n") //IN instruction returnValue
     printf("POPFRAME\n");                      //must be always saved return value
     printf("RETURN\n\n");                      //double newline for better look after function definition
@@ -96,7 +141,13 @@ void generate_function_header(char *fun_name, array_nodes_t params)
  */
 void generate_function_footer()
 {
-    //TODO and last value for return insert into LF@returnValue it will MOVE this value to retvalue in another function
+    printf("POPFRAME\n");
+    printf("RETURN\n");
+    //we dont have to move any return value into @%retval despite of fact, that we declarate it... of course in case,
+    //when we dont want to return anything for function
+    //f.e.: def foo(a,b):
+    //          print(a,b)
+    //          return
 }
 
 /**
