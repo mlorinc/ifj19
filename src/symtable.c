@@ -28,12 +28,12 @@ int hash_code (char* key) {
  * @param key searching key.
  * @return if hash map item was found it will be return, else NULL.
  */
-void *hash_search(hash_map_t hash_map, const char *key)
+void *hash_search(hash_map_t hash_map, char *key)
 {
 	item_t actual = NULL;
 	for (int i = 0; i < BUCKET_SIZE; i++)
 	{
-		actual = hash_map[i];
+		actual = hash_map[i]; //TODO 100% wokring :kappa:
 		while (actual != NULL)
 		{
 			if(strcmp(actual->key, key) == 0)
@@ -49,14 +49,14 @@ void *hash_search(hash_map_t hash_map, const char *key)
 hash_map_t hash_map_init()
 {
     hash_map_t new = (hash_map_t) malloc(sizeof(item_t) * BUCKET_SIZE);
-    for(int i=0; i<BUCKET_SIZE; i++0)
+    for(int i=0; i<BUCKET_SIZE; i++)
     {
         new[i] = NULL;
     }
     return new;
 }
 
-bool hash_map_put(hash_map_t hash_map, const char *key, void *element)
+bool hash_map_put(hash_map_t hash_map, char *key, void *element)
 {
     item_t foundItem = hash_search(hash_map, key);
 	if(foundItem != NULL)
@@ -75,12 +75,12 @@ bool hash_map_put(hash_map_t hash_map, const char *key, void *element)
 		new->data = element;
 		new->key = key;
 		new->ptrnext = hash_map[id];
-		hash_map[id] = new;
+        hash_map[id] = new;
         return true;
 	}
 }
 
-bool hash_map_has(hash_map_t hash_map, const char *key)
+bool hash_map_has(hash_map_t hash_map, char *key)
 {
     if(hash_search(hash_map, key) != NULL)
     {
@@ -89,7 +89,7 @@ bool hash_map_has(hash_map_t hash_map, const char *key)
     return false;
 }
 
-void *hash_map_get(hash_map_t hash_map, const char *key)
+void *hash_map_get(hash_map_t hash_map, char *key)
 {
     item_t found_item = hash_search(hash_map, key);
     if(found_item != NULL)
@@ -130,7 +130,7 @@ void hash_map_destroy(hash_map_t hash_map)
 	}
 }
 
-void hash_map_delete_item (hash_map_t hash_map, const char* key) {
+void hash_map_delete_item (hash_map_t hash_map, char* key) {
 	item_t actual = NULL;
 	item_t previous = NULL;
 	for (int i = 0; i < BUCKET_SIZE; i++)
