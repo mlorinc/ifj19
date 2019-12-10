@@ -18,7 +18,7 @@
 #ifndef IFJ19_ERROR_H
 #define IFJ19_ERROR_H
 
-typedef error_codes
+enum error_codes
 {
     ERROR_OK = 0,       //code compiled without any error
     ERROR_LEX = 1,      //lexical error
