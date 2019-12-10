@@ -153,7 +153,7 @@ tToken indent_counter()
  */
 tToken token_fill(tToken *token_ptr, ptr_string_t string, char c, tToken_type token_type)
 {
-    if(token_type != TIDENTIFICATOR && token_type != TKEYWORD && token_type != TBLOCKCOMMENTORLITERAL && token_type != TFLOAT && (token_type < TFLOORDIV || token_type > TNE))
+    if(token_type != TIDENTIFICATOR && token_type != TKEYWORD && token_type != TBLOCKCOMMENTORLITERAL && (token_type < TFLOORDIV || token_type > TNE))
     {
         ptr_string_delete_last(string);
     }
@@ -305,7 +305,7 @@ tToken get_token()
             /*************************** Numbers ********************************/
             case sInteger0:
                 if (c == '.')
-                    state = sFloat;
+                    state = sIntWithDot;
                 else if (c == 'e' || c == 'E')
                     state = sExponent;
                 else if (c >= '0' && c <= '9')  // Oct number is not valid
@@ -320,14 +320,18 @@ tToken get_token()
                 if (c >= '0' && c <= '9')
                     state = sInteger;
                 else if (c == '.')
-                    state = sFloat;
+                    state = sIntWithDot;
                 else if (c == 'e' || c == 'E')
                     state = sExponent;
-                else if (c == ' ' || c == '\n' || c == EOF)  // End of the int number
+                else  // End of the int number
                      return token_fill(&token, string, c, TINT);
+                break;
+            case sIntWithDot:
+                if (c >= '0' && c <= '9')
+                    state = sFloat;
                 else
                 {
-                    error_print("Int number must contain only digits or 'e' as exponent", row, character_position);
+                    error_print("Number with dot (.) must be followed by number", row, character_position);
                     return token_fill(&token, string, c, TLEXERR);
                 }
                 break;
@@ -336,7 +340,29 @@ tToken get_token()
                     state = sFloat;
                 else if (c == 'e' || c == 'E')
                     state = sExponent;
-                else if (c == ' ' || c == '\n' || c == EOF)   // End of the float number
+                else   // End of the float number
+                    return token_fill(&token, string, c, TFLOAT);
+                break;
+            case sExponent:
+                if (c == '0')
+                {
+                    ptr_string_delete_last(string);
+                    state = sExponent;
+                }
+                else if (c >= '1' && c <= '9')
+                    state = sExponentNumber;
+                else if (c == '-' || c == '+')
+                    state = sExponentOperator;
+                else    // Error (not ending state)
+                {
+                    error_print("Char 'E' as exponent must be followed by '- or +' or a number", row, character_position);
+                    return token_fill(&token, string, c, TLEXERR);
+                }
+                break;
+            case sExponentNumber:
+                if (c >= '0' && c <= '9')
+                    state = sExponentNumber;
+                else
                 {
                     char * string_number = ptr_string_c_string(string);
                     double number = atof(string_number);
@@ -355,29 +381,7 @@ tToken get_token()
                     }
                     string = ptr_string(buffer);
                     return token_fill(&token, string, c, TFLOAT);
-                } 
-                else
-                {
-                    error_print("Float number must contain only digits or 'e' as exponent", row, character_position);
-                    return token_fill(&token, string, c, TLEXERR);
                 }
-                break;
-            case sExponent:
-                if (c == '0')
-                {
-                    ptr_string_delete_last(string);
-                    state = sExponent;
-                }
-                else if (c >= '1' && c <= '9')
-                    state = sFloat;
-                else if (c == '-' || c == '+')
-                    state = sExponentOperator;
-                else    // Error (not ending state)
-                {
-                    error_print("Char 'E' as exponent must be followed by '- or +' or a number", row, character_position);
-                    return token_fill(&token, string, c, TLEXERR);
-                }
-                break;
             case sExponentOperator:
                 if (c == '0')
                 {
@@ -385,7 +389,7 @@ tToken get_token()
                     state = sExponent;
                 }
                 else if (c >= '0' && c <= '9')
-                    state = sFloat;
+                    state = sExponentNumber;
                 else
                 {
                     error_print("Exponent must be followed by number", row, character_position);
