@@ -153,7 +153,7 @@ tToken indent_counter()
  */
 tToken token_fill(tToken *token_ptr, ptr_string_t string, char c, tToken_type token_type)
 {
-    if(token_type != TIDENTIFICATOR && token_type != TKEYWORD && token_type != TBLOCKCOMMENTORLITERAL && (token_type < TFLOORDIV || token_type > TNE))
+    if(token_type != TIDENTIFICATOR && token_type != TKEYWORD && token_type != TBLOCKCOMMENTORLITERAL && token_type != TFLOAT && (token_type < TFLOORDIV || token_type > TNE))
     {
         ptr_string_delete_last(string);
     }
@@ -319,7 +319,7 @@ tToken get_token()
                     state = sFloat;
                 else if (c == 'e' || c == 'E')
                     state = sExponent;
-                else if (c == ' ')  // End of the int number
+                else if (c == ' ' || c == '\n' || c == EOF)  // End of the int number
                      return token_fill(&token, string, c, TINT);
                 else
                 {
@@ -332,8 +332,26 @@ tToken get_token()
                     state = sFloat;
                 else if (c == 'e' || c == 'E')
                     state = sExponent;
-                else if (c == ' ')   // End of the float number
+                else if (c == ' ' || c == '\n' || c == EOF)   // End of the float number
+                {
+                    char * string_number = ptr_string_c_string(string);
+                    double number = atof(string_number);
+                    free(string_number);
+                    char buffer[500];
+                    int check = sprintf(buffer, "%lf", number);
+                    if (check < 0)  // Sprintf failed
+                    {
+                        error_print("Internal error", row, character_position);
+                        return token_fill(&token, string, c, TERR);
+                    }
+                    if (strcmp(buffer, "inf") == 0)
+                    {
+                        error_print("Internal error", row, character_position);
+                        return token_fill(&token, string, c, TERR);
+                    }
+                    string = ptr_string(buffer);
                     return token_fill(&token, string, c, TFLOAT);
+                } 
                 else
                 {
                     error_print("Float number must contain only digits or 'e' as exponent", row, character_position);
