@@ -2,6 +2,57 @@
 #include "generator_functions.h"
 #include "deque.c"
 #include "scope.c"
+#include "scaner.h"
+#include "string_convertor.c"
+#include <stdbool.h>
+
+void generate_expression(scope_t scope, queue_t expression)
+{
+    while (!queue_empty(expression)){
+        tToken *token = queue_pop(expression);
+        if (is_literal(token)){
+            char *buffer = ptr_string_c_string(token->value);
+            if (token->type == TFLOAT){
+                printf("PUSHS float@%a\n", atof(buffer));
+            }
+            else {
+                printf("PUSHS %s@%s\n", token->type == TINT ? "int" : "string",buffer);
+            }
+            free(buffer);
+        }
+
+        else if (token->type == TIDENTIFICATOR) {
+            char *buffer = ptr_string_c_string(token->value);
+            scope_t variable_scope = find_scope_with_defined_variable(scope, token->value);
+            if (variable_scope->root->node_type == FUNCTION_DEFINITION) {
+                printf("PUSHS LF@%s\n", buffer);
+            }
+            else {
+                printf("PUSHS GF@%s\n", buffer);
+            }
+            free(buffer);
+        }
+        else {
+            switch(token->type){
+                case TADD:
+                    printf("ADDS\n");
+                    break;
+                case TSUB:
+                    printf("SUBS\n");
+                    break;
+                case TMUL:
+                    printf("MULS\n");
+                    break;
+                case TDIV:
+                    printf("SUBS\n");
+                    break;
+                default:
+                    fprintf(stderr, "Zabudol som sorry :(\n");
+                    break;
+            }
+        }
+    }
+}
 
 /**
  * Generates ifj19 code for if/elif condition
@@ -14,26 +65,26 @@ void generate_condition(scope_t scope, queue_t expression, char *label_name, uns
     if (get_function_scope(scope) == NULL) { //we are in GLOBAL FRAME
 
         if (!strcmp(expression->last, '>')) {
-            printf("DEFVAR LF@cond%u\n", line);
-            printf("GT GF@cond%u GF@%s GF@%s\n", line, (char *) expression->first, (char *) expression->first->next);
+            printf("DEFVAR GF@cond%u\n", line);
+            printf("GT GF@cond%u GF@%s GF@%s\n", line, (char *) expression->first->value, (char *) expression->first->next->value);
             printf("JUMPIFEQ %s%u bool@true GF@cond%u\n", label_name, line, line);
         }
 
         else if (!strcmp(expression->last, '<')) {
-            printf("DEFVAR LF@cond%u\n", line);
-            printf("LT GF@cond%u GF@%s GF@%s\n", line, (char *) expression->first, (char *) expression->first->next);
+            printf("DEFVAR GF@cond%u\n", line);
+            printf("LT GF@cond%u GF@%s GF@%s\n", line, (char *) expression->first->value, (char *) expression->first->next->value);
             printf("JUMPIFEQ %s%u bool@true GF@cond%u\n", label_name, line, line);
         }
 
         else if (!strcmp(expression->last, "==")) {
-            printf("JUMPIFEQ %s%u GF@%s GF@%s\n", label_name, line, (char *) expression->first, (char *) expression->first->next);
+            printf("JUMPIFEQ %s%u GF@%s GF@%s\n", label_name, line, (char *) expression->first->value, (char *) expression->first->next->value);
         }
 
         else if(!strcmp(expression->last, ">=")){
             printf("DEFVAR GF@condgt%u\n", line);
             printf("DEFVAR GF@condeq%u\n", line);
-            printf("GT GF@condgt%u GF@%s GF@%s\n", line, (char *) expression->first, (char *) expression->first->next);
-            printf("EQ GF@condeq%u GF@%s GF@%s\n", line, (char *) expression->first, (char *) expression->first->next);
+            printf("GT GF@condgt%u GF@%s GF@%s\n", line, (char *) expression->first->value, (char *) expression->first->next->value);
+            printf("EQ GF@condeq%u GF@%s GF@%s\n", line, (char *) expression->first->value, (char *) expression->first->next->value);
             printf("DEFVAR GF@iseq%u\n", line);
             printf("OR GF@iseq%u GF@condeq%u GF@condgt%u\n", line, line, line);
             printf("JUMPIFEQ %s%u bool@true GF@iseq%u\n", label_name, line, line);
@@ -42,8 +93,8 @@ void generate_condition(scope_t scope, queue_t expression, char *label_name, uns
         else if(!strcmp(expression->last, "<=")){
             printf("DEFVAR GF@condlt%u\n", line);
             printf("DEFVAR GF@condeq%u\n", line);
-            printf("LT GF@condlt%u GF@%s GF@%s\n", line, (char *) expression->first, (char *) expression->first->next);
-            printf("EQ GF@condeq%u GF@%s GF@%s\n", line, (char *) expression->first, (char *) expression->first->next);
+            printf("LT GF@condlt%u GF@%s GF@%s\n", line, (char *) expression->first->value, (char *) expression->first->next->value);
+            printf("EQ GF@condeq%u GF@%s GF@%s\n", line, (char *) expression->first->value, (char *) expression->first->next->value);
             printf("DEFVAR GF@iseq%u\n", line);
             printf("OR GF@iseq%u GF@condeq%u GF@condlt%u\n", line, line, line);
             printf("JUMPIFEQ %s%u bool@true GF@iseq%u\n", label_name, line, line);
@@ -54,24 +105,25 @@ void generate_condition(scope_t scope, queue_t expression, char *label_name, uns
 
         if (!strcmp(expression->last, '>')) {
             printf("DEFVAR LF@cond%u\n", line);
-            printf("GT LF@cond%u LF@%s LF@%s\n", line, (char *) expression->first, (char *) expression->first->next);
+            printf("GT LF@cond%u LF@%s LF@%s\n", line, (char *) expression->first->value, (char *) expression->first->next->value);
             printf("JUMPIFEQ %s%u bool@true LF@cond%u\n", label_name, line, line);
         }
 
         else if (!strcmp(expression->last, '<')) {
-            printf("LT LF@cond%u LF@%s LF@%s\n", line, (char *) expression->first, (char *) expression->first->next);
+            printf("DEFVAR LF@cond%u\n", line);
+            printf("LT LF@cond%u LF@%s LF@%s\n", line, (char *) expression->first->value, (char *) expression->first->next->value);
             printf("JUMPIFEQ %s%u bool@true LF@cond%u\n", label_name, line, line);
         }
 
         else if (!strcmp(expression->last, "==")) {
-            printf("JUMPIFEQ %s%u LF@%s LF@%s\n", label_name, line, (char *) expression->first, (char *) expression->first->next);
+            printf("JUMPIFEQ %s%u LF@%s LF@%s\n", label_name, line, (char *) expression->first->value, (char *) expression->first->next->value);
         }
 
         else if(!strcmp(expression->last, ">=")){
             printf("DEFVAR LF@condgt%u\n", line);
             printf("DEFVAR LF@condeq%u\n", line);
-            printf("GT LF@condgt%u LF@%s LF@%s\n", line, (char *) expression->first, (char *) expression->first->next);
-            printf("EQ LF@condeq%u LF@%s LF@%s\n", line, (char *) expression->first, (char *) expression->first->next);
+            printf("GT LF@condgt%u LF@%s LF@%s\n", line, (char *) expression->first->value, (char *) expression->first->next->value);
+            printf("EQ LF@condeq%u LF@%s LF@%s\n", line, (char *) expression->first->value, (char *) expression->first->next->value);
             printf("DEFVAR LF@iseq%u\n", line);
             printf("OR LF@iseq%u LF@condeq%u LF@condgt%u\n", line, line, line);
             printf("JUMPIFEQ %s%u bool@true LF@iseq%u\n", label_name, line, line);
@@ -80,8 +132,8 @@ void generate_condition(scope_t scope, queue_t expression, char *label_name, uns
         else if(!strcmp(expression->last, "<=")){
             printf("DEFVAR LF@condlt%u\n", line);
             printf("DEFVAR LF@condeq%u\n", line);
-            printf("LT LF@condlt%u LF@%s LF@%s\n", line, (char *) expression->first, (char *) expression->first->next);
-            printf("EQ LF@condeq%u LF@%s LF@%s\n", line, (char *) expression->first, (char *) expression->first->next);
+            printf("LT LF@condlt%u LF@%s LF@%s\n", line, (char *) expression->first->value, (char *) expression->first->next->value);
+            printf("EQ LF@condeq%u LF@%s LF@%s\n", line, (char *) expression->first->value, (char *) expression->first->next->value);
             printf("DEFVAR LF@iseq%u\n", line);
             printf("OR LF@iseq%u LF@condeq%u LF@condlt%u\n", line, line, line);
             printf("JUMPIFEQ %s%u bool@true LF@iseq%u\n", label_name, line, line);
@@ -109,16 +161,32 @@ void generate_endif_jump(unsigned line)
     printf("JUMP ENDIF$%u\n", line);
 }
 
+
+
+bool is_literal(tToken *token)
+{
+    return token->type == TINT || token->type == TFLOAT ||  token->type == TSTRING;
+}
+
 /**
  * Generates return. If expression is NULL, it means it returns None
  */
 void generate_return(scope_t scope, queue_t expression)
 {
+    if (expression == NULL){
+        printf("MOVE LF@%retval nil@nil\n");
+        printf("POPFRAME\n");
+        printf("RETURN\n\n");
+        return;
+    }
 
-    printf("MOVE LF@%retval LF@returnValue\n") //IN instruction returnValue
+    generate_expression(scope, expression);
+
+    printf("POPS LF@%retval");
     printf("POPFRAME\n");                      //must be always saved return value
     printf("RETURN\n\n");                      //double newline for better look after function definition
 }
+
 
 /**
  * Generates header of function. params is never NULL.
@@ -144,7 +212,7 @@ void generate_function_footer()
     printf("POPFRAME\n");
     printf("RETURN\n");
     //we dont have to move any return value into @%retval despite of fact, that we declarate it... of course in case,
-    //when we dont want to return anything for function
+    //when we dont want to return anything from function
     //f.e.: def foo(a,b):
     //          print(a,b)
     //          return
@@ -157,7 +225,13 @@ void generate_function_footer()
  */
 void generate_function_call(scope_t current_scope, ast_t node)
 {
+    printf("CREATEFRAME\n");
 
+    for(size_t i = 0; i < array_nodes_size(params); i++){               //DEFVAR TF@%1
+        ast_t param_name = array_nodes_get(params->nodes, i);           //MOVE LF@parami LF@%i+1
+        printf("DEFVAR LF@%s\n", param_name->data);                     //after this generate function body
+        printf("MOVE LF@%s LF@%%d\n", param_name->data, i+1);
+    }
 }
 
 /**
@@ -165,7 +239,52 @@ void generate_function_call(scope_t current_scope, ast_t node)
  */
 void generate_function_call_assignment(scope_t current_scope, const char *id, ast_t func_call)
 {
+    for(size_t i = 0; i < array_nodes_size(func_call->nodes); i++){
+        ast_t param = array_nodes_get(func_call->nodes, i);
+        char *buffer = ptr_string_c_string(param->data);
 
+        printf("DEFVAR TF@%%u\n", i+1);
+
+        char *temp;
+        switch(param->node_type){
+            case STRING_LITERAL:
+                temp = ptr_string_c_string(ifj_string_to_code_string(param->data));
+                printf("MOVE TF@%%u string@%%s\n", i+1, temp);
+                free(temp);
+                break;
+            case FLOAT_LITERAL:
+                printf("MOVE TF@%%u float@%%a\n", i+1, atof(buffer));
+                break;
+            case INT_LITERAL:
+                printf("MOVE TF@%%u int@%%s\n", i+1, buffer);
+                break;
+            case ID:
+                char *buffer = ptr_string_c_string(param->data);
+                if (is_local_frame(current_scope, param->data)) {
+                    printf("MOVE TF@%%u LF@%%s\n", i+1, buffer);
+                }
+                else {
+                    printf("MOVE TF@%%u GF@%%s\n", i+1, buffer);
+                }
+                break;
+        }
+
+        free(buffer);
+    }
+
+    printf("CALL %s\n", func_call->data);
+    if (is_local_frame(current_scope, ptr_string(id))){
+        printf("MOVE LF@%s TF@%retval\n", id);
+    }
+    else{
+        printf("MOVE GF@%s TF@%retval\n", id);
+    }
+}
+
+bool is_local_frame(scope_t scope, ptr_string_t id)
+{
+    scope_t return_scope = find_scope_with_defined_variable(scope, id);
+    return return_scope->root->node_type == FUNCTION_DEFINITION ? true : false;
 }
 
 /**
@@ -173,7 +292,7 @@ void generate_function_call_assignment(scope_t current_scope, const char *id, as
  */
 void generate_expression_assignment(scope_t current_scope, const char *id, ast_t expression)
 {
-
+    generate_expression(current_scope)
 
 }
 
