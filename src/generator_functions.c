@@ -1,9 +1,7 @@
 #include "queue.h"
 #include "generator_functions.h"
-#include "deque.c"
-#include "scope.c"
 #include "scaner.h"
-#include "string_convertor.c"
+#include "string_convertor.h"
 #include "array_nodes.h"
 #include <stdbool.h>
 
@@ -78,7 +76,16 @@ void generate_expression(scope_t scope, queue_t expression)
  * @param label_name name of label "if" | "elif" | "else" | "ENDIF (if else is missing)"
  * @param line line of if or elif
  */
-void generate_condition(scope_t scope, queue_t expression, char *label_name, size_t line) {
+void generate_condition(scope_t scope, queue_t expression, char *label_name, size_t line)
+{
+    if(expression == NULL){
+        printf("JUMP %s$%zu\n", label_name, line);
+    }
+    else{
+        generate_expression(scope, expression);
+        printf("PUSHS bool@true\n");
+        printf("JUMPIFEQS %s$%zu\n", label_name, line);
+    }
 
     /*if (!strcmp(expression->last, '>')) {
         printf("DEFVAR GF@cond%zu\n", line);
