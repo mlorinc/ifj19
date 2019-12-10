@@ -207,7 +207,10 @@ void start_state(char c, tState* state, ptr_string_t string, tToken *token)
         ptr_string_delete_last(string);
     }
     else if(c == '"')
+    {
+        ptr_string_delete_last(string); // Delete first " from string
         *state = sBlockCommentStart1;
+    }
     else if(c == '#')
         *state = sLineComment;
     else if(c == '+')
@@ -302,7 +305,9 @@ tToken get_token()
             /*************************** Numbers ********************************/
             case sInteger0:
                 if (c == '.')
-                    state = sFloat;
+                    state = sIntWithDot;
+                else if (c == 'e' || c == 'E')
+                    state = sExponent;
                 else if (c >= '0' && c <= '9')  // Oct number is not valid
                 {
                     error_print("Digit '0' must be followed by '.' or left alone", row, character_position);
@@ -315,23 +320,37 @@ tToken get_token()
                 if (c >= '0' && c <= '9')
                     state = sInteger;
                 else if (c == '.')
-                    state = sFloat;
+                    state = sIntWithDot;
                 else if (c == 'e' || c == 'E')
                     state = sExponent;
-                else    // End of the int number
-                    return token_fill(&token, string, c, TINT);
+                else  // End of the int number
+                     return token_fill(&token, string, c, TINT);
+                break;
+            case sIntWithDot:
+                if (c >= '0' && c <= '9')
+                    state = sFloat;
+                else
+                {
+                    error_print("Number with dot (.) must be followed by number", row, character_position);
+                    return token_fill(&token, string, c, TLEXERR);
+                }
                 break;
             case sFloat:
                 if (c >= '0' && c <= '9')
                     state = sFloat;
                 else if (c == 'e' || c == 'E')
                     state = sExponent;
-                else    // End of the float number
+                else   // End of the float number
                     return token_fill(&token, string, c, TFLOAT);
                 break;
             case sExponent:
-                if (c >= '0' && c <= '9')
-                    state = sFloat;
+                if (c == '0')
+                {
+                    ptr_string_delete_last(string);
+                    state = sExponent;
+                }
+                else if (c >= '1' && c <= '9')
+                    state = sExponentNumber;
                 else if (c == '-' || c == '+')
                     state = sExponentOperator;
                 else    // Error (not ending state)
@@ -340,14 +359,43 @@ tToken get_token()
                     return token_fill(&token, string, c, TLEXERR);
                 }
                 break;
-            case sExponentOperator:
+            case sExponentNumber:
                 if (c >= '0' && c <= '9')
-                    state = sFloat;
+                    state = sExponentNumber;
+                else
+                {
+                    char * string_number = ptr_string_c_string(string);
+                    double number = atof(string_number);
+                    free(string_number);
+                    char buffer[500];
+                    int check = sprintf(buffer, "%lf", number);
+                    if (check < 0)  // Sprintf failed
+                    {
+                        error_print("Internal error", row, character_position);
+                        return token_fill(&token, string, c, TERR);
+                    }
+                    if (strcmp(buffer, "inf") == 0)
+                    {
+                        error_print("Internal error", row, character_position);
+                        return token_fill(&token, string, c, TERR);
+                    }
+                    string = ptr_string(buffer);
+                    return token_fill(&token, string, c, TFLOAT);
+                }
+            case sExponentOperator:
+                if (c == '0')
+                {
+                    ptr_string_delete_last(string);
+                    state = sExponent;
+                }
+                else if (c >= '0' && c <= '9')
+                    state = sExponentNumber;
                 else
                 {
                     error_print("Exponent must be followed by number", row, character_position);
                     return token_fill(&token, string, c, TLEXERR);
                 }
+                break;
 
             /*************************** Comments ********************************/
             case sLineComment:
@@ -362,7 +410,10 @@ tToken get_token()
                 break;
             case sBlockCommentStart1:
                 if (c == '"')   // It means now you have second '""'
+                {
+                    ptr_string_delete_last(string); // Delete second " from string
                     state = sBlockCommentStart2;
+                }
                 else
                 {
                     error_print("Block comment is not valid", row, character_position);
@@ -371,7 +422,10 @@ tToken get_token()
                 break;
             case sBlockCommentStart2:
                 if (c == '"')   // It means now you have third '"""' and the comment has started
+                {
+                    ptr_string_delete_last(string); // Delete last " from string
                     state = sBlockComment;
+                }
                 else
                 {
                     error_print("Block comment is not valid", row, character_position);
@@ -391,7 +445,6 @@ tToken get_token()
                     error_print("Block comment is not valid", row, character_position);
                     return token_fill(&token, string, c, TLEXERR);
                 }
-                
                 else    // Everything inside the block comment
                     state = sBlockComment;
                 break;
@@ -418,7 +471,13 @@ tToken get_token()
                     character_position = 0; // New line so possition is 0
                 }
                 if (c == '"')   // It means now you have third '"""' and the comment has ended
+                {
+                    for (short i = 0; i < 3; i++)   // Delete last three "
+                    {
+                        ptr_string_delete_last(string);
+                    }
                     return token_fill(&token, string, (int) -1, TBLOCKCOMMENTORLITERAL);
+                }   
                 else if (c == EOF)     // If EOF, it's syntax error (Ending of the comment is missing)
                 {
                     error_print("Block comment is not valid", row, character_position);
@@ -459,16 +518,19 @@ tToken get_token()
                     return token_fill(&token, string, (int) -1, TEQ);
                 else    // Assign
                     return token_fill(&token, string, c , TASSIGN);
+                break;
             case sLtOrLte:
                 if (c == '=')   // Less than or Equal
                     return token_fill(&token, string, (int) -1, TLTE);
                 else    // Less than
                     return token_fill(&token, string, c , TLT);
+                break;
             case sGtOrGte:
                 if (c == '=')   // Greater than or Equal
                     return token_fill(&token, string, (int) -1, TGTE);
                 else    // Greater than
                     return token_fill(&token, string, c , TGT);
+                break;
             case sExclMark:
                 if (c == '=')   // Not equal
                     return token_fill(&token, string, (int) -1, TNE);
@@ -477,6 +539,8 @@ tToken get_token()
                     error_print("Exclamation mark should be followed by equal sign", row, character_position);
                     return token_fill(&token, string, c, TLEXERR);
                 }
+                break;
+
             /************************* String *****************************/
             case sString:
                 if (c > 31 && c != '\\' && c != '\'')

@@ -92,9 +92,11 @@ typedef enum {
     // Data types
     sInteger0,   // Ending (includes only 0)
     sInteger,   // Ending (e.g. 5906)
+    sIntWithDot,    // Not ending (e.g. 10.)
 
     sFloat,    // Ending (e.g. 1.332 or 0.233 or 1.2e-22)
     sExponent,    // Not ending
+    sExponentNumber,    // Ending (e.g. 12e32)
     sExponentOperator,    // Not ending (e.g. 1.2e-)
 
     // String
