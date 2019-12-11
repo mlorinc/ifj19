@@ -10,8 +10,20 @@ int main(void)
     printf(".IFJcode19\n");
     printf("DEFVAR GF@TypeCheck1\n");
     printf("DEFVAR GF@TypeCheck2\n"); //Variables for typecheck in Functions
-    printf("DEFVAR GF@VarForGTE\n");
-    printf("DEFVAR GF@VarForLTE\n\n"); //Variables for GTE or LTE comparison
+    printf("DEFVAR GF@RecastVar1\n");
+    printf("DEFVAR GF@RecastVar2\n");
+    printf("DEFVAR GF@RecastVar3\n");
+    printf("DEFVAR GF@WhatType1\n\n");
+    printf("DEFVAR GF@WhatType2\n\n");
+
+    printf("JUMP $$main\n\n");
+
+    void generate_semantic_check_add();
+    void generate_semantic_check_sub();
+    void generate_semantic_check_mul();
+    void generate_semantic_check_div();
+    void generate_semantic_check_idiv();
+
     parser_result_t result = parse();
 
     if (result.error_code != ERROR_OK) {
