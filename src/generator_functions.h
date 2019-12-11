@@ -101,4 +101,14 @@ void generate_endwhile_jump(size_t line);
  */ 
 void generate_endwhile(size_t line);
 
+void generate_semantic_check_add();
+
+void generate_semantic_check_sub();
+
+void generate_semantic_check_mul();
+
+void generate_semantic_check_div();
+
+void generate_semantic_check_idiv();
+
 #endif

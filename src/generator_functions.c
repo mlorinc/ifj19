@@ -42,50 +42,50 @@ void generate_expression(scope_t scope, queue_t expression)
                     printf("POPS GF@RecastVar2\n"
                            "POPS GF@RecastVar1\n"
                            "CREATEFRAME\n"
-                           "DEFVAR TF@%1\n"
-                           "MOVE TF@%1 GF@RecastVar1\n"
-                           "DEFVAR TF@%2\n"
-                           "MOVE TF@%2 GF@RecastVar2\n"
+                           "DEFVAR TF@%%1\n"
+                           "MOVE TF@%%1 GF@RecastVar1\n"
+                           "DEFVAR TF@%%2\n"
+                           "MOVE TF@%%2 GF@RecastVar2\n"
                            "CALL CHECKADD\n\n");
                     break;
                 case TSUB:
                     printf("POPS GF@RecastVar2\n"
                            "POPS GF@RecastVar1\n"
                            "CREATEFRAME\n"
-                           "DEFVAR TF@%1\n"
-                           "MOVE TF@%1 GF@RecastVar1\n"
-                           "DEFVAR TF@%2\n"
-                           "MOVE TF@%2 GF@RecastVar2\n"
+                           "DEFVAR TF@%%1\n"
+                           "MOVE TF@%%1 GF@RecastVar1\n"
+                           "DEFVAR TF@%%2\n"
+                           "MOVE TF@%%2 GF@RecastVar2\n"
                            "CALL CHECKSUB\n\n");
                     break;
                 case TMUL:
                     printf("POPS GF@RecastVar2\n"
                            "POPS GF@RecastVar1\n"
                            "CREATEFRAME\n"
-                           "DEFVAR TF@%1\n"
-                           "MOVE TF@%1 GF@RecastVar1\n"
-                           "DEFVAR TF@%2\n"
-                           "MOVE TF@%2 GF@RecastVar2\n"
+                           "DEFVAR TF@%%1\n"
+                           "MOVE TF@%%1 GF@RecastVar1\n"
+                           "DEFVAR TF@%%2\n"
+                           "MOVE TF@%%2 GF@RecastVar2\n"
                            "CALL CHECKMUL\n\n");
                     break;
                 case TDIV:
                     printf("POPS GF@RecastVar2\n"
                            "POPS GF@RecastVar1\n"
                            "CREATEFRAME\n"
-                           "DEFVAR TF@%1\n"
-                           "MOVE TF@%1 GF@RecastVar1\n"
-                           "DEFVAR TF@%2\n"
-                           "MOVE TF@%2 GF@RecastVar2\n"
+                           "DEFVAR TF@%%1\n"
+                           "MOVE TF@%%1 GF@RecastVar1\n"
+                           "DEFVAR TF@%%2\n"
+                           "MOVE TF@%%2 GF@RecastVar2\n"
                            "CALL CHECKDIV\n\n");
                     break;
                 case TFLOORDIV:
                     printf("POPS GF@RecastVar2\n"
                            "POPS GF@RecastVar1\n"
                            "CREATEFRAME\n"
-                           "DEFVAR TF@%1\n"
-                           "MOVE TF@%1 GF@RecastVar1\n"
-                           "DEFVAR TF@%2\n"
-                           "MOVE TF@%2 GF@RecastVar2\n"
+                           "DEFVAR TF@%%1\n"
+                           "MOVE TF@%%1 GF@RecastVar1\n"
+                           "DEFVAR TF@%%2\n"
+                           "MOVE TF@%%2 GF@RecastVar2\n"
                            "CALL CHECKFLOORDIV\n\n");
                     break;
                 case TGT:
@@ -101,6 +101,7 @@ void generate_expression(scope_t scope, queue_t expression)
                     printf("PUSHS GF@TypeCheck1\n");
                     printf("EQS\n");
                     printf("ORS\n"); //ak je to eq || gt tak to bude true, ak nie, false
+                    break;
                 case TLT:
                     printf("LTS\n");
                     break;
@@ -114,21 +115,18 @@ void generate_expression(scope_t scope, queue_t expression)
                     printf("PUSHS GF@TypeCheck1\n");
                     printf("EQS\n");
                     printf("ORS\n"); //ak je to eq || gt tak to bude true, ak nie, false
+                    break;
                 case TEQ:
                     printf("EQS\n");
                     break;
                 case TNE:
+                    break;
                 default:
                     fprintf(stderr, "Zabudol som sorry :(\n");
                     break;
             }
         }
     }
-}
-
-void retype_int_to_float(size_t line)
-{
-
 }
 
 /**
@@ -413,13 +411,13 @@ void generate_semantic_check_add()
 {
     printf("LABEL CHECKADD\n"
            "PUSHFRAME\n"
-           "DEFVAR LF@%retval\n"
-           "MOVE LF@%retval nil@nil\n"
+           "DEFVAR LF@%%retval\n"
+           "MOVE LF@%%retval nil@nil\n"
 
            "DEFVAR LF@param1\n"
-           "MOVE LF@param1 LF@%1\n"
+           "MOVE LF@param1 LF@%%1\n"
            "DEFVAR LF@param2\n"
-           "MOVE LF@param2 LF@%2\n"
+           "MOVE LF@param2 LF@%%2\n"
            "DEFVAR LF@result\n"
            "DEFVAR LF@typeCheck1\n"
            "DEFVAR LF@typeCheck2\n"
@@ -429,30 +427,30 @@ void generate_semantic_check_add()
            "TYPE LF@typeCheck1 LF@param1\n"
            "TYPE LF@typeCheck2 LF@param2\n"
 
-           "JUMPIFEQ $StringDetectedFirst LF@typeCheck1 string@string\n"
-           "JUMPIFEQ $StringDetectedSecond LF@typeCheck2 string@string\n"
-           "JUMPIFEQ $FloatDetectedFirst LF@typeCheck1 string@float\n"
-           "JUMPIFEQ $FloatDetectedSecond LF@typeCheck2 string@float\n"
+           "JUMPIFEQ $StringDetectedFirstAdd LF@typeCheck1 string@string\n"
+           "JUMPIFEQ $StringDetectedSecondAdd LF@typeCheck2 string@string\n"
+           "JUMPIFEQ $FloatDetectedFirstAdd LF@typeCheck1 string@float\n"
+           "JUMPIFEQ $FloatDetectedSecondAdd LF@typeCheck2 string@float\n"
            "JUMP AddedSucc\n"
 
-           "LABEL $FloatDetectedFirst\n"
+           "LABEL $FloatDetectedFirstAdd\n"
            "JUMPIFEQ AddedSucc LF@typeCheck2 string@float\n"
            "INT2FLOAT LF@valueCheck2 LF@param2\n"
            "MOVE LF@param2 LF@valueCheck2\n"
            "JUMP AddedSucc\n"
 
-           "LABEL $FloatDetectedSecond\n"
+           "LABEL $FloatDetectedSecondAdd\n"
            "INT2FLOAT LF@valueCheck1 LF@param1\n"
            "MOVE LF@param1 LF@valueCheck1\n"
            "JUMP AddedSucc\n"
 
-           "LABEL $StringDetectedFirst\n"
-           "JUMPIFEQ $StringDetectedSecond LF@typeCheck2 string@int\n"
-           "JUMPIFEQ $StringDetectedSecond LF@typeCheck2 string@float\n"
+           "LABEL $StringDetectedFirstAdd\n"
+           "JUMPIFEQ $StringDetectedSecondAdd LF@typeCheck2 string@int\n"
+           "JUMPIFEQ $StringDetectedSecondAdd LF@typeCheck2 string@float\n"
            "CONCAT LF@result LF@param1 LF@param2\n"
            "JUMP END\n"
 
-           "LABEL $StringDetectedSecond\n"
+           "LABEL $StringDetectedSecondAdd\n"
            "EXIT int@4\n"
 
            "LABEL AddedSucc\n"
@@ -467,13 +465,13 @@ void generate_semantic_check_sub()
 {
     printf("LABEL CHECKSUB\n"
     "PUSHFRAME\n"
-    "DEFVAR LF@%retval\n"
-    "MOVE LF@%retval nil@nil\n"
+    "DEFVAR LF@%%retval\n"
+    "MOVE LF@%%retval nil@nil\n"
 
     "DEFVAR LF@param1\n"
-    "MOVE LF@param1 LF@%1\n"
+    "MOVE LF@param1 LF@%%1\n"
     "DEFVAR LF@param2\n"
-    "MOVE LF@param2 LF@%2\n"
+    "MOVE LF@param2 LF@%%2\n"
     "DEFVAR LF@result\n"
     "DEFVAR LF@typeCheck1\n"
     "DEFVAR LF@typeCheck2\n"
@@ -485,17 +483,17 @@ void generate_semantic_check_sub()
 
     "JUMPIFEQ $ErrorSub LF@typeCheck1 string@string\n"
     "JUMPIFEQ $ErrorSub LF@typeCheck2 string@string\n"
-    "JUMPIFEQ $FloatDetectedFirst LF@typeCheck1 string@float\n"
-    "JUMPIFEQ $FloatDetectedSecond LF@typeCheck2 string@float\n"
+    "JUMPIFEQ $FloatDetectedFirstSub LF@typeCheck1 string@float\n"
+    "JUMPIFEQ $FloatDetectedSecondSub LF@typeCheck2 string@float\n"
     "JUMP SubSucc\n"
 
-    "LABEL $FloatDetectedFirst\n"
+    "LABEL $FloatDetectedFirstSub\n"
     "JUMPIFEQ SubSucc LF@typeCheck2 string@float\n"
     "INT2FLOAT LF@valueCheck2 LF@param2\n"
     "MOVE LF@param2 LF@valueCheck2\n"
     "JUMP SubSucc\n"
 
-    "LABEL $FloatDetectedSecond\n"
+    "LABEL $FloatDetectedSecondSub\n"
     "INT2FLOAT LF@valueCheck1 LF@param1\n"
     "MOVE LF@param1 LF@valueCheck1\n"
     "JUMP SubSucc\n"
@@ -514,13 +512,13 @@ void generate_semantic_check_mul()
 {
     printf("LABEL CHECKMUL\n"
     "PUSHFRAME\n"
-    "DEFVAR LF@%retval\n"
-    "MOVE LF@%retval nil@nil\n"
+    "DEFVAR LF@%%retval\n"
+    "MOVE LF@%%retval nil@nil\n"
 
     "DEFVAR LF@param1\n"
-    "MOVE LF@param1 LF@%1\n"
+    "MOVE LF@param1 LF@%%1\n"
     "DEFVAR LF@param2\n"
-    "MOVE LF@param2 LF@%2\n"
+    "MOVE LF@param2 LF@%%2\n"
     "DEFVAR LF@result\n"
     "DEFVAR LF@typeCheck1\n"
     "DEFVAR LF@typeCheck2\n"
@@ -532,17 +530,17 @@ void generate_semantic_check_mul()
 
     "JUMPIFEQ $ErrorMul LF@typeCheck1 string@string\n"
     "JUMPIFEQ $ErrorMul LF@typeCheck2 string@string\n"
-    "JUMPIFEQ $FloatDetectedFirst LF@typeCheck1 string@float\n"
-    "JUMPIFEQ $FloatDetectedSecond LF@typeCheck2 string@float\n"
+    "JUMPIFEQ $FloatDetectedFirstMul LF@typeCheck1 string@float\n"
+    "JUMPIFEQ $FloatDetectedSecondMul LF@typeCheck2 string@float\n"
     "JUMP MulSucc\n"
 
-    "LABEL $FloatDetectedFirst\n"
+    "LABEL $FloatDetectedFirstMul\n"
     "JUMPIFEQ MulSucc LF@typeCheck2 string@float\n"
     "INT2FLOAT LF@valueCheck2 LF@param2\n"
     "MOVE LF@param2 LF@valueCheck2\n"
     "JUMP MulSucc\n"
 
-    "LABEL $FloatDetectedSecond\n"
+    "LABEL $FloatDetectedSecondMul\n"
     "INT2FLOAT LF@valueCheck1 LF@param1\n"
     "MOVE LF@param1 LF@valueCheck1\n"
     "JUMP MulSucc\n"
@@ -561,13 +559,13 @@ void generate_semantic_check_div()
 {
     printf("LABEL CHECKDIV\n"
     "PUSHFRAME\n"
-    "DEFVAR LF@%retval\n"
-    "MOVE LF@%retval nil@nil\n"
+    "DEFVAR LF@%%retval\n"
+    "MOVE LF@%%retval nil@nil\n"
 
     "DEFVAR LF@param1\n"
-    "MOVE LF@param1 LF@%1\n"
+    "MOVE LF@param1 LF@%%1\n"
     "DEFVAR LF@param2\n"
-    "MOVE LF@param2 LF@%2\n"
+    "MOVE LF@param2 LF@%%2\n"
     "DEFVAR LF@result\n"
     "DEFVAR LF@typeCheck1\n"
     "DEFVAR LF@typeCheck2\n"
@@ -579,8 +577,8 @@ void generate_semantic_check_div()
 
     "JUMPIFEQ $ErrorDiv LF@typeCheck1 string@string\n"
     "JUMPIFEQ $ErrorDiv LF@typeCheck2 string@string\n"
-    "JUMPIFEQ $FloatDetectedFirst LF@typeCheck1 string@float\n"
-    "JUMPIFEQ $FloatDetectedSecond LF@typeCheck2 string@float\n"
+    "JUMPIFEQ $FloatDetectedFirstDiv LF@typeCheck1 string@float\n"
+    "JUMPIFEQ $FloatDetectedSecondDiv LF@typeCheck2 string@float\n"
 
     "INT2FLOAT LF@valueCheck1 LF@param1\n"
     "INT2FLOAT LF@valueCheck2 LF@param2\n"
@@ -588,13 +586,13 @@ void generate_semantic_check_div()
     "MOVE LF@param2 LF@valueCheck2\n"
     "JUMP DivSucc\n"
 
-    "LABEL $FloatDetectedFirst\n"
+    "LABEL $FloatDetectedFirstDiv\n"
     "JUMPIFEQ DivSucc LF@typeCheck2 string@float\n"
     "INT2FLOAT LF@valueCheck2 LF@param2\n"
     "MOVE LF@param2 LF@valueCheck2\n"
     "JUMP DivSucc\n"
 
-    "LABEL $FloatDetectedSecond\n"
+    "LABEL $FloatDetectedSecondDiv\n"
     "INT2FLOAT LF@valueCheck1 LF@param1\n"
     "MOVE LF@param1 LF@valueCheck1\n"
     "JUMP DivSucc\n"
@@ -614,15 +612,16 @@ void generate_semantic_check_div()
 
 void generate_semantic_check_idiv()
 {
-    printf("LABEL CHECKFLOORDIV\n"
+    printf(
+            "LABEL CHECKFLOORDIV\n"
     "PUSHFRAME\n"
-    "DEFVAR LF@%retval\n"
-    "MOVE LF@%retval nil@nil\n"
+    "DEFVAR LF@%%retval\n"
+    "MOVE LF@%%retval nil@nil\n"
 
     "DEFVAR LF@param1\n"
-    "MOVE LF@param1 LF@%1\n"
+    "MOVE LF@param1 LF@%%1\n"
     "DEFVAR LF@param2\n"
-    "MOVE LF@param2 LF@%2\n"
+    "MOVE LF@param2 LF@%%2\n"
     "DEFVAR LF@result\n"
     "DEFVAR LF@typeCheck1\n"
     "DEFVAR LF@typeCheck2\n"
@@ -642,9 +641,9 @@ void generate_semantic_check_idiv()
     "EXIT int@4\n"
 
     "LABEL FloorDivSucc\n"
-    "JUMPIFNEQ ENDDIV LF@param2 int@0\n"
+    "JUMPIFNEQ ENDFLOORDIV LF@param2 int@0\n"
     "EXIT int@9\n"
-    "LABEL ENDDIV\n"
+    "LABEL ENDFLOORDIV\n"
     "IDIV LF@result LF@param1 LF@param2\n"
     "PUSHS LF@result\n"
     "POPFRAME\n"

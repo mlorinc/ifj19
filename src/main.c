@@ -3,6 +3,7 @@
 #include "parser_ast.h"
 #include "semantic_analyser.h"
 #include "generate.h"
+#include "generator_functions.h"
 #include <stdio.h>
 
 int main(void)
@@ -13,17 +14,20 @@ int main(void)
     printf("DEFVAR GF@RecastVar1\n");
     printf("DEFVAR GF@RecastVar2\n");
     printf("DEFVAR GF@RecastVar3\n");
-    printf("DEFVAR GF@WhatType1\n\n");
+    printf("DEFVAR GF@WhatType1\n");
     printf("DEFVAR GF@WhatType2\n\n");
 
     printf("JUMP $$main\n\n");
 
-    void generate_semantic_check_add();
-    void generate_semantic_check_sub();
-    void generate_semantic_check_mul();
-    void generate_semantic_check_div();
-    void generate_semantic_check_idiv();
+    generate_semantic_check_add();
+    generate_semantic_check_sub();
+    generate_semantic_check_mul();
+    generate_semantic_check_div();
+    generate_semantic_check_idiv();
 
+    printf("LABEL $$main\n"
+           "DEFVAR GF@a\n"
+           "CREATEFRAME\n");
     parser_result_t result = parse();
 
     if (result.error_code != ERROR_OK) {
@@ -43,6 +47,8 @@ int main(void)
     }
 
     generate(result.ast);
+
+    printf("WRITE GF@a\n");
 
     return ERROR_OK;
 }
