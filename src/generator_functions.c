@@ -408,3 +408,44 @@ void generate_endwhile(size_t line)
 {
     printf("LABEL ENDWHILE$%zu\n", line);
 }
+
+void generate_print(scope_t scope, array_nodes_t params)
+{
+    size_t size = array_nodes_size(params);
+    for (size_t i = 0; i < size; i++) // Until all params
+    {
+        ast_t param = array_nodes_get(params, i);
+        char *buffer = ptr_string_c_string(param->data);
+
+        char *frame_modifier;
+        switch (param->node_type)
+        {
+        case STRING_LITERAL:
+            printf("WRITE string@%s\n", buffer);
+            break;
+        case INT_LITERAL:
+            printf("WRITE int@%s\n", buffer);
+            break;
+        case FLOAT_LITERAL:
+            // todo: i am not sure, fix it
+            printf("WRITE float@%a\n", atof(buffer));
+            break;
+        case ID:
+            frame_modifier = find_scope_with_defined_variable(scope, param->data) != NULL ? "LF" : "GF";
+            printf("WRITE %s@%s\n", frame_modifier, buffer); // Write the param
+            break;
+        default:
+            break;
+        }
+
+        if (i + 1 == size) // Last term
+        {
+            printf("WRITE string@\\010\n"); // Last term must have newline after
+        }
+        else
+        {
+            printf("WRITE string@\\032\n"); // After every term must be space
+        }
+        free(buffer);
+    }
+}
