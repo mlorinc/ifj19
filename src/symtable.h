@@ -5,8 +5,8 @@
 #include "queue.h"
 
 typedef struct item* item_t;
-typedef item_t** hash_map_t;
-typedef unsigned (*hash_function_t)(const char *key);
+typedef item_t* hash_map_t;
+typedef unsigned (*hash_function_t)(char *key);
 
 /**
  * Initialization new hash map.
@@ -21,7 +21,7 @@ hash_map_t hash_map_init();
  * @param element inserting item.
  * @return if operation was successful true, else false.
  */
-bool hash_map_put(hash_map_t hash_map, const char *key, void *element);
+bool hash_map_put(hash_map_t hash_map, char *key, void *element);
 
 /**
  * Searching item by key.
@@ -29,7 +29,7 @@ bool hash_map_put(hash_map_t hash_map, const char *key, void *element);
  * @param key searching key.
  * @return if item was found true, else false.
  */
-bool hash_map_has(hash_map_t hash_map, const char *key);
+bool hash_map_has(hash_map_t hash_map, char *key);
 
 /**
  * Searching item by key.
@@ -37,7 +37,7 @@ bool hash_map_has(hash_map_t hash_map, const char *key);
  * @param key searching key.
  * @return if item was found it will be return, else NULL.
  */
-void *hash_map_get(hash_map_t hash_map, const char *key);
+void *hash_map_get(hash_map_t hash_map, char *key);
 
 /**
  * Find out if hash map is empty.
@@ -57,7 +57,7 @@ void hash_map_destroy(hash_map_t hash_map);
  * @param hash_map where I can delete item.
  * @param key item key.
  */
-void hash_map_delete_item (hash_map_t hash_map, const char* key);
+void hash_map_delete_item (hash_map_t hash_map, char* key);
 
 void hash_map_set_hash_function(hash_map_t hash_map, hash_function_t hash_function);
 

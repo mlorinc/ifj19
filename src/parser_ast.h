@@ -6,6 +6,8 @@
 
 typedef enum {
     LEAVE_SCOPE,
+    LEAVE_IF,
+    LEAVE_WHILE,
     PASS,
     RETURN,
     BREAK,
