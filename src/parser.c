@@ -71,12 +71,7 @@ bool accept(parser_t parser, tToken_type token_type)
 
 bool accept_keyword(parser_t parser, const char *keyword)
 {
-    if (parser->previousToken.value == NULL)
-    {
-        return false;
-    }
-
-    if (parser->token.type == TKEYWORD && ptr_string_c_equals(parser->previousToken.value, keyword))
+    if (parser->token.type == TKEYWORD && ptr_string_c_equals(parser->token.value, keyword))
     {
         parser_next(parser);
         return true;
@@ -143,6 +138,7 @@ parser_result_t flow_statement(parser_t parser)
 
 parser_result_t assign_statemnt(parser_t parser)
 {
+    tToken prevToken = parser->previousToken;
     if (accept(parser, TIDENTIFICATOR))
     {
         tToken id = parser->previousToken;
@@ -155,7 +151,6 @@ parser_result_t assign_statemnt(parser_t parser)
 
             // attach id to left node
             ast_add_node(assign, ast_node_init(ID, id.line, id.pos, id.value));
-
             // try to get function call
             parser_result_t fnc_call = function_call(parser);
 
@@ -192,7 +187,9 @@ parser_result_t assign_statemnt(parser_t parser)
         else
         {
             // ok it is not assignment, we must return back ID token
-            parser_return_back(parser, id);
+            parser_return_back(parser, parser->token);
+            parser->previousToken = prevToken;
+            parser->token = id;
             return parser_result(NULL);
         }
     }
@@ -205,6 +202,11 @@ parser_result_t assign_statemnt(parser_t parser)
 
 parser_result_t small_statement(parser_t parser)
 {
+    while (accept(parser, TNEWLINE))
+    {
+        /* just skip eol */
+    }
+
     if (accept_keyword(parser, "pass"))
     {
         return parser_result(ast_node_init(PASS, parser->previousToken.line, parser->previousToken.pos, parser->previousToken.value));
@@ -215,6 +217,13 @@ parser_result_t small_statement(parser_t parser)
     if (flow_stmt.ast != NULL || flow_stmt.error)
     {
         return flow_stmt;
+    }
+
+    parser_result_t assign = assign_statemnt(parser);
+
+    if (assign.ast != NULL || assign.error)
+    {
+        return assign;
     }
 
     parser_result_t func_call = function_call(parser);
@@ -371,7 +380,6 @@ parser_result_t if_statement(parser_t parser)
 
             // lets connect body to else
             ast_add_node(else_stmt, body.ast);
-
             return parser_result(else_stmt);
         }
         else
@@ -494,7 +502,7 @@ parser_result_t function_call_parameter(parser_t parser)
             argument_type = FLOAT_LITERAL;
             break;
         default:
-            return parser_error(NULL, "INTERNAL ERROR\n");
+            return parser_error(NULL, "%s:%d: INTERNAL ERROR\n", __FILE__, __LINE__);
         }
 
         return parser_result(ast_node_init(argument_type, parser->previousToken.line, parser->previousToken.pos, parser->previousToken.value));
@@ -513,7 +521,7 @@ parser_result_t function_paramaters(parser_t parser, parser_method_t get_paramet
         return parser_error(NULL, "expecting left parenthesis after function name (line %u)\n", parser->previousToken.line);
     }
 
-    parser_result_t param = function_definition_parameter(parser);
+    parser_result_t param = get_parameter(parser);
     ast_t parameters = ast_node_init(FUNCTION_PARAMETERS, 0, 0, NULL);
 
     ast_add_node(parameters, param.ast);
@@ -523,7 +531,6 @@ parser_result_t function_paramaters(parser_t parser, parser_method_t get_paramet
         if (accept(parser, TCOMMA))
         {
             param = get_parameter(parser);
-
             if (param.ast == NULL)
             {
                 return parser_error(parameters, "invalid trailing comma (line %u)\n", parser->previousToken.line);
@@ -572,18 +579,17 @@ parser_result_t function_def(parser_t parser)
         {
             // initialize function definition node with name of function
             ast_t fn_def = ast_node_init(FUNCTION_DEFINITION, parser->previousToken.line, parser->previousToken.pos, parser->previousToken.value);
-
-            if (accept_keyword(parser, ":"))
+            // get parameters of function
+            parser_result_t parameters = function_paramaters(parser, function_definition_parameter);
+            // check errors
+            if (parameters.error)
             {
-                // get parameters of function
-                parser_result_t parameters = function_paramaters(parser, function_definition_parameter);
+                ast_delete(fn_def);
+                return parameters;
+            }
 
-                // check errors
-                if (parameters.error)
-                {
-                    return parameters;
-                }
-
+            if (accept(parser, TCOLON))
+            {
                 // get body of function, its ast must not be null and must not error
                 parser_result_t function_body_suites = function_body_suite(parser);
 
@@ -622,6 +628,7 @@ parser_result_t function_def(parser_t parser)
 
 parser_result_t function_call(parser_t parser)
 {
+    tToken prevToken = parser->previousToken;
     if (accept(parser, TIDENTIFICATOR))
     {
         tToken id = parser->previousToken;
@@ -629,7 +636,9 @@ parser_result_t function_call(parser_t parser)
         if (parser->token.type != TLEFTPAR)
         {
             // not function call
-            parser_return_back(parser, id);
+            parser_return_back(parser, parser->token);
+            parser->previousToken = prevToken;
+            parser->token = id;
             return parser_result(NULL);
         }
 
@@ -656,7 +665,6 @@ parser_result_t try_statements(parser_t parser, parser_method_t methods[], size_
     {
         // try every statement
         parser_result_t stmt = methods[i](parser);
-
         if (stmt.error)
         {
             // propagate errors
@@ -682,26 +690,13 @@ parser_result_t compound_statement(parser_t parser)
 
 parser_result_t statement(parser_t parser)
 {
-    parser_method_t methods[] = {assign_statemnt, simple_statement, compound_statement};
+    parser_method_t methods[] = {simple_statement, compound_statement};
     return try_statements(parser, methods, 2);
 }
 
 parser_result_t suite(parser_t parser)
 {
-    parser_result_t simple_stmt = simple_statement(parser);
-
-    // if there is error, propagate it
-    if (simple_stmt.error)
-    {
-        return simple_stmt;
-    }
-
-    // check if found simple statement, if we did so, return it
-    if (simple_stmt.ast != NULL)
-    {
-        return simple_stmt;
-    }
-
+    tToken previousToken = parser->previousToken;
     if (accept(parser, TNEWLINE))
     {
         tToken eol = parser->previousToken;
@@ -711,7 +706,11 @@ parser_result_t suite(parser_t parser)
 
             for (parser_result_t stmt = statement(parser); stmt.ast != NULL || stmt.error != NULL; stmt = statement(parser))
             {
-                // todo: error checking
+                if (stmt.error)
+                {
+                    ast_delete(consequent);
+                    return stmt;
+                }
                 ast_add_node(consequent, stmt.ast);
             }
 
@@ -735,7 +734,8 @@ parser_result_t suite(parser_t parser)
         {
             // we found newline, but it did not follow up by indent, so we dont know
             // even though, we better return it
-            parser_return_back(parser, eol);
+            parser->previousToken = previousToken;
+            parser->token = eol;
             return parser_result(NULL);
         }
     }
@@ -755,7 +755,9 @@ parser_result_t parse()
 
     enum error_codes status = ERROR_OK;
 
-    for (parser_result_t stmt = statement(parser); parser->token.type != TENDOFFILE; stmt = statement(parser))
+    for (parser_result_t stmt = statement(parser);
+         stmt.ast || stmt.error || parser->token.type != TENDOFFILE;
+         stmt = statement(parser))
     {
         if (parser->token.type == TLEXERR)
         {
@@ -769,9 +771,9 @@ parser_result_t parse()
         }
         else if (stmt.error)
         {
+            status = ERROR_SYNTAX;
             char *err = ptr_string_c_string(stmt.error);
             fprintf(stderr, "[PARSER]: %s\n", err);
-
             free(err);
             parser_error_dispose(stmt);
             break;
@@ -780,7 +782,7 @@ parser_result_t parse()
         {
             // error occurred before, and it left unprocessed tokens
             status = ERROR_INTERNAL;
-            fprintf(stderr, "%s:%d: Unknow error\n", __FILE__, __LINE__);
+            fprintf(stderr, "%s:%d: Unexpected token type: %d, line: %u\n", __FILE__, __LINE__, parser->token.type, parser->token.line);
             break;
         }
         else
