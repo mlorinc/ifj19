@@ -208,7 +208,7 @@ parser_result_t parse_expression(parser_t parser)
     do
     {
         new_table_value = create_table_value(parser->token, token_to_precedent_elem(parser->token.type));
-
+        
         if ((parser->token.type == TRIGHTPAR && parser->previousToken.type == TLEFTPAR) ||
             !precedent_analyze(expression_stack, postfix, new_table_value)) // Bad expression.
         {
@@ -217,10 +217,12 @@ parser_result_t parse_expression(parser_t parser)
             return parser_error(NULL, "Expression error on line %u.\n", parser->previousToken.line);
         }
 
-        parser_next(parser);
+        if (new_table_value->element != Pend) {
+            parser_next(parser);
+        }
     } while (new_table_value->element != Pend);
 
-    parser_return_back(parser, parser->token);
+    // parser_return_back(parser, parser->token);
     expression_stack_destroy(expression_stack);
 
     if (queue_empty(postfix)) //  Expression wasn't found.
