@@ -338,12 +338,7 @@ tToken get_token()
                     return token_fill(&token, string, c, TFLOAT);
                 break;
             case sExponent:
-                if (c == '0')
-                {
-                    ptr_string_delete_last(string);
-                    state = sExponent;
-                }
-                else if (c >= '1' && c <= '9')
+                if (c >= '0' && c <= '9')
                     state = sExponentNumber;
                 else if (c == '-' || c == '+')
                     state = sExponentOperator;
@@ -377,12 +372,7 @@ tToken get_token()
                     return token_fill(&token, string, c, TFLOAT);
                 }
             case sExponentOperator:
-                if (c == '0')
-                {
-                    ptr_string_delete_last(string);
-                    state = sExponent;
-                }
-                else if (c >= '0' && c <= '9')
+                if (c >= '0' && c <= '9')
                     state = sExponentNumber;
                 else
                 {
@@ -550,23 +540,21 @@ tToken get_token()
                 }
                 break;
             case sStringEscape:
-                if (c == '"' || c == '\\' || c == '\'' || c == 'n' || c == 't') // Valid escape sequence
-                    state = sString;
-                else if (c == 'x')  // Hexa number
-                    state = sStringEscapeNumber1;
-                else    // Not valid, nothing happens
+                if (c == 'x')  // Hexa number
+                    state = sStringEscapeNumber;
+                else    // Not valid, nothing happens, also valid counts here
                     state = sString;
                 break;
-            case sStringEscapeNumber1:
+            case sStringEscapeNumber:
                 if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))
-                    state = sStringEscapeNumber2;
+                    state = sStringEscapeNumber1;
                 else
                 {
                     error_print("Hexadecimal number in string must have two valid digits/symbols", row, character_position);
                     return token_fill(&token, string, c, TLEXERR);
                 }
                 break;
-            case sStringEscapeNumber2:
+            case sStringEscapeNumber1:
                 if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))
                     // End of the hex number
                     state = sString;
