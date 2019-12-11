@@ -245,8 +245,6 @@ void start_state(char c, tState* state, ptr_string_t string, tToken *token)
         token_fill(token, string, (int) -1, TLEFTPAR);
     else if (c == ')')
         token_fill(token, string, (int) -1, TRIGHTPAR);
-    else if (c == ';')
-        token_fill(token, string, (int) -1, TSEMICOLON);
     else if (c == ':')
         token_fill(token, string, (int) -1, TCOLON);
     else if (c == ',')
