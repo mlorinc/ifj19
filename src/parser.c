@@ -682,7 +682,7 @@ parser_result_t compound_statement(parser_t parser)
 
 parser_result_t statement(parser_t parser)
 {
-    parser_method_t methods[] = {simple_statement, compound_statement, assign_statemnt};
+    parser_method_t methods[] = {assign_statemnt, simple_statement, compound_statement};
     return try_statements(parser, methods, 2);
 }
 

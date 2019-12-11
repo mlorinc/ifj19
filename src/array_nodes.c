@@ -13,6 +13,8 @@ array_nodes_t array_nodes_init() {
     array_nodes_t array = malloc(sizeof(struct array_nodes));
     array->nodes = malloc(sizeof(ast_t) * __ARRAY_CHUNK);
 
+    assert(array->nodes != NULL);
+
     array->capacity = __ARRAY_CHUNK;
     array->size = 0;
     return array;

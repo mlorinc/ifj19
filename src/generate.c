@@ -1,7 +1,8 @@
-#include "generator.h"
+#include "generate.h"
 #include "generator_functions.h"
 #include "stack.h"
 #include "scope.h"
+#include <assert.h>
 #include <stdio.h>
 #include <stdbool.h>
 
@@ -19,7 +20,7 @@ generator_result_t generator_result(scope_t current_scope, enum error_codes stat
     return result;
 }
 
-generator_result_t handle_consequent(scope_t current_scope, ast_t node, stack_t tree_traversal)
+generator_result_t generator_handle_consequent(scope_t current_scope, ast_t node, stack_t tree_traversal)
 {
     array_nodes_t nodes = node->nodes;
     size_t size = array_nodes_size(nodes);
@@ -54,9 +55,11 @@ char *get_label_name(ast_node_type_t type)
         fprintf(stderr, "Unsupported type conversion on line %d", __LINE__);
         break;
     }
+
+    return NULL;
 }
 
-void handle_conditions(scope_t scope, ast_t node)
+void generator_handle_conditions(scope_t scope, ast_t node)
 {
     ast_t current_node = node;
     bool has_else = false;
@@ -87,7 +90,7 @@ void handle_conditions(scope_t scope, ast_t node)
     }
 }
 
-generator_result_t handle_if_elif_else(scope_t current_scope, ast_t node, stack_t tree_traversal)
+generator_result_t generator_handle_if_elif_else(scope_t current_scope, ast_t node, stack_t tree_traversal)
 {
     scope_t scope = new_scope(current_scope, node);
 
@@ -105,7 +108,7 @@ generator_result_t handle_if_elif_else(scope_t current_scope, ast_t node, stack_
     return generator_result(scope, ERROR_OK);
 }
 
-generator_result_t handle_if(scope_t current_scope, ast_t node, stack_t tree_traversal)
+generator_result_t generator_handle_if(scope_t current_scope, ast_t node, stack_t tree_traversal)
 {
     ast_t leave_if = ast_node_init(LEAVE_IF, node->line, node->pos, NULL);
     scope_t helper_scope = new_scope(current_scope, leave_if);
@@ -113,17 +116,17 @@ generator_result_t handle_if(scope_t current_scope, ast_t node, stack_t tree_tra
     // this will be popped when we process all ifs
     stack_push(tree_traversal, leave_if);
 
-    return handle_if_elif_else(helper_scope, node, tree_traversal);
+    return generator_handle_if_elif_else(helper_scope, node, tree_traversal);
 }
 
-generator_result_t handle_return(scope_t current_scope, ast_t node)
+generator_result_t generator_handle_return(scope_t current_scope, ast_t node)
 {
     ast_t expr = array_nodes_try_get(node->nodes, 0);
     generate_return(current_scope, expr->node_type == NONE ? NULL : expr->data);
     return generator_result(current_scope, ERROR_OK);
 }
 
-generator_result_t handle_function_definition(scope_t current_scope, ast_t node, stack_t tree_traversal)
+generator_result_t generator_handle_function_definition(scope_t current_scope, ast_t node, stack_t tree_traversal)
 {
     scope_t function_scope = new_scope(current_scope, node);
 
@@ -131,7 +134,7 @@ generator_result_t handle_function_definition(scope_t current_scope, ast_t node,
     ast_t parameters = array_nodes_get(node->nodes, 0);
     ast_t body = array_nodes_get(node->nodes, 1);
 
-    generate_function_header(id, parameters);
+    generate_function_header(id, parameters->nodes);
     free(id);
 
     // leave scope
@@ -141,13 +144,13 @@ generator_result_t handle_function_definition(scope_t current_scope, ast_t node,
     return generator_result(function_scope, ERROR_OK);
 }
 
-generator_result_t handle_function_call(scope_t current_scope, ast_t node)
+generator_result_t generator_handle_function_call(scope_t current_scope, ast_t node)
 {
     generate_function_call(current_scope, node);
     return generator_result(current_scope, ERROR_OK);
 }
 
-generator_result_t handle_assignment(scope_t current_scope, ast_t node)
+generator_result_t generator_handle_assignment(scope_t current_scope, ast_t node)
 {
     ast_t lvalue = array_nodes_get(node->nodes, 0);
     ast_t rvalue = array_nodes_get(node->nodes, 1);
@@ -167,7 +170,7 @@ generator_result_t handle_assignment(scope_t current_scope, ast_t node)
     return generator_result(current_scope, ERROR_OK);
 }
 
-generator_result_t handle_while(scope_t current_scope, ast_t node, stack_t tree_traversal)
+generator_result_t generator_handle_while(scope_t current_scope, ast_t node, stack_t tree_traversal)
 {
     scope_t scope = new_scope(current_scope, node);
 
@@ -199,7 +202,7 @@ generator_result_t handle_while(scope_t current_scope, ast_t node, stack_t tree_
     return generator_result(current_scope, ERROR_OK);
 }
 
-generator_result_t handle_while_else(scope_t current_scope, ast_t node, stack_t tree_traversal) {
+generator_result_t generator_handle_while_else(scope_t current_scope, ast_t node, stack_t tree_traversal) {
     scope_t scope = new_scope(current_scope, node);
 
     stack_push(tree_traversal, ast_node_init(LEAVE_SCOPE, 0, 0, NULL));
@@ -209,22 +212,22 @@ generator_result_t handle_while_else(scope_t current_scope, ast_t node, stack_t 
 
     // Get LEAVE_WHILE line
     generate_while_else_label(current_scope->root->line);
-    return generator_result(current_scope, ERROR_OK);
+    return generator_result(scope, ERROR_OK);
 }
 
-generator_result_t handle_continue(scope_t current_scope, ast_t node, stack_t tree_traversal) {
+generator_result_t generator_handle_continue(scope_t current_scope) {
     scope_t while_scope = find_first_node_type_in_scope(current_scope, WHILE);
     generate_while_jump(while_scope->root->line);
     return generator_result(current_scope, ERROR_OK);
 }
 
-generator_result_t handle_break(scope_t current_scope, ast_t node, stack_t tree_traversal) {
+generator_result_t generator_handle_break(scope_t current_scope) {
     scope_t while_scope = find_first_node_type_in_scope(current_scope, WHILE);
     generate_endwhile_jump(while_scope->root->line);
     return generator_result(current_scope, ERROR_OK);
 }
 
-generator_result_t handle_leave_scope(scope_t current_scope, ast_t node)
+generator_result_t generator_handle_leave_scope(scope_t current_scope, ast_t node)
 {
     ast_node_type_t parent_type = current_scope->parent_scope->root->node_type;
     ast_node_type_t current_type = current_scope->root->node_type;
@@ -249,13 +252,13 @@ generator_result_t handle_leave_scope(scope_t current_scope, ast_t node)
     return generator_result(delete_scope(current_scope), ERROR_OK);
 }
 
-generator_result_t handle_node(scope_t current_scope, ast_t node, stack_t tree_traversal)
+generator_result_t generator_handle_node(scope_t current_scope, ast_t node, stack_t tree_traversal)
 {
     switch (node->node_type)
     {
     case LEAVE_SCOPE:
         // leave scope
-        return handle_leave_scope(current_scope, node);
+        return generator_handle_leave_scope(current_scope, node);
     case LEAVE_IF:
         // end if
         generate_endif(node->line);
@@ -267,34 +270,34 @@ generator_result_t handle_node(scope_t current_scope, ast_t node, stack_t tree_t
         // expression without assignment is totally uselss, dont generate it
         return generator_result(current_scope, ERROR_OK);
     case RETURN:
-        return handle_return(current_scope, node);
+        return generator_handle_return(current_scope, node);
     case CONTINUE:
-        return handle_continue(current_scope, node, tree_traversal);
+        return generator_handle_continue(current_scope);
 
     case BREAK:
-        return handle_break(current_scope, node, tree_traversal);
+        return generator_handle_break(current_scope);
 
     case FUNCTION_DEFINITION:
-        return handle_function_definition(current_scope, node, tree_traversal);
+        return generator_handle_function_definition(current_scope, node, tree_traversal);
 
     case FUNCTION_CALL:
-        return handle_function_call(current_scope, node);
+        return generator_handle_function_call(current_scope, node);
     case ASSIGN:
-        return handle_assignment(current_scope, node);
+        return generator_handle_assignment(current_scope, node);
 
     case WHILE:
-        return handle_while(current_scope, node, tree_traversal);
+        return generator_handle_while(current_scope, node, tree_traversal);
     case WHILE_ELSE:
-        return handle_while_else(current_scope, node, tree_traversal);
+        return generator_handle_while_else(current_scope, node, tree_traversal);
     case IF:
-        handle_conditions(current_scope, node);
-        return handle_if(current_scope, node, tree_traversal);
+        generator_handle_conditions(current_scope, node);
+        return generator_handle_if(current_scope, node, tree_traversal);
     case ELIF:
     case ELSE:
-        return handle_if_elif_else(current_scope, node, tree_traversal);
+        return generator_handle_if_elif_else(current_scope, node, tree_traversal);
 
     case CONSEQUENT:
-        return handle_consequent(current_scope, node, tree_traversal);
+        return generator_handle_consequent(current_scope, node, tree_traversal);
 
     default:
         fprintf(stderr, "Forgot to implement %d on line %u\n", node->node_type, node->line);
@@ -304,8 +307,6 @@ generator_result_t handle_node(scope_t current_scope, ast_t node, stack_t tree_t
 
 enum error_codes generate(ast_t ast)
 {
-    enum error_codes status = ERROR_OK;
-
     stack_t tree_traversal = stack_init();
     stack_push(tree_traversal, ast);
 
@@ -314,7 +315,7 @@ enum error_codes generate(ast_t ast)
     while (!stack_empty(tree_traversal))
     {
         ast_t node = stack_pop(tree_traversal);
-        generator_result_t result = handle_node(scope, node, tree_traversal);
+        generator_result_t result = generator_handle_node(scope, node, tree_traversal);
         scope = result.current_scope;
     }
 
@@ -325,4 +326,6 @@ enum error_codes generate(ast_t ast)
 
     stack_destroy(tree_traversal);
     ast_delete(ast);
+
+    return ERROR_OK;
 }

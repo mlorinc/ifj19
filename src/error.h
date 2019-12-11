@@ -31,6 +31,7 @@ enum error_codes
     ERROR_INTERNAL = 99 //compiler error (not affected by input) example: error during memory allocation
 };
 
+
 /**
  * Error handling function
  */
