@@ -72,7 +72,7 @@ semantic_result_t handle_fuction_definition(scope_t current_scope, ast_t node, d
             }
             else
             {
-                hash_map_put(scope->local_table, key, arg);
+                set_variable_in_scope(scope, arg->data, arg);
             }
             free(key);
         }
@@ -84,6 +84,49 @@ semantic_result_t handle_fuction_definition(scope_t current_scope, ast_t node, d
 
         // return new function scope
         return semantic_result(node, scope, status);
+    }
+}
+
+semantic_result_t handle_function_call(scope_t current_scope, ast_t node)
+{
+    scope_t global = current_scope->root_scope;
+    char *fun_name = ptr_string_c_string(node->data);
+    ast_t var_node = hash_map_get(global->local_table, fun_name);
+
+    if (var_node == NULL)
+    {
+        fprintf(stderr, "Function with name %s does not exist (line %u)\n", fun_name, node->line);
+        free(fun_name);
+        return semantic_result(node, current_scope, ERROR_SEM);
+    }
+    else if (var_node->node_type == FUNCTION_DEFINITION)
+    {
+        // check passed arguments
+        ast_t params = array_nodes_get(node->nodes, 0);
+        for (size_t i = 0; i < array_nodes_size(params->nodes); i++)
+        {
+            ast_t param = array_nodes_get(params->nodes, i);
+            // check if it is id, so we must ensure it exists
+            if (param->node_type == ID)
+            {
+                if (!exists_variable_in_scope(current_scope, param->data))
+                {
+                    char *arg_name = ptr_string_c_string(param->data);
+                    fprintf(stderr, "Function %s contains argument which does not exist %s (line %u)\n", fun_name, arg_name, node->line);
+                    free(arg_name);
+                    free(fun_name);
+                    return semantic_result(node, current_scope, ERROR_SEM);
+                }
+            }
+        }
+        free(fun_name);
+        return semantic_result(node, current_scope, ERROR_OK);
+    }
+    else
+    {
+        fprintf(stderr, "Object %s is not callable (line %u)\n", fun_name, node->line);
+        free(fun_name);
+        return semantic_result(node, current_scope, ERROR_SEM);
     }
 }
 
@@ -118,7 +161,7 @@ semantic_result_t handle_assign(scope_t current_scope, ast_t node, deque_t tree_
         }
         else
         {
-            hash_map_put(scope->local_table, key, id);
+            set_variable_in_scope(scope, id->data, id);
         }
     }
 
@@ -263,6 +306,9 @@ semantic_result_t handle_node(scope_t current_scope, ast_t node, deque_t tree_tr
     case FUNCTION_DEFINITION:
         return handle_fuction_definition(current_scope, node, tree_traversing_deque);
 
+    case FUNCTION_CALL:
+        return handle_function_call(current_scope, node);
+
     case ASSIGN:
         return handle_assign(current_scope, node, tree_traversing_deque);
 
@@ -287,7 +333,7 @@ semantic_result_t handle_node(scope_t current_scope, ast_t node, deque_t tree_tr
         return handle_consequent(current_scope, node, tree_traversing_deque);
 
     default:
-        fprintf(stderr, "Forgot to implement %d on line %u\n", node->node_type, node->line);
+        fprintf(stderr, "%s:%d: Forgot to implement %d on line %u\n", __FILE__, __LINE__, node->node_type, node->line);
         return semantic_result(node, current_scope, ERROR_INTERNAL);
     }
 }
@@ -326,6 +372,6 @@ semantic_result_t semantic_analysis(ast_t root)
     {
         current_scope = delete_scope(current_scope);
     }
-    
+
     return semantic_result(root, NULL, status);
 }
