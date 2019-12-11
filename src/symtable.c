@@ -73,7 +73,12 @@ bool hash_map_put(hash_map_t hash_map, char *key, void *element)
             return false;
         }
 		new->data = element;
-		new->key = key;
+		
+		size_t length = strlen(key) + 1;
+		new->key = malloc(length);
+		memcpy(new->key, key, length);
+
+
 		new->ptrnext = hash_map[id];
         hash_map[id] = new;
         return true;
@@ -121,7 +126,7 @@ void hash_map_destroy(hash_map_t hash_map)
 		while(actual != NULL)
 		{
 			next = actual->ptrnext;
-            free(actual->data);
+            // free(actual->data);
             free(actual->key);
 			free(actual);
 			actual = next;
