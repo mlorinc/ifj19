@@ -65,7 +65,6 @@ typedef enum {
     // Special characters
     TLEFTPAR, // (
     TRIGHTPAR, // )
-    TSEMICOLON, // ;
     TCOLON, // :
     TCOMMA, // ,
     TASSIGN,    // =
