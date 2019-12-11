@@ -93,8 +93,16 @@ void generator_handle_conditions(scope_t scope, ast_t node)
 generator_result_t generator_handle_if_elif_else(scope_t current_scope, ast_t node, stack_t tree_traversal)
 {
     scope_t scope = new_scope(current_scope, node);
+    ast_t body;
 
-    ast_t body = array_nodes_try_get(node->nodes, 1);
+    if (node->node_type == ELSE)
+    {
+        body = array_nodes_get(node->nodes, 0);
+    }
+    else
+    {
+        body = array_nodes_get(node->nodes, 1);
+    }
     ast_t alternate_clause = array_nodes_try_get(node->nodes, 2);
 
     if (alternate_clause != NULL)
@@ -104,7 +112,6 @@ generator_result_t generator_handle_if_elif_else(scope_t current_scope, ast_t no
 
     stack_push(tree_traversal, ast_node_init(LEAVE_SCOPE, 0, 0, NULL));
     stack_push(tree_traversal, body);
-
     return generator_result(scope, ERROR_OK);
 }
 
@@ -206,7 +213,8 @@ generator_result_t generator_handle_while(scope_t current_scope, ast_t node, sta
     return generator_result(current_scope, ERROR_OK);
 }
 
-generator_result_t generator_handle_while_else(scope_t current_scope, ast_t node, stack_t tree_traversal) {
+generator_result_t generator_handle_while_else(scope_t current_scope, ast_t node, stack_t tree_traversal)
+{
     scope_t scope = new_scope(current_scope, node);
 
     stack_push(tree_traversal, ast_node_init(LEAVE_SCOPE, 0, 0, NULL));
@@ -219,13 +227,15 @@ generator_result_t generator_handle_while_else(scope_t current_scope, ast_t node
     return generator_result(scope, ERROR_OK);
 }
 
-generator_result_t generator_handle_continue(scope_t current_scope) {
+generator_result_t generator_handle_continue(scope_t current_scope)
+{
     scope_t while_scope = find_first_node_type_in_scope(current_scope, WHILE);
     generate_while_jump(while_scope->root->line);
     return generator_result(current_scope, ERROR_OK);
 }
 
-generator_result_t generator_handle_break(scope_t current_scope) {
+generator_result_t generator_handle_break(scope_t current_scope)
+{
     scope_t while_scope = find_first_node_type_in_scope(current_scope, WHILE);
     generate_endwhile_jump(while_scope->root->line);
     return generator_result(current_scope, ERROR_OK);
@@ -304,7 +314,7 @@ generator_result_t generator_handle_node(scope_t current_scope, ast_t node, stac
         return generator_handle_consequent(current_scope, node, tree_traversal);
 
     default:
-        fprintf(stderr, "Forgot to implement %d on line %u\n", node->node_type, node->line);
+        fprintf(stderr, "%s:%d: Forgot to implement %d on line %u\n", __FILE__, __LINE__, node->node_type, node->line);
         return generator_result(current_scope, ERROR_INTERNAL);
     }
 }
@@ -319,6 +329,14 @@ enum error_codes generate(ast_t ast)
     while (!stack_empty(tree_traversal))
     {
         ast_t node = stack_pop(tree_traversal);
+        if (node)
+        {
+            printf("Type: %d, line: %u\n", node->node_type, node->line);
+        }
+        else
+        {
+            printf("huh\n");
+        }
         generator_result_t result = generator_handle_node(scope, node, tree_traversal);
         scope = result.current_scope;
     }

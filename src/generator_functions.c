@@ -4,34 +4,42 @@
 #include "string_convertor.h"
 #include "array_nodes.h"
 #include <stdbool.h>
+#include <stdio.h>
 
 bool is_literal(tToken *token)
 {
-    return token->type == TINT || token->type == TFLOAT ||  token->type == TSTRING;
+    return token->type == TINT || token->type == TFLOAT || token->type == TSTRING;
 }
 
 void generate_expression(scope_t scope, queue_t expression)
 {
-    while (!queue_empty(expression)){
+    while (!queue_empty(expression))
+    {
         tToken *token = queue_pop(expression);
-        if (is_literal(token)){
+        if (is_literal(token))
+        {
             char *buffer = ptr_string_c_string(token->value);
-            if (token->type == TFLOAT){
+            if (token->type == TFLOAT)
+            {
                 printf("PUSHS float@%a\n", atof(buffer));
             }
-            else {
-                printf("PUSHS %s@%s\n", token->type == TINT ? "int" : "string",buffer);
+            else
+            {
+                printf("PUSHS %s@%s\n", token->type == TINT ? "int" : "string", buffer);
             }
             free(buffer);
         }
 
-        else if (token->type == TIDENTIFICATOR) {
+        else if (token->type == TIDENTIFICATOR)
+        {
             char *buffer = ptr_string_c_string(token->value);
             scope_t variable_scope = find_scope_with_defined_variable(scope, token->value);
-            if (variable_scope->root->node_type == FUNCTION_DEFINITION) {
+            if (variable_scope != NULL)
+            {
                 printf("PUSHS LF@%s\n", buffer);
             }
-            else {
+            else
+            {
                 printf("PUSHS GF@%s\n", buffer);
             }
             free(buffer);
@@ -122,7 +130,7 @@ void generate_expression(scope_t scope, queue_t expression)
                 case TNE:
                     break;
                 default:
-                    fprintf(stderr, "Zabudol som sorry :(\n");
+                    fprintf(stderr, "%s:%d: Unimplemented token type %d\n", __FILE__, __LINE__, token->type);
                     break;
             }
         }
@@ -137,15 +145,16 @@ void generate_expression(scope_t scope, queue_t expression)
  */
 void generate_condition(scope_t scope, queue_t expression, char *label_name, size_t line)
 {
-    if(expression == NULL){
+    if (expression == NULL)
+    {
         printf("JUMP %s$%zu\n", label_name, line);
     }
-    else{
+    else
+    {
         generate_expression(scope, expression);
         printf("PUSHS bool@true\n");
         printf("JUMPIFEQS %s$%zu\n", label_name, line);
     }
-    
 }
 
 /**
@@ -173,7 +182,8 @@ void generate_endif_jump(size_t line)
  */
 void generate_return(scope_t scope, queue_t expression)
 {
-    if (expression == NULL){
+    if (expression == NULL)
+    {
         printf("MOVE LF@%%retval nil@nil\n");
         printf("POPFRAME\n");
         printf("RETURN\n\n");
@@ -183,10 +193,9 @@ void generate_return(scope_t scope, queue_t expression)
     generate_expression(scope, expression);
 
     printf("POPS LF@%%retval\n");
-    printf("POPFRAME\n");                      //must be always saved return value
-    printf("RETURN\n\n");                      //double newline for better look after function definition
+    printf("POPFRAME\n"); //must be always saved return value
+    printf("RETURN\n\n"); //double newline for better look after function definition
 }
-
 
 /**
  * Generates header of function. params is never NULL.
@@ -200,8 +209,8 @@ void generate_function_header(char *fun_name, array_nodes_t params)
     for(size_t i = 0; i < array_nodes_size(params); i++){               //DEFVAR LF@parami
         ast_t param_name = array_nodes_get(params, i);           //MOVE LF@parami LF@%i+1
         char *buffer = ptr_string_c_string(param_name->data);
-        printf("DEFVAR LF@%s\n", buffer);                               //after this generate function body
-        printf("MOVE LF@%s LF@%%%zu\n", buffer, i+1);
+        printf("DEFVAR LF@%s\n", buffer); //after this generate function body
+        printf("MOVE LF@%s LF@%%%zu\n", buffer, i + 1);
         free(buffer);
     }
 }
@@ -216,8 +225,7 @@ void generate_function_footer()
     //we dont have to move any return value into @%retval despite of fact, that we declarate it... of course in case,
     //when we dont want to return anything from function
     //f.e.: def foo(a,b):
-    //          print(a,b)
-    //          return
+    //          print(a,b)         
 }
 
 bool is_local_frame(scope_t scope, ptr_string_t id)
@@ -235,43 +243,51 @@ void generate_function_call(scope_t current_scope, ast_t func_call)
 {
     printf("CREATEFRAME\n");
 
-    for(size_t i = 0; i < array_nodes_size(func_call->nodes); i++){
-        ast_t param = array_nodes_get(func_call->nodes, i);
+    ast_t params = array_nodes_get(func_call->nodes, 0);
+
+    for (size_t i = 0; i < array_nodes_size(params->nodes); i++)
+    {
+        ast_t param = array_nodes_get(params->nodes, i);
         char *buffer = ptr_string_c_string(param->data);
 
-        printf("DEFVAR TF@%%%zu\n", i+1);
+        printf("DEFVAR TF@%%%zu\n", i + 1);
 
         char *temp;
-        switch(param->node_type){
-            case STRING_LITERAL:
-                temp = ptr_string_c_string(ifj_string_to_code_string(param->data));
-                printf("MOVE TF@%%%zu string@%%%s\n", i+1, temp);
-                free(temp);
-                break;
-            case FLOAT_LITERAL:
-                printf("MOVE TF@%%%zu float@%%%a\n", i+1, atof(buffer));
-                break;
-            case INT_LITERAL:
-                printf("MOVE TF@%%%zu int@%%%s\n", i+1, buffer);
-                break;
-            case ID:
-                temp = ptr_string_c_string(param->data);
-                if (is_local_frame(current_scope, param->data)) {
-                    printf("MOVE TF@%%%zu LF@%%%s\n", i+1, temp);
-                }
-                else {
-                    printf("MOVE TF@%%%zu GF@%%%s\n", i+1, temp);
-                }
-                free(temp);
-                break;
-            default:
-                fprintf(stderr, "FAJRONT PICO\n");
+        switch (param->node_type)
+        {
+        case STRING_LITERAL:
+            temp = ptr_string_c_string(ifj_string_to_code_string(param->data));
+            printf("MOVE TF@%%%zu string@%%%s\n", i + 1, temp);
+            free(temp);
+            break;
+        case FLOAT_LITERAL:
+            printf("MOVE TF@%%%zu float@%%%a\n", i + 1, atof(buffer));
+            break;
+        case INT_LITERAL:
+            printf("MOVE TF@%%%zu int@%%%s\n", i + 1, buffer);
+            break;
+        case ID:
+            temp = ptr_string_c_string(param->data);
+            if (is_local_frame(current_scope, param->data))
+            {
+                printf("MOVE TF@%%%zu LF@%%%s\n", i + 1, temp);
+            }
+            else
+            {
+                printf("MOVE TF@%%%zu GF@%%%s\n", i + 1, temp);
+            }
+            free(temp);
+            break;
+        default:
+            fprintf(stderr, "%s:%d: Did not match any node type (%d)\n", __FILE__, __LINE__, param->node_type);
         }
 
         free(buffer);
     }
 
-    printf("CALL %s\n", ptr_string_c_string(func_call->data));
+    char *fn_name = ptr_string_c_string(func_call->data);
+    printf("CALL %s\n", fn_name);
+    free(fn_name);
 }
 
 /**
@@ -279,47 +295,57 @@ void generate_function_call(scope_t current_scope, ast_t func_call)
  */
 void generate_function_call_assignment(scope_t current_scope, const char *id, ast_t func_call)
 {
-    for(size_t i = 0; i < array_nodes_size(func_call->nodes); i++){
-        ast_t param = array_nodes_get(func_call->nodes, i);
+    ast_t params = array_nodes_get(func_call->nodes, 0);
+    for (size_t i = 0; i < array_nodes_size(params->nodes); i++)
+    {
+        ast_t param = array_nodes_get(params->nodes, i);
         char *buffer = ptr_string_c_string(param->data);
 
-        printf("DEFVAR TF@%%%zu\n", i+1);
+        printf("DEFVAR TF@%%%zu\n", i + 1);
 
         char *temp;
-        switch(param->node_type){
-            case STRING_LITERAL:
-                temp = ptr_string_c_string(ifj_string_to_code_string(param->data));
-                printf("MOVE TF@%%%zu string@%%%s\n", i+1, temp);
-                free(temp);
-                break;
-            case FLOAT_LITERAL:
-                printf("MOVE TF@%%%zu float@%%%a\n", i+1, atof(buffer));
-                break;
-            case INT_LITERAL:
-                printf("MOVE TF@%%%zu int@%%%s\n", i+1, buffer);
-                break;
-            case ID:
-                temp = ptr_string_c_string(param->data);
-                if (is_local_frame(current_scope, param->data)) {
-                    printf("MOVE TF@%%%zu LF@%%%s\n", i+1, temp);
-                }
-                else {
-                    printf("MOVE TF@%%%zu GF@%%%s\n", i+1, temp);
-                }
-                free(temp);
-                break;
-            default:
-                fprintf(stderr, "FAJRONT PICO\n");
+        switch (param->node_type)
+        {
+        case STRING_LITERAL:
+            temp = ptr_string_c_string(ifj_string_to_code_string(param->data));
+            printf("MOVE TF@%%%zu string@%%%s\n", i + 1, temp);
+            free(temp);
+            break;
+        case FLOAT_LITERAL:
+            printf("MOVE TF@%%%zu float@%%%a\n", i + 1, atof(buffer));
+            break;
+        case INT_LITERAL:
+            printf("MOVE TF@%%%zu int@%%%s\n", i + 1, buffer);
+            break;
+        case ID:
+            temp = ptr_string_c_string(param->data);
+            if (is_local_frame(current_scope, param->data))
+            {
+                printf("MOVE TF@%%%zu LF@%%%s\n", i + 1, temp);
+            }
+            else
+            {
+                printf("MOVE TF@%%%zu GF@%%%s\n", i + 1, temp);
+            }
+            free(temp);
+            break;
+        default:
+            fprintf(stderr, "%s:%d: Did not match any node type (%d)\n", __FILE__, __LINE__, param->node_type);
         }
 
         free(buffer);
     }
 
-    printf("CALL %s\n", ptr_string_c_string(func_call->data));
-    if (is_local_frame(current_scope, ptr_string(id))){
+    char *fn_name = ptr_string_c_string(func_call->data);
+    printf("CALL %s\n", fn_name);
+    free(fn_name);
+
+    if (is_local_frame(current_scope, func_call->data))
+    {
         printf("POPS LF@%s\n", id);
     }
-    else{
+    else
+    {
         printf("POPS GF@%s\n", id);
     }
 }
@@ -331,12 +357,16 @@ void generate_expression_assignment(scope_t current_scope, const char *id, ast_t
 {
     generate_expression(current_scope, expression->data);
 
-    if (is_local_frame(current_scope, ptr_string(id))){
+    ptr_string_t str = ptr_string(id);
+    if (is_local_frame(current_scope, str))
+    {
         printf("POPS LF@%s\n", id);
     }
-    else{
+    else
+    {
         printf("POPS GF@%s\n", id);
     }
+    ptr_string_delete(str);
 }
 
 /**
@@ -353,7 +383,7 @@ void generate_while_label(size_t line)
  */
 void generate_while_condition(scope_t scope, queue_t expression)
 {
-    generate_expression(scope,expression);
+    generate_expression(scope, expression);
 }
 
 /**
@@ -404,7 +434,7 @@ void generate_endwhile_jump(size_t line)
  */
 void generate_endwhile(size_t line)
 {
-    printf("LABEL ENDWHILE$%zu\n",line);
+    printf("LABEL ENDWHILE$%zu\n", line);
 }
 
 void generate_semantic_check_add()
