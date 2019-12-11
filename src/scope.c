@@ -1,5 +1,24 @@
 #include <stdlib.h>
 #include "scope.h"
+#include <stdarg.h>
+
+void declare_function(hash_map_t map, char *name, size_t count, ...) {
+    va_list args;
+    va_start(args, count);
+
+    ast_t function = ast_node_init(FUNCTION_DEFINITION, 0, 0, name);
+    ast_t params = ast_node_init(FUNCTION_PARAMETERS, 0, 0, NULL);
+
+    for (size_t i = 0; i < count; i++)
+    {
+        char *arg_name = va_arg(args, char*);
+        ast_add_node(params, ast_node_init(ID, 0, 0, arg_name));
+    }
+
+    ast_add_node(function, params);
+    hash_map_put(map, name, function);
+    va_end(args);
+}
 
 scope_t new_scope(scope_t parent, ast_t root)
 {
@@ -11,6 +30,14 @@ scope_t new_scope(scope_t parent, ast_t root)
     if (parent == NULL)
     {
         scope->root_scope = scope;
+        declare_function(scope->local_table, "print", 0);
+        declare_function(scope->local_table, "inputi", 0);
+        declare_function(scope->local_table, "inputf", 0);
+        declare_function(scope->local_table, "inputs", 0);
+        declare_function(scope->local_table, "len", 1, "s");
+        declare_function(scope->local_table, "substr", 3, "s", "i", "n");
+        declare_function(scope->local_table, "ord", 2, "s", "i");
+        declare_function(scope->local_table, "chr", 1, "i");
     }
     else
     {

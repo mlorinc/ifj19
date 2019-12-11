@@ -4,6 +4,7 @@
 #include "deque.h"
 #include "symtable.h"
 #include "ptr_string.h"
+#include <string.h>
 
 semantic_result_t semantic_result(ast_t ast, scope_t scope, enum error_codes status)
 {
@@ -101,8 +102,20 @@ semantic_result_t handle_function_call(scope_t current_scope, ast_t node)
     }
     else if (var_node->node_type == FUNCTION_DEFINITION)
     {
+        ast_t def_function_params = array_nodes_get(var_node->nodes, 0);
         // check passed arguments
         ast_t params = array_nodes_get(node->nodes, 0);
+        size_t params_size = array_nodes_size(params->nodes);
+        size_t def_params_size = array_nodes_size(def_function_params->nodes);
+
+        if (params_size != array_nodes_size(def_function_params->nodes) && strcmp(fun_name, "print") != 0)
+        {
+            fprintf(stderr, "Function %s does not pass expected number of arguments (line %u) (passed: %lu, expected: %lu)\n",
+                    fun_name, node->line, params_size, def_params_size);
+            free(fun_name);
+            return semantic_result(node, current_scope, ERROR_SEM);
+        }
+
         for (size_t i = 0; i < array_nodes_size(params->nodes); i++)
         {
             ast_t param = array_nodes_get(params->nodes, i);
@@ -112,7 +125,7 @@ semantic_result_t handle_function_call(scope_t current_scope, ast_t node)
                 if (!exists_variable_in_scope(current_scope, param->data))
                 {
                     char *arg_name = ptr_string_c_string(param->data);
-                    fprintf(stderr, "Function %s contains argument which does not exist %s (line %u)\n", fun_name, arg_name, node->line);
+                    fprintf(stderr, "Function %s passes argument which does not exist %s (line %u)\n", fun_name, arg_name, node->line);
                     free(arg_name);
                     free(fun_name);
                     return semantic_result(node, current_scope, ERROR_SEM);

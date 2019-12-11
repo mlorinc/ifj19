@@ -110,5 +110,6 @@ void generate_semantic_check_mul();
 void generate_semantic_check_div();
 
 void generate_semantic_check_idiv();
+void generate_print(scope_t scope, array_nodes_t params);
 
 #endif
