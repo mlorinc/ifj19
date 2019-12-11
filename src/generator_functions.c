@@ -12,6 +12,7 @@ bool is_literal(tToken *token)
 
 void generate_expression(scope_t scope, queue_t expression)
 {
+    bool isFunction = false;
     while (!queue_empty(expression)){
         tToken *token = queue_pop(expression);
         if (is_literal(token)){
@@ -30,6 +31,7 @@ void generate_expression(scope_t scope, queue_t expression)
             scope_t variable_scope = find_scope_with_defined_variable(scope, token->value);
             if (variable_scope->root->node_type == FUNCTION_DEFINITION) {
                 printf("PUSHS LF@%s\n", buffer);
+                isFunction = true;
             }
             else {
                 printf("PUSHS GF@%s\n", buffer);
@@ -54,10 +56,54 @@ void generate_expression(scope_t scope, queue_t expression)
                     printf("GTS\n");
                     break;
                 case TGTE:
+                    if (isFunction) {
+                        printf("POPS LF@TypeCheck1\n");
+                        printf("POPS LF@TypeCheck2\n");
+                        printf("PUSHS LF@TypeCheck2\n");
+                        printf("PUSHS LF@TypeCheck1\n");
+                        printf("GTS\n");
+                        printf("PUSHS LF@TypeCheck2\n"); //we have to push values back to stack
+                        printf("PUSHS LF@TypeCheck1\n"); //because GTS pops it out
+                        printf("EQS\n");
+                        printf("ORS\n"); //ak je to eq || gt tak to bude true, ak nie, false
+                    }
+                    else {
+                        printf("POPS GF@TypeCheck1");
+                        printf("POPS GF@TypeCheck2");
+                        printf("PUSHS GF@TypeCheck2");
+                        printf("PUSHS GF@TypeCheck1");
+                        printf("GTS\n");
+                        printf("PUSHS GF@TypeCheck2\n");
+                        printf("PUSHS GF@TypeCheck1\n");
+                        printf("EQS\n");
+                        printf("ORS\n"); //ak je to eq || gt tak to bude true, ak nie, false
+                    }
                 case TLT:
                     printf("LTS\n");
                     break;
                 case TLTE:
+                    if (isFunction) {
+                        printf("POPS LF@TypeCheck1");
+                        printf("POPS LF@TypeCheck2");
+                        printf("PUSHS LF@TypeCheck2\n");
+                        printf("PUSHS LF@TypeCheck1\n");
+                        printf("LTS\n");
+                        printf("PUSHS LF@TypeCheck2\n");
+                        printf("PUSHS LF@TypeCheck1\n");
+                        printf("EQS\n");
+                        printf("ORS\n"); //ak je to eq || gt tak to bude true, ak nie, false
+                    }
+                    else {
+                        printf("POPS GF@TypeCheck1");
+                        printf("POPS GF@TypeCheck2");
+                        printf("PUSHS GF@TypeCheck2\n");
+                        printf("PUSHS GF@TypeCheck1\n");
+                        printf("LTS\n");
+                        printf("PUSHS GF@TypeCheck2\n");
+                        printf("PUSHS GF@TypeCheck1\n");
+                        printf("EQS\n");
+                        printf("ORS\n"); //ak je to eq || gt tak to bude true, ak nie, false
+                    }
                 case TEQ:
                     printf("EQS\n");
                     break;
@@ -68,6 +114,11 @@ void generate_expression(scope_t scope, queue_t expression)
             }
         }
     }
+}
+
+void retype_int_to_float(size_t line)
+{
+
 }
 
 /**
@@ -86,76 +137,7 @@ void generate_condition(scope_t scope, queue_t expression, char *label_name, siz
         printf("PUSHS bool@true\n");
         printf("JUMPIFEQS %s$%zu\n", label_name, line);
     }
-
-    /*if (!strcmp(expression->last, '>')) {
-        printf("DEFVAR GF@cond%zu\n", line);
-        printf("GT GF@cond%zu GF@%s GF@%s\n", line, (char *) expression->first->value,
-               (char *) expression->first->next->value);
-        printf("JUMPIFEQ %s%zu bool@true GF@cond%zu\n", label_name, line, line);
-    } else if (!strcmp(expression->last, '<')) {
-        printf("DEFVAR GF@cond%zu\n", line);
-        printf("LT GF@cond%zu GF@%s GF@%s\n", line, (char *) expression->first->value,
-               (char *) expression->first->next->value);
-        printf("JUMPIFEQ %s%zu bool@true GF@cond%zu\n", label_name, line, line);
-    } else if (!strcmp(expression->last, "==")) {
-        printf("JUMPIFEQ %s%zu GF@%s GF@%s\n", label_name, line, (char *) expression->first->value,
-               (char *) expression->first->next->value);
-    } else if (!strcmp(expression->last, ">=")) {
-        printf("DEFVAR GF@condgt%zu\n", line);
-        printf("DEFVAR GF@condeq%zu\n", line);
-        printf("GT GF@condgt%zu GF@%s GF@%s\n", line, (char *) expression->first->value,
-               (char *) expression->first->next->value);
-        printf("EQ GF@condeq%zu GF@%s GF@%s\n", line, (char *) expression->first->value,
-               (char *) expression->first->next->value);
-        printf("DEFVAR GF@iseq%zu\n", line);
-        printf("OR GF@iseq%zu GF@condeq%zu GF@condgt%zu\n", line, line, line);
-        printf("JUMPIFEQ %s%zu bool@true GF@iseq%zu\n", label_name, line, line);
-    } else if (!strcmp(expression->last, "<=")) {
-        printf("DEFVAR GF@condlt%zu\n", line);
-        printf("DEFVAR GF@condeq%zu\n", line);
-        printf("LT GF@condlt%zu GF@%s GF@%s\n", line, (char *) expression->first->value,
-               (char *) expression->first->next->value);
-        printf("EQ GF@condeq%zu GF@%s GF@%s\n", line, (char *) expression->first->value,
-               (char *) expression->first->next->value);
-        printf("DEFVAR GF@iseq%zu\n", line);
-        printf("OR GF@iseq%zu GF@condeq%zu GF@condlt%zu\n", line, line, line);
-        printf("JUMPIFEQ %s%zu bool@true GF@iseq%zu\n", label_name, line, line);
-    }
-
-    if (!strcmp(expression->last, '>')) {
-        printf("DEFVAR LF@cond%zu\n", line);
-        printf("GT LF@cond%zu LF@%s LF@%s\n", line, (char *) expression->first->value,
-               (char *) expression->first->next->value);
-        printf("JUMPIFEQ %s%zu bool@true LF@cond%zu\n", label_name, line, line);
-    } else if (!strcmp(expression->last, '<')) {
-        printf("DEFVAR LF@cond%zu\n", line);
-        printf("LT LF@cond%zu LF@%s LF@%s\n", line, (char *) expression->first->value,
-               (char *) expression->first->next->value);
-        printf("JUMPIFEQ %s%zu bool@true LF@cond%zu\n", label_name, line, line);
-    } else if (!strcmp(expression->last, "==")) {
-        printf("JUMPIFEQ %s%zu LF@%s LF@%s\n", label_name, line, (char *) expression->first->value,
-               (char *) expression->first->next->value);
-    } else if (!strcmp(expression->last, ">=")) {
-        printf("DEFVAR LF@condgt%zu\n", line);
-        printf("DEFVAR LF@condeq%zu\n", line);
-        printf("GT LF@condgt%zu LF@%s LF@%s\n", line, (char *) expression->first->value,
-               (char *) expression->first->next->value);
-        printf("EQ LF@condeq%zu LF@%s LF@%s\n", line, (char *) expression->first->value,
-               (char *) expression->first->next->value);
-        printf("DEFVAR LF@iseq%zu\n", line);
-        printf("OR LF@iseq%zu LF@condeq%zu LF@condgt%zu\n", line, line, line);
-        printf("JUMPIFEQ %s%zu bool@true LF@iseq%zu\n", label_name, line, line);
-    } else if (!strcmp(expression->last, "<=")) {
-        printf("DEFVAR LF@condlt%zu\n", line);
-        printf("DEFVAR LF@condeq%zu\n", line);
-        printf("LT LF@condlt%zu LF@%s LF@%s\n", line, (char *) expression->first->value,
-               (char *) expression->first->next->value);
-        printf("EQ LF@condeq%zu LF@%s LF@%s\n", line, (char *) expression->first->value,
-               (char *) expression->first->next->value);
-        printf("DEFVAR LF@iseq%zu\n", line);
-        printf("OR LF@iseq%zu LF@condeq%zu LF@condlt%zu\n", line, line, line);
-        printf("JUMPIFEQ %s%zu bool@true LF@iseq%zu\n", label_name, line, line);
-    }*/
+    
 }
 
 /**
@@ -205,8 +187,10 @@ void generate_function_header(char *fun_name, array_nodes_t params)
 {
     printf("LABEL %s\n", fun_name);                                     //LABEL fun_name
     printf("PUSHFRAME\n");                                              //PUSHFRAME
-    printf("DEFVAR LF@%%retval");                                        //DEFVAR LF@%retval
-    printf("MOVE LF@%%retval nil@nil");                                  //DEFVAR LF@%retval nil@nil
+    printf("DEFVAR LF@%%retval\n");                                        //DEFVAR LF@%retval
+    printf("MOVE LF@%%retval nil@nil\n");                                  //DEFVAR LF@%retval nil@nil
+    printf("DEFVAR LF@TypeCheck1\n");
+    printf("DEFVAR LF@TypeCheck2\n");
     for(size_t i = 0; i < array_nodes_size(params); i++){               //DEFVAR LF@parami
         ast_t param_name = array_nodes_get(params, i);           //MOVE LF@parami LF@%i+1
         char *buffer = ptr_string_c_string(param_name->data);
