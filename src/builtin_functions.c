@@ -22,7 +22,7 @@
 void inputs()
 {
     printf(
-        "LABEL $inputs\n"
+        "LABEL inputs\n"
         "PUSHFRAME\n"
         "DEFVAR LF@%retval\n"
         "READ LF@%retval string\n"
@@ -34,7 +34,7 @@ void inputs()
 void inputi()
 {
     printf(
-        "LABEL $inputi\n"
+        "LABEL inputi\n"
         "PUSHFRAME\n"
         "DEFVAR LF@%retval\n"
         "READ LF@%retval int\n"
@@ -46,7 +46,7 @@ void inputi()
 void inputf()
 {
     printf(
-        "LABEL $inputf\n"
+        "LABEL inputf\n"
         "PUSHFRAME\n"
         "DEFVAR LF@%retval\n"
         "READ LF@%retval float\n"
@@ -58,7 +58,7 @@ void inputf()
 void len()
 {
     printf(
-        "LABEL $len\n"
+        "LABEL len\n"
         "PUSHFRAME\n"
         "DEFVAR LF@%retval\n"
         "DEFVAR LF@param1\n"
@@ -72,7 +72,7 @@ void len()
 void substr()
 {
     printf(
-        "LABEL $substr\n"
+        "LABEL substr\n"
         "PUSHFRAME\n"
         "DEFVAR LF@%retval\n"
         "MOVE LF@%retval nil@nil\n"
@@ -133,7 +133,7 @@ void substr()
 void ord()
 {
     printf(
-        "LABEL $ord\n"
+        "LABEL ord\n"
         "PUSHFRAME\n"
         "DEFVAR LF@%retval\n"
         "MOVE LF@%retval nil@nil\n"
@@ -160,7 +160,7 @@ void ord()
 void chr()
 {
     printf(
-        "LABEL $chr\n"
+        "LABEL chr\n"
         "PUSHFRAME\n"
         "DEFVAR LF@%retval\n"
         "DEFVAR LF@i\n"
