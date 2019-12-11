@@ -4,6 +4,7 @@
 #include "string_convertor.h"
 #include "array_nodes.h"
 #include <stdbool.h>
+#include <string.h>
 #include <stdio.h>
 
 bool is_literal(tToken *token)
@@ -299,6 +300,23 @@ void generate_function_call(scope_t current_scope, ast_t func_call)
 void generate_function_call_assignment(scope_t current_scope, const char *id, ast_t func_call)
 {
     ast_t params = array_nodes_get(func_call->nodes, 0);
+    char *fn_name = ptr_string_c_string(func_call->data);
+
+    if (strcmp(fn_name, "print") == 0)
+    {
+        generate_print(current_scope, params->nodes);
+        if (is_local_frame(current_scope, func_call->data))
+        {
+            printf("MOVE LF@%s nil@nil\n", id);
+        }
+        else
+        {
+            printf("MOVE LF@%s nil@nil\n", id);
+        }
+        free(fn_name);
+        return;
+    }
+
     for (size_t i = 0; i < array_nodes_size(params->nodes); i++)
     {
         ast_t param = array_nodes_get(params->nodes, i);
@@ -339,7 +357,6 @@ void generate_function_call_assignment(scope_t current_scope, const char *id, as
         free(buffer);
     }
 
-    char *fn_name = ptr_string_c_string(func_call->data);
     printf("CALL %s\n", fn_name);
     free(fn_name);
 
