@@ -522,9 +522,16 @@ parser_result_t function_paramaters(parser_t parser, parser_method_t get_paramet
     }
 
     parser_result_t param = get_parameter(parser);
+
+    if (param.error) {
+        return param;
+    }
+
     ast_t parameters = ast_node_init(FUNCTION_PARAMETERS, 0, 0, NULL);
 
-    ast_add_node(parameters, param.ast);
+    if (param.ast != NULL) {
+        ast_add_node(parameters, param.ast);
+    }
 
     while (param.ast != NULL)
     {
