@@ -38,7 +38,6 @@ int main(void)
     }
 
     semantic_result_t semantic = semantic_analysis(result.ast);
-
     if (semantic.status != ERROR_OK) {
         if (semantic.ast != NULL) {
             ast_delete(result.ast);
