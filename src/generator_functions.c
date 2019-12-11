@@ -131,6 +131,13 @@ void generate_expression(scope_t scope, queue_t expression)
                 printf("EQS\n");
                 break;
             case TNE:
+                printf("POPS GF@TypeCheck1\n");
+                printf("POPS GF@TypeCheck2\n");
+                printf("PUSHS bool@false");
+                printf("PUSHS GF@TypeCheck2\n");
+                printf("PUSHS GF@TypeCheck1\n");
+                printf("EQS\n"); //if they are not equal it return bool@false to top of the stack
+                printf("EQS\n"); //eqs, if it is false (not equal) it will return TRUE so they are NOT EQUAL!
                 break;
             default:
                 fprintf(stderr, "%s:%d: Unimplemented token type %d\n", __FILE__, __LINE__, token->type);
