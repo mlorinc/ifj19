@@ -4,6 +4,7 @@
 #include "deque.h"
 #include "symtable.h"
 #include "ptr_string.h"
+#include "scaner.h"
 #include <string.h>
 
 semantic_result_t semantic_result(ast_t ast, scope_t scope, enum error_codes status)
@@ -294,6 +295,29 @@ semantic_result_t handle_consequent(scope_t current_scope, ast_t node, deque_t t
     return semantic_result(node, current_scope, ERROR_OK);
 }
 
+semantic_result_t handle_expression(scope_t current_scope, ast_t ast)
+{
+    queue_t checkedPostfix = queue_init();
+    tToken* token;
+
+    while (!queue_empty(ast->data))
+    {
+        token = queue_pop(ast->data);
+        queue_push(checkedPostfix, token);
+        if(token->type == TIDENTIFICATOR)
+        {
+            if (!exists_variable_in_scope(current_scope, token->value))
+            {
+                print_undefined_variable_error(token->value);
+                return semantic_result(ast, current_scope, ERROR_SEM);
+            }
+        }
+    }
+    queue_destroy(ast->data);
+    ast->data = checkedPostfix;
+    return semantic_result(ast, current_scope, ERROR_OK);
+}
+
 /**
  * Returns error count so far
  */
@@ -340,7 +364,7 @@ semantic_result_t handle_node(scope_t current_scope, ast_t node, deque_t tree_tr
         return semantic_result(node, current_scope, ERROR_OK);
 
     case EXPRESSION:
-        return semantic_result(node, current_scope, ERROR_OK);
+        return handle_expression(current_scope, node);
 
     case CONSEQUENT:
         return handle_consequent(current_scope, node, tree_traversing_deque);
