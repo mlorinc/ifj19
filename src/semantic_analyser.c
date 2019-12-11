@@ -262,7 +262,7 @@ semantic_result_t handle_return(scope_t current_scope, ast_t node, deque_t tree_
 
 semantic_result_t handle_break_continue(scope_t current_scope, ast_t node, const char *what)
 {
-    // we must ensure, return is in function
+    // we must ensure, break/continue is in while
     scope_t while_scope = find_first_node_type_in_scope(current_scope, WHILE);
     enum error_codes status = ERROR_OK;
 
@@ -308,7 +308,9 @@ semantic_result_t handle_expression(scope_t current_scope, ast_t ast)
         {
             if (!exists_variable_in_scope(current_scope, token->value))
             {
-                print_undefined_variable_error(token->value);
+                char *name = ptr_string_c_string(token->value);
+                fprintf(stderr, "Variable %s is not declared\n", name);
+                free(name);
                 return semantic_result(ast, current_scope, ERROR_SEM);
             }
         }

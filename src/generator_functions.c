@@ -34,8 +34,7 @@ void generate_expression(scope_t scope, queue_t expression)
         else if (token->type == TIDENTIFICATOR)
         {
             char *buffer = ptr_string_c_string(token->value);
-            scope_t variable_scope = find_scope_with_defined_variable(scope, token->value);
-            if (variable_scope != NULL)
+            if (is_local_variable(scope, token->value))
             {
                 printf("PUSHS LF@%s\n", buffer);
             }
@@ -287,12 +286,6 @@ void generate_function_footer(scope_t scope, ast_t function)
     free(fun_name);
 }
 
-bool is_local_frame(scope_t scope, ptr_string_t id)
-{
-    scope_t return_scope = find_scope_with_defined_variable(scope, id);
-    return return_scope != NULL;
-}
-
 /**
  * Generated code which calls function
  * @param node function call node
@@ -327,7 +320,7 @@ void generate_function_call(scope_t current_scope, ast_t func_call)
             break;
         case ID:
             temp = ptr_string_c_string(param->data);
-            if (is_local_frame(current_scope, param->data))
+            if (is_local_variable(current_scope, param->data))
             {
                 printf("MOVE TF@%%%zu LF@%%%s\n", i + 1, temp);
             }
@@ -360,13 +353,13 @@ void generate_function_call_assignment(scope_t current_scope, const char *id, as
     if (strcmp(fn_name, "print") == 0)
     {
         generate_print(current_scope, params->nodes);
-        if (is_local_frame(current_scope, func_call->data))
+        if (is_local_variable(current_scope, func_call->data))
         {
             printf("MOVE LF@%s nil@nil\n", id);
         }
         else
         {
-            printf("MOVE LF@%s nil@nil\n", id);
+            printf("MOVE GF@%s nil@nil\n", id);
         }
         free(fn_name);
         return;
@@ -395,7 +388,7 @@ void generate_function_call_assignment(scope_t current_scope, const char *id, as
             break;
         case ID:
             temp = ptr_string_c_string(param->data);
-            if (is_local_frame(current_scope, param->data))
+            if (is_local_variable(current_scope, param->data))
             {
                 printf("MOVE TF@%%%zu LF@%%%s\n", i + 1, temp);
             }
@@ -415,7 +408,7 @@ void generate_function_call_assignment(scope_t current_scope, const char *id, as
     printf("CALL %s\n", fn_name);
     free(fn_name);
 
-    if (is_local_frame(current_scope, func_call->data))
+    if (is_local_variable(current_scope, func_call->data))
     {
         printf("POPS LF@%s\n", id);
     }
@@ -433,7 +426,7 @@ void generate_expression_assignment(scope_t current_scope, const char *id, ast_t
     generate_expression(current_scope, expression->data);
 
     ptr_string_t str = ptr_string(id);
-    if (is_local_frame(current_scope, str))
+    if (is_local_variable(current_scope, str))
     {
         printf("POPS LF@%s\n", id);
     }
@@ -762,7 +755,6 @@ void generate_print(scope_t scope, array_nodes_t params)
         ast_t param = array_nodes_get(params, i);
         char *buffer = ptr_string_c_string(param->data);
 
-        char *frame_modifier;
         switch (param->node_type)
         {
         case STRING_LITERAL:
@@ -776,8 +768,7 @@ void generate_print(scope_t scope, array_nodes_t params)
             printf("WRITE float@%a\n", atof(buffer));
             break;
         case ID:
-            frame_modifier = find_scope_with_defined_variable(scope, param->data) != NULL ? "LF" : "GF";
-            printf("WRITE %s@%s\n", frame_modifier, buffer); // Write the param
+            printf("WRITE %s@%s\n", is_local_variable(scope, param->data) ? "LF" : "GF", buffer); // Write the param
             break;
         default:
             break;

@@ -1,8 +1,11 @@
 #include <stdlib.h>
 #include "scope.h"
 #include <stdarg.h>
+#include <assert.h>
+#include <stdio.h>
 
-void declare_function(hash_map_t map, char *name, size_t count, ...) {
+void declare_function(hash_map_t map, char *name, size_t count, ...)
+{
     va_list args;
     va_start(args, count);
 
@@ -11,7 +14,7 @@ void declare_function(hash_map_t map, char *name, size_t count, ...) {
 
     for (size_t i = 0; i < count; i++)
     {
-        char *arg_name = va_arg(args, char*);
+        char *arg_name = va_arg(args, char *);
         ast_add_node(params, ast_node_init(ID, 0, 0, arg_name));
     }
 
@@ -120,6 +123,7 @@ bool set_variable_in_scope(scope_t scope, ptr_string_t key, void *value)
     else
     {
         variable_scope = func_scope;
+        assert(variable_scope->root->node_type == FUNCTION_DEFINITION);
     }
 
     char *variable_key = ptr_string_c_string(key);
@@ -132,4 +136,24 @@ bool set_variable_in_scope(scope_t scope, ptr_string_t key, void *value)
 bool set_function_in_scope(scope_t scope, ptr_string_t key, void *value)
 {
     return set_variable_in_scope(scope->root_scope, key, value);
+}
+
+bool is_local_variable(scope_t scope, ptr_string_t id) {
+    scope = find_scope_with_defined_variable(scope, id);
+    assert(scope != NULL);
+
+    if (scope->root->node_type == CONSEQUENT) {
+        // thats global
+        return false;
+    }
+    else if (scope->root->node_type == FUNCTION_DEFINITION) {
+        return true;
+    }
+    else {
+        assert(false);
+    }
+}
+
+bool is_global_variable(scope_t scope, ptr_string_t id) {
+    return !is_local_variable(scope, id);
 }

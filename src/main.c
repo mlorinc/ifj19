@@ -26,9 +26,6 @@ int main(void)
     }
 
     generate(result.ast);
-
-    printf("WRITE GF@a\n");
-
     return ERROR_OK;
 }
 

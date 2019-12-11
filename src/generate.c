@@ -143,7 +143,7 @@ generator_result_t generator_handle_function_definition(scope_t current_scope, a
     ast_t parameters = array_nodes_get(node->nodes, 0);
     ast_t body = array_nodes_get(node->nodes, 1);
 
-    hash_map_put(current_scope->local_table, id, node);
+    set_function_in_scope(current_scope, node->data, node);
 
     generate_function_header(id, parameters->nodes);
     free(id);
@@ -351,7 +351,6 @@ enum error_codes generate(ast_t ast)
     ord();
     chr();
     printf("LABEL $$main\n"
-           "DEFVAR GF@a\n"
            "CREATEFRAME\n");
 
     generate_declaration_block_main_function("$$main");
