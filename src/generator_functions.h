@@ -101,4 +101,6 @@ void generate_endwhile_jump(size_t line);
  */ 
 void generate_endwhile(size_t line);
 
+void generate_print(scope_t scope, array_nodes_t params);
+
 #endif

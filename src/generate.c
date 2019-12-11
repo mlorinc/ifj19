@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <string.h>
 
 typedef struct generator_result
 {
@@ -155,7 +156,13 @@ generator_result_t generator_handle_function_definition(scope_t current_scope, a
 
 generator_result_t generator_handle_function_call(scope_t current_scope, ast_t node)
 {
-    generate_function_call(current_scope, node);
+    char *fun_name = ptr_string_c_string(node->data);
+    if (strcmp(fun_name, "print") == 0) {
+        generate_print(current_scope, array_nodes_get(node->nodes, 0)->nodes);
+    }
+    else {
+        generate_function_call(current_scope, node);
+    }
     return generator_result(current_scope, ERROR_OK);
 }
 
@@ -329,14 +336,6 @@ enum error_codes generate(ast_t ast)
     while (!stack_empty(tree_traversal))
     {
         ast_t node = stack_pop(tree_traversal);
-        if (node)
-        {
-            printf("Type: %d, line: %u\n", node->node_type, node->line);
-        }
-        else
-        {
-            printf("huh\n");
-        }
         generator_result_t result = generator_handle_node(scope, node, tree_traversal);
         scope = result.current_scope;
     }
