@@ -22,7 +22,7 @@
 #include <ctype.h>
 #include <string.h>
 
-#define KEYWORDS_COUNT 7
+#define KEYWORDS_COUNT 9
 
 tToken_type last_token_type = TFIRSTINDENT;
 stack_t stack;  //stack for indent numbers
@@ -32,7 +32,7 @@ unsigned int row = 1;   // What row are we at
 unsigned int character_position = 1;
 
 /* Global array of possible keywords */
-char *keywords[KEYWORDS_COUNT] = {"def", "else", "if", "None", "pass", "return", "while"};
+char *keywords[KEYWORDS_COUNT] = {"def", "else", "if", "None", "pass", "return", "while", "break", "continue"};
 
 /**
  * Function for malloc pointer to int
