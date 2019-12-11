@@ -23,5 +23,7 @@ void inputi();
 void inputf();
 void len();
 void substr();
+void ord();
+void chr();
 
 #endif //IFJ19_SCANER_H
