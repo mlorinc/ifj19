@@ -312,17 +312,20 @@ semantic_result_t semantic_analysis(ast_t root)
         semantic_result_t result = handle_node(current_scope, node, tree_traversing_deque);
         current_scope = result.scope;
 
-        if (status != ERROR_SYNTAX && status != ERROR_INTERNAL)
+        if (result.status != ERROR_OK)
         {
             status = result.status;
+            break;
         }
     }
 
     deque_destroy(tree_traversing_deque);
 
-    // we should bubble up to root
-    assert(current_scope->root == root);
-
-    delete_scope(current_scope);
+    // clear scopes
+    while (current_scope != NULL)
+    {
+        current_scope = delete_scope(current_scope);
+    }
+    
     return semantic_result(root, NULL, status);
 }

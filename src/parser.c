@@ -753,26 +753,19 @@ parser_result_t parse()
 
     ast_t program = ast_node_init(CONSEQUENT, 0, 0, NULL);
 
-    bool building_tree = true;
     enum error_codes status = ERROR_OK;
 
     for (parser_result_t stmt = statement(parser); parser->token.type != TENDOFFILE; stmt = statement(parser))
     {
         if (parser->token.type == TLEXERR)
         {
-            if (status == ERROR_OK)
-            {
-                status = ERROR_LEX;
-            }
-            parser_next(parser);
+            status = ERROR_LEX;
+            break;
         }
         else if (parser->token.type == TERR)
         {
-            if (status == ERROR_OK)
-            {
-                status = ERROR_INTERNAL;
-            }
-            parser_next(parser);
+            status = ERROR_INTERNAL;
+            break;
         }
         else if (stmt.error)
         {
@@ -781,33 +774,18 @@ parser_result_t parse()
 
             free(err);
             parser_error_dispose(stmt);
-
-            if (program != NULL)
-            {
-                ast_delete(program);
-            }
-
-            if (status == ERROR_OK)
-            {
-                status = ERROR_SYNTAX;
-            }
-
-            building_tree = false;
-            program = NULL;
+            break;
         }
         else if (stmt.ast == NULL)
         {
             // error occurred before, and it left unprocessed tokens
-            // so skip them
-            parser_next(parser);
-        }
-        else if (building_tree)
-        {
-            ast_add_node(program, stmt.ast);
+            status = ERROR_INTERNAL;
+            fprintf(stderr, "%s:%d: Unknow error\n", __FILE__, __LINE__);
+            break;
         }
         else
         {
-            // well its right, but we dont build tree anymore, because syntax error happened
+            ast_add_node(program, stmt.ast);
         }
     }
 
