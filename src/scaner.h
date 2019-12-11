@@ -101,8 +101,8 @@ typedef enum {
     // String
     sString,   // Not ending (') and getting all the characters
     sStringEscape,  // Not ending (\)
-    sStringEscapeNumber1,    // Not ending first digit of hexa number
-    sStringEscapeNumber2,    // Not ending second digit of hexa number
+    sStringEscapeNumber,    // Not ending first digit of hexa number
+    sStringEscapeNumber1,    // Not ending second digit of hexa number
     // sString after getting (') returns token
 
     // Operators
