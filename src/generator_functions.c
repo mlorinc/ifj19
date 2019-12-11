@@ -224,12 +224,33 @@ void generate_function_header(char *fun_name, array_nodes_t params)
         printf("MOVE LF@%s LF@%%%zu\n", buffer, i + 1);
         free(buffer);
     }
+    printf("JUMP %s$declarations\n", fun_name);
+    printf("LABEL %s$start\n", fun_name);
+}
+
+void generate_declaration_block_main_function(char *jump_back_label) {
+    printf("JUMP %s$declarations\n", jump_back_label);
+    printf("LABEL %s$start\n", jump_back_label);
+}
+
+void generate_declaration_block(char *jump_back_label, scope_t scope) {
+    hash_map_t variables = scope->local_table;
+    printf("LABEL %s$declarations\n", jump_back_label);
+
+    for (hash_map_iterator_t ite = hash_map_begin(variables); hash_map_iterator_value(ite); ite = hash_map_iterator_next(ite))
+    {
+        ast_t node = ite.current->data;
+        if (node->node_type != FUNCTION_DEFINITION) {
+            printf("DEFVAR GF@%s\n", ite.current->key);
+        }
+    }
+    printf("JUMP %s$start\n", jump_back_label);
 }
 
 /**
  * Generates code before function returns
  */
-void generate_function_footer()
+void generate_function_footer(scope_t scope, ast_t function)
 {
     printf("POPFRAME\n");
     printf("RETURN\n");
@@ -237,6 +258,33 @@ void generate_function_footer()
     //when we dont want to return anything from function
     //f.e.: def foo(a,b):
     //          print(a,b)
+
+    char *fun_name = ptr_string_c_string(function->data);
+    hash_map_t variables = scope->local_table;
+    ast_t params = array_nodes_get(function->nodes, 0);
+    size_t params_size = array_nodes_size(params->nodes);
+
+    printf("LABEL %s$declarations\n", fun_name);
+
+    for (hash_map_iterator_t ite = hash_map_begin(variables); hash_map_iterator_value(ite); ite = hash_map_iterator_next(ite))
+    {
+        bool render = true;
+        for (size_t i = 0; i < params_size; i++)
+        {
+            ast_t param = array_nodes_get(params->nodes, i);
+            if (ptr_string_c_equals(param->data, ite.current->key))
+            {
+                render = false;
+                break;
+            }
+        }
+        if (render)
+        {
+            printf("DEFVAR LF@%s\n", ite.current->key);
+        }
+    }
+    printf("JUMP %s$start\n", fun_name);
+    free(fun_name);
 }
 
 bool is_local_frame(scope_t scope, ptr_string_t id)

@@ -143,7 +143,7 @@ generator_result_t generator_handle_function_definition(scope_t current_scope, a
     ast_t parameters = array_nodes_get(node->nodes, 0);
     ast_t body = array_nodes_get(node->nodes, 1);
 
-    hash_map_put(current_scope->local_table, id, NULL);
+    hash_map_put(current_scope->local_table, id, node);
 
     generate_function_header(id, parameters->nodes);
     free(id);
@@ -174,7 +174,7 @@ generator_result_t generator_handle_assignment(scope_t current_scope, ast_t node
 
     char *id = ptr_string_c_string(lvalue->data);
 
-    set_variable_in_scope(current_scope, lvalue->data, NULL);
+    set_variable_in_scope(current_scope, lvalue->data, node);
 
     if (rvalue->node_type == FUNCTION_CALL)
     {
@@ -260,7 +260,7 @@ generator_result_t generator_handle_leave_scope(scope_t current_scope, ast_t nod
     }
     else if (current_type == FUNCTION_DEFINITION)
     {
-        generate_function_footer();
+        generate_function_footer(current_scope, current_scope->root);
     }
     else if (current_type == WHILE)
     {
@@ -354,6 +354,8 @@ enum error_codes generate(ast_t ast)
            "DEFVAR GF@a\n"
            "CREATEFRAME\n");
 
+    generate_declaration_block_main_function("$$main");
+
     stack_t tree_traversal = stack_init();
     stack_push(tree_traversal, ast);
 
@@ -369,6 +371,7 @@ enum error_codes generate(ast_t ast)
     // we should bubble up to root
     assert(scope->root == ast);
 
+    generate_declaration_block("$$main", scope);
     delete_scope(scope);
 
     stack_destroy(tree_traversal);

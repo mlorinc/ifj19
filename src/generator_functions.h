@@ -40,7 +40,7 @@ void generate_function_header(char *fun_name, array_nodes_t params);
 /**
  * Generates code before function returns
  */ 
-void generate_function_footer();
+void generate_function_footer(scope_t scope, ast_t function);
 
 /**
  * Generated code which calls function
@@ -111,5 +111,9 @@ void generate_semantic_check_div();
 
 void generate_semantic_check_idiv();
 void generate_print(scope_t scope, array_nodes_t params);
+
+void generate_declaration_block_main_function(char *jump_back_label);
+
+void generate_declaration_block(char *jump_back_label, scope_t scope);
 
 #endif
