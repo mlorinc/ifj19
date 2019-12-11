@@ -33,13 +33,49 @@ generator_result_t generator_handle_consequent(scope_t current_scope, ast_t node
         return generator_result(current_scope, ERROR_OK);
     }
 
-    for (size_t i = size - 1; i > 0; i--)
+    if (current_scope != current_scope->root_scope)
     {
-        stack_push(tree_traversal, array_nodes_get(nodes, i));
+        // we are not in root, there cannot be function
+        for (size_t i = size - 1; i > 0; i--)
+        {
+            stack_push(tree_traversal, array_nodes_get(nodes, i));
+        }
+        stack_push(tree_traversal, array_nodes_get(nodes, 0));
     }
+    else
+    {
+        // push normal commands, so they are generated later
+        for (size_t i = size - 1; i > 0; i--)
+        {
+            ast_t node = array_nodes_get(nodes, i);
+            if (node->node_type != FUNCTION_DEFINITION)
+            {
+                stack_push(tree_traversal, node);
+            }
+        }
 
-    stack_push(tree_traversal, array_nodes_get(nodes, 0));
+        if (node->node_type != FUNCTION_DEFINITION)
+        {
+            stack_push(tree_traversal, array_nodes_get(nodes, 0));
+        }
 
+        // push main creation
+        stack_push(tree_traversal, ast_node_init(MAIN_START, 0, 0, NULL));
+
+        // push function declarations on top
+        for (size_t i = size - 1; i > 0; i--)
+        {
+            ast_t node = array_nodes_get(nodes, i);
+            if (node->node_type == FUNCTION_DEFINITION)
+            {
+                stack_push(tree_traversal, node);
+            }
+        }
+        if (node->node_type == FUNCTION_DEFINITION)
+        {
+            stack_push(tree_traversal, array_nodes_get(nodes, 0));
+        }
+    }
     return generator_result(current_scope, ERROR_OK);
 }
 
@@ -158,10 +194,12 @@ generator_result_t generator_handle_function_definition(scope_t current_scope, a
 generator_result_t generator_handle_function_call(scope_t current_scope, ast_t node)
 {
     char *fun_name = ptr_string_c_string(node->data);
-    if (strcmp(fun_name, "print") == 0) {
+    if (strcmp(fun_name, "print") == 0)
+    {
         generate_print(current_scope, array_nodes_get(node->nodes, 0)->nodes);
     }
-    else {
+    else
+    {
         generate_function_call(current_scope, node);
     }
     return generator_result(current_scope, ERROR_OK);
@@ -320,7 +358,9 @@ generator_result_t generator_handle_node(scope_t current_scope, ast_t node, stac
 
     case CONSEQUENT:
         return generator_handle_consequent(current_scope, node, tree_traversal);
-
+    case MAIN_START:
+        generate_declaration_block_main_function("$$main");
+        return generator_result(current_scope, ERROR_OK); 
     default:
         fprintf(stderr, "%s:%d: Forgot to implement %d on line %u\n", __FILE__, __LINE__, node->node_type, node->line);
         return generator_result(current_scope, ERROR_INTERNAL);
@@ -352,8 +392,6 @@ enum error_codes generate(ast_t ast)
     chr();
     printf("LABEL $$main\n"
            "CREATEFRAME\n");
-
-    generate_declaration_block_main_function("$$main");
 
     stack_t tree_traversal = stack_init();
     stack_push(tree_traversal, ast);

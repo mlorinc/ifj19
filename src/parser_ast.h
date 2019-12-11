@@ -28,7 +28,8 @@ typedef enum {
     WHILE_ELSE,
     NONE,
     EXPRESSION,
-    CONSEQUENT
+    CONSEQUENT,
+    MAIN_START
 } ast_node_type_t;
 
 struct array_nodes;
