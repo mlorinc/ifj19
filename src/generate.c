@@ -134,6 +134,8 @@ generator_result_t generator_handle_function_definition(scope_t current_scope, a
     ast_t parameters = array_nodes_get(node->nodes, 0);
     ast_t body = array_nodes_get(node->nodes, 1);
 
+    hash_map_put(current_scope->local_table, id, NULL);
+
     generate_function_header(id, parameters->nodes);
     free(id);
 
@@ -156,6 +158,8 @@ generator_result_t generator_handle_assignment(scope_t current_scope, ast_t node
     ast_t rvalue = array_nodes_get(node->nodes, 1);
 
     char *id = ptr_string_c_string(lvalue->data);
+
+    set_variable_in_scope(current_scope, lvalue->data, NULL);
 
     if (rvalue->node_type == FUNCTION_CALL)
     {
