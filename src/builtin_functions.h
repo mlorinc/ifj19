@@ -18,6 +18,10 @@
 #ifndef IFJ19_BUILTIN_H
 #define IFJ19_BUILTIN_H
 
-void builtin_function();
+void inputs();
+void inputi();
+void inputf();
+void len();
+void substr();
 
 #endif //IFJ19_SCANER_H
