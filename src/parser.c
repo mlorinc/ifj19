@@ -217,18 +217,18 @@ parser_result_t small_statement(parser_t parser)
         return flow_stmt;
     }
 
-    parser_result_t expr = parse_expression(parser);
-
-    if (expr.ast != NULL || expr.error)
-    {
-        return expr;
-    }
-
     parser_result_t func_call = function_call(parser);
 
     if (func_call.ast != NULL || func_call.error)
     {
         return func_call;
+    }
+
+    parser_result_t expr = parse_expression(parser);
+
+    if (expr.ast != NULL || expr.error)
+    {
+        return expr;
     }
 
     return parser_result(NULL);
