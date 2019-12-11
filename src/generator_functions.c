@@ -56,54 +56,28 @@ void generate_expression(scope_t scope, queue_t expression)
                     printf("GTS\n");
                     break;
                 case TGTE:
-                    if (isFunction) {
-                        printf("POPS LF@TypeCheck1\n");
-                        printf("POPS LF@TypeCheck2\n");
-                        printf("PUSHS LF@TypeCheck2\n");
-                        printf("PUSHS LF@TypeCheck1\n");
-                        printf("GTS\n");
-                        printf("PUSHS LF@TypeCheck2\n"); //we have to push values back to stack
-                        printf("PUSHS LF@TypeCheck1\n"); //because GTS pops it out
-                        printf("EQS\n");
-                        printf("ORS\n"); //ak je to eq || gt tak to bude true, ak nie, false
-                    }
-                    else {
-                        printf("POPS GF@TypeCheck1");
-                        printf("POPS GF@TypeCheck2");
-                        printf("PUSHS GF@TypeCheck2");
-                        printf("PUSHS GF@TypeCheck1");
-                        printf("GTS\n");
-                        printf("PUSHS GF@TypeCheck2\n");
-                        printf("PUSHS GF@TypeCheck1\n");
-                        printf("EQS\n");
-                        printf("ORS\n"); //ak je to eq || gt tak to bude true, ak nie, false
-                    }
+                    printf("POPS GF@TypeCheck1");
+                    printf("POPS GF@TypeCheck2");
+                    printf("PUSHS GF@TypeCheck2\n");
+                    printf("PUSHS GF@TypeCheck1\n");
+                    printf("GTS\n");
+                    printf("PUSHS GF@TypeCheck2\n");
+                    printf("PUSHS GF@TypeCheck1\n");
+                    printf("EQS\n");
+                    printf("ORS\n"); //ak je to eq || gt tak to bude true, ak nie, false
                 case TLT:
                     printf("LTS\n");
                     break;
                 case TLTE:
-                    if (isFunction) {
-                        printf("POPS LF@TypeCheck1");
-                        printf("POPS LF@TypeCheck2");
-                        printf("PUSHS LF@TypeCheck2\n");
-                        printf("PUSHS LF@TypeCheck1\n");
-                        printf("LTS\n");
-                        printf("PUSHS LF@TypeCheck2\n");
-                        printf("PUSHS LF@TypeCheck1\n");
-                        printf("EQS\n");
-                        printf("ORS\n"); //ak je to eq || gt tak to bude true, ak nie, false
-                    }
-                    else {
-                        printf("POPS GF@TypeCheck1");
-                        printf("POPS GF@TypeCheck2");
-                        printf("PUSHS GF@TypeCheck2\n");
-                        printf("PUSHS GF@TypeCheck1\n");
-                        printf("LTS\n");
-                        printf("PUSHS GF@TypeCheck2\n");
-                        printf("PUSHS GF@TypeCheck1\n");
-                        printf("EQS\n");
-                        printf("ORS\n"); //ak je to eq || gt tak to bude true, ak nie, false
-                    }
+                    printf("POPS GF@TypeCheck1");
+                    printf("POPS GF@TypeCheck2");
+                    printf("PUSHS GF@TypeCheck2\n");
+                    printf("PUSHS GF@TypeCheck1\n");
+                    printf("LTS\n");
+                    printf("PUSHS GF@TypeCheck2\n");
+                    printf("PUSHS GF@TypeCheck1\n");
+                    printf("EQS\n");
+                    printf("ORS\n"); //ak je to eq || gt tak to bude true, ak nie, false
                 case TEQ:
                     printf("EQS\n");
                     break;
