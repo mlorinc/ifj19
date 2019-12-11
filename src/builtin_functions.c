@@ -24,8 +24,8 @@ void inputs()
     printf(
         "LABEL inputs\n"
         "PUSHFRAME\n"
-        "DEFVAR LF@%retval\n"
-        "READ LF@%retval string\n"
+        "DEFVAR LF@%%retval\n"
+        "READ LF@%%retval string\n"
         "POPFRAME\n"
         "RETURN\n\n"
         );
@@ -36,8 +36,8 @@ void inputi()
     printf(
         "LABEL inputi\n"
         "PUSHFRAME\n"
-        "DEFVAR LF@%retval\n"
-        "READ LF@%retval int\n"
+        "DEFVAR LF@%%retval\n"
+        "READ LF@%%retval int\n"
         "POPFRAME\n"
         "RETURN\n\n"
         );
@@ -48,42 +48,12 @@ void inputf()
     printf(
         "LABEL inputf\n"
         "PUSHFRAME\n"
-        "DEFVAR LF@%retval\n"
-        "READ LF@%retval float\n"
+        "DEFVAR LF@%%retval\n"
+        "READ LF@%%retval float\n"
         "POPFRAME\n"
         "RETURN\n\n"
         );
     
-}
-
-void print_builtin_function(array_nodes_t params){
-
-    printf(
-        "LABEL print\n"
-        "PUSHFRAME\n"
-        "DEFVAR LF@%retval\n"
-        "MOVE LF@%retval nil@nil\n"
-    );
-    for(size_t i = 0; i < array_nodes_size(params); i++)    // Until all params
-    { 
-        ast_t param_name = array_nodes_get(params, i);
-        char *buffer = ptr_string_c_string(param_name->data);
-        printf("WRITE LF@%s\n", buffer);    // Write the param
-        if (i+1 == array_nodes_size(params))    // Last term
-        {
-            printf("WRITE string@\\010");    // Last term must have newline after
-        }
-        else
-        {
-            printf("WRITE string@\\032");    // After every term must be space
-        }
-        printf("MOVE LF@%s LF@%%%zu\n", buffer, i+1);
-        free(buffer);
-    }
-
-    printf(
-        "POPFRAME\n"
-        "RETURN\n\n")
 }
 
 void len()
@@ -91,10 +61,10 @@ void len()
     printf(
         "LABEL len\n"
         "PUSHFRAME\n"
-        "DEFVAR LF@%retval\n"
+        "DEFVAR LF@%%retval\n"
         "DEFVAR LF@param1\n"
-        "MOVE LF@param1 LF@%1\n"
-        "STRLEN LF@%retval LF@param1\n"
+        "MOVE LF@param1 LF@%%1\n"
+        "STRLEN LF@%%retval LF@param1\n"
         "POPFRAME\n"
         "RETURN\n\n"
         );
@@ -105,14 +75,14 @@ void substr()
     printf(
         "LABEL substr\n"
         "PUSHFRAME\n"
-        "DEFVAR LF@%retval\n"
-        "MOVE LF@%retval nil@nil\n"
+        "DEFVAR LF@%%retval\n"
+        "MOVE LF@%%retval nil@nil\n"
         "DEFVAR LF@s\n"
-        "MOVE LF@s LF@%1\n"
+        "MOVE LF@s LF@%%1\n"
         "DEFVAR LF@i\n"
-        "MOVE LF@i LF@%2\n"
+        "MOVE LF@i LF@%%2\n"
         "DEFVAR LF@n\n"
-        "MOVE LF@n LF@%3\n"
+        "MOVE LF@n LF@%%3\n"
         "DEFVAR LF@jump\n"
         "DEFVAR LF@lenstring\n"
         "STRLEN LF@lenstring LF@s\n"
@@ -135,7 +105,7 @@ void substr()
         "EQ LF@jump LF@n int@0\n"
         "JUMPIFEQ $substrend LF@jump bool@true\n"
         "GETCHAR LF@char LF@s LF@i\n"
-        "MOVE LF@%retval LF@char\n"
+        "MOVE LF@%%retval LF@char\n"
         "ADD LF@tmp LF@i int@1\n"
         "MOVE LF@i LF@tmp\n"
         "SUB LF@tmp LF@n int@1\n"
@@ -144,8 +114,8 @@ void substr()
         "JUMPIFEQ $substrend LF@jump bool@true\n"
         "LABEL $substrwhile\n"
         "GETCHAR LF@char LF@s LF@i\n"
-        "CONCAT LF@tmp LF@%retval LF@char\n"
-        "MOVE LF@%retval LF@tmp\n"
+        "CONCAT LF@tmp LF@%%retval LF@char\n"
+        "MOVE LF@%%retval LF@tmp\n"
         "ADD LF@tmp LF@i int@1\n"
         "MOVE LF@i LF@tmp\n"
         "SUB LF@tmp LF@n int@1\n"
@@ -154,7 +124,7 @@ void substr()
         "JUMPIFNEQ $substrwhile LF@jump bool@true\n"
         "JUMP $substrend\n"
         "LABEL $substrbadi\n"
-        "MOVE LF@%retval nil@nil\n"
+        "MOVE LF@%%retval nil@nil\n"
         "LABEL $substrend\n"
         "POPFRAME\n"
         "RETURN\n"
@@ -166,12 +136,12 @@ void ord()
     printf(
         "LABEL ord\n"
         "PUSHFRAME\n"
-        "DEFVAR LF@%retval\n"
-        "MOVE LF@%retval nil@nil\n"
+        "DEFVAR LF@%%retval\n"
+        "MOVE LF@%%retval nil@nil\n"
         "DEFVAR LF@s\n"
-        "MOVE LF@s LF@%1\n"
+        "MOVE LF@s LF@%%1\n"
         "DEFVAR LF@i\n"
-        "MOVE LF@i LF@%2\n"
+        "MOVE LF@i LF@%%2\n"
         "DEFVAR LF@jump\n"
         "DEFVAR LF@lenstring\n"
         "DEFVAR LF@lenstringsubone\n"
@@ -181,7 +151,7 @@ void ord()
         "JUMPIFEQ $ordbadi LF@jump bool@true\n"
         "GT LF@jump LF@i LF@lenstringsubone\n"
         "JUMPIFEQ $ordbadi LF@jump bool@true\n"
-        "STRI2INT LF@%retval LF@s LF@i\n"
+        "STRI2INT LF@%%retval LF@s LF@i\n"
         "LABEL $ordbadi\n"
         "POPFRAME\n"
         "RETURN\n"
@@ -193,10 +163,10 @@ void chr()
     printf(
         "LABEL chr\n"
         "PUSHFRAME\n"
-        "DEFVAR LF@%retval\n"
+        "DEFVAR LF@%%retval\n"
         "DEFVAR LF@i\n"
-        "MOVE LF@i LF@%1\n"
-        "INT2CHAR LF@%retval LF@i\n"
+        "MOVE LF@i LF@%%1\n"
+        "INT2CHAR LF@%%retval LF@i\n"
         "POPFRAME\n"
         "RETURN\n"
         );

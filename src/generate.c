@@ -1,5 +1,6 @@
 #include "generate.h"
 #include "generator_functions.h"
+#include "builtin_functions.h"
 #include "stack.h"
 #include "scope.h"
 #include <assert.h>
@@ -328,6 +329,20 @@ generator_result_t generator_handle_node(scope_t current_scope, ast_t node, stac
 
 enum error_codes generate(ast_t ast)
 {
+    printf(".IFJcode19\n");
+    printf("DEFVAR GF@TypeCheck1\n");
+    printf("DEFVAR GF@TypeCheck2\n"); //Variables for typecheck in Functions
+    printf("DEFVAR GF@VarForGTE\n");
+    printf("DEFVAR GF@VarForLTE\n\n"); //Variables for GTE or LTE comparison
+
+    inputs();
+    inputi();
+    inputf();
+    len();
+    substr();
+    ord();
+    chr();
+
     stack_t tree_traversal = stack_init();
     stack_push(tree_traversal, ast);
 
