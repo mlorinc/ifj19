@@ -75,8 +75,6 @@ typedef enum {
     TERR, // Systerm error (e.g. malloc)
     TLEXERR,    // Lexical error
     TNOTHING // do nothing
-
-
 } tToken_type;
 
 // Automata states

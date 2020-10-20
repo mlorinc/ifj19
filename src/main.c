@@ -2,6 +2,9 @@
 #include "parser_result.h"
 #include "parser_ast.h"
 #include "semantic_analyser.h"
+#include "generate.h"
+#include "generator_functions.h"
+#include <stdio.h>
 
 int main(void)
 {
@@ -15,7 +18,6 @@ int main(void)
     }
 
     semantic_result_t semantic = semantic_analysis(result.ast);
-
     if (semantic.status != ERROR_OK) {
         if (semantic.ast != NULL) {
             ast_delete(result.ast);
@@ -23,6 +25,7 @@ int main(void)
         return semantic.status;
     }
 
+    generate(result.ast);
     return ERROR_OK;
 }
 
